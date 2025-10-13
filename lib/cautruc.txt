@@ -1,0 +1,29 @@
+lib/
+│
+├── main.dart
+│
+├── app/
+│   ├── app.dart             # Khởi tạo MaterialApp, theme, routes
+│   ├── router.dart          # Điều hướng (Navigator)
+│   └── di.dart              # Khởi tạo các dependency (nếu dùng get_it)
+│
+├── core/
+│   ├── constants/           # Chứa hằng số, màu sắc, endpoint
+│   ├── utils/               # Hàm tiện ích, định dạng dữ liệu
+│   └── widgets/             # Widget dùng chung (button, textfield, v.v.)
+│
+└── features/
+    ├── auth/                # Chức năng đăng nhập
+    │   ├── bloc/
+    │   │   ├── auth_bloc.dart
+    │   │   ├── auth_event.dart
+    │   │   └── auth_state.dart
+    │   ├── pages/
+    │   │   └── login_page.dart
+    │   └── widgets/
+    │       └── login_form.dart
+    │
+    └── home/
+        ├── bloc/
+        ├── pages/
+        └── widgets/
