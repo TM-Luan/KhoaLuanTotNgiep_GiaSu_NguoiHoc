@@ -13,7 +13,14 @@ class _WelcomePageState extends State<WelcomePage> {
 
   void _selectRole(String role) {
     if (selected == role) {
-      Navigator.pushNamed(context, '/register');
+      // --- SỬA LỖI LOGIC TẠI ĐÂY ---
+      // Kiểm tra vai trò đã chọn và điều hướng đến đúng trang
+      if (role == 'Gia sư') {
+        Navigator.pushNamed(context, '/register_tutor'); // Điều hướng đến trang đăng ký gia sư
+      } else {
+        Navigator.pushNamed(context, '/register'); // Giữ nguyên cho người học
+      }
+      // --- KẾT THÚC SỬA LỖI ---
     } else {
       setState(() => selected = role);
     }
@@ -30,7 +37,7 @@ class _WelcomePageState extends State<WelcomePage> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Image.asset('assets/onboarding.png', height: 200), // Thay thế welcome.png bằng onboarding.png
+            Image.asset('assets/onboarding.png', height: 200),
             const SizedBox(height: 20),
             const Text(
               'Tham gia cộng đồng gia sư',

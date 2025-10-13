@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/features/auth/widgets/custom_button.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../core/constants/app_colors.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,7 +14,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final emailCtrl = TextEditingController();
   final passCtrl = TextEditingController();
-  bool rememberMe = false; // Thêm trạng thái cho checkbox
+  bool rememberMe = false;
 
   @override
   Widget build(BuildContext context) {
@@ -25,70 +27,69 @@ class _LoginPageState extends State<LoginPage> {
         title: const Text('Đăng nhập'),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Image.asset('assets/logo.png', width: 80, height: 80), // Thay biểu tượng sách
-            const SizedBox(height: 10),
-            const Text('Đăng nhập', style: TextStyle(fontSize: 22)),
-            const SizedBox(height: 30),
-            CustomTextField(
-              label: 'Email',
-              icon: Icons.email_outlined,
-              controller: emailCtrl,
-            ),
-            const SizedBox(height: 15),
-            CustomTextField(
-              label: 'Mật khẩu',
-              icon: Icons.lock_outline,
-              obscureText: true,
-              controller: passCtrl,
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Checkbox(
-                  value: rememberMe,
-                  onChanged: (value) {
-                    setState(() {
-                      rememberMe = value ?? false; // Cập nhật trạng thái khi tích
-                    });
-                  },
-                  activeColor: Colors.purple, // Màu tím khi tích
-                ),
-                const Text('Nhớ mật khẩu'),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text('Quên mật khẩu?'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                minimumSize: const Size(double.infinity, 50),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Image.asset('assets/logo.png', width: 80, height: 80),
+              const SizedBox(height: 10),
+              const Text('Đăng nhập', style: TextStyle(fontSize: 22)),
+              const SizedBox(height: 30),
+              CustomTextField(
+                label: 'Email',
+                icon: Icons.email_outlined,
+                controller: emailCtrl,
+                maxLines: 1,
               ),
-              child: const Text('ĐĂNG NHẬP'),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('Không có tài khoản? '),
-                GestureDetector(
-                  onTap: () => Navigator.pushNamed(context, '/welcome'),
-                  child: const Text(
-                    'Đăng ký ngay',
-                    style: TextStyle(color: AppColors.primaryBlue),
+              const SizedBox(height: 15),
+              CustomTextField(
+                label: 'Mật khẩu',
+                icon: Icons.lock_outline,
+                obscureText: true,
+                controller: passCtrl,
+                maxLines: 1,
+              ),
+              Row(
+                children: [
+                  Checkbox(
+                    value: rememberMe,
+                    onChanged: (value) {
+                      setState(() {
+                        rememberMe = value ?? false;
+                      });
+                    },
+                    activeColor: Colors.purple,
                   ),
-                )
-              ],
-            )
-          ],
+                  const Text('Nhớ mật khẩu'),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () {},
+                    child: const Text('Quên mật khẩu?'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              CustomButton(
+                text: 'ĐĂNG NHẬP',
+                onPressed: () {},
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Không có tài khoản? '),
+                  GestureDetector(
+                    onTap: () => Navigator.pushNamed(context, '/welcome'),
+                    child: const Text(
+                      'Đăng ký ngay',
+                      style: TextStyle(color: AppColors.primaryBlue),
+                    ),
+                  )
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );

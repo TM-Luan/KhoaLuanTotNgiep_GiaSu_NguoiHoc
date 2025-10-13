@@ -3,27 +3,30 @@ import 'package:flutter/material.dart';
 class CustomTextField extends StatelessWidget {
   final String label;
   final IconData icon;
-  final bool obscureText;
   final TextEditingController controller;
+  final bool obscureText;
+  final int maxLines;
 
   const CustomTextField({
     super.key,
     required this.label,
     required this.icon,
+    required this.controller,
     this.obscureText = false,
-    required this.controller, required int maxLines,
+    required this.maxLines,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return TextFormField(
       controller: controller,
       obscureText: obscureText,
+      maxLines: maxLines,
       decoration: InputDecoration(
-        prefixIcon: Icon(icon),
         labelText: label,
+        prefixIcon: Icon(icon),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(8.0),
         ),
       ),
     );

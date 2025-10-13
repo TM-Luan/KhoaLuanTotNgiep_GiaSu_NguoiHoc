@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/widgets/custom_text_field.dart';
-import '../../../core/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/core/widgets/custom_text_field.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/features/auth/widgets/custom_button.dart';
 
 class RegisterPage extends StatelessWidget {
   const RegisterPage({super.key});
@@ -18,34 +18,33 @@ class RegisterPage extends StatelessWidget {
         title: const Text('Đăng ký'),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Image.asset('assets/logo.png', width: 80, height: 80),
-            const SizedBox(height: 10),
-            const Text('Đăng ký', style: TextStyle(fontSize: 22)),
-            const SizedBox(height: 30),
-            CustomTextField(label: 'Email', icon: Icons.email, controller: emailCtrl),
-            const SizedBox(height: 15),
-            CustomTextField(label: 'Số điện thoại', icon: Icons.phone, controller: phoneCtrl),
-            const SizedBox(height: 15),
-            CustomTextField(
-              label: 'Mật khẩu',
-              icon: Icons.lock_outline,
-              obscureText: true,
-              controller: passCtrl,
-            ),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                minimumSize: const Size(double.infinity, 50),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Image.asset('assets/logo.png', width: 80, height: 80),
+              const SizedBox(height: 10),
+              const Text('Đăng ký', style: TextStyle(fontSize: 22)),
+              const SizedBox(height: 30),
+              CustomTextField(label: 'Email', icon: Icons.email, controller: emailCtrl, maxLines: 1),
+              const SizedBox(height: 15),
+              CustomTextField(label: 'Số điện thoại', icon: Icons.phone, controller: phoneCtrl, maxLines: 1),
+              const SizedBox(height: 15),
+              CustomTextField(
+                label: 'Mật khẩu',
+                icon: Icons.lock_outline,
+                obscureText: true,
+                controller: passCtrl,
+                maxLines: 1,
               ),
-              child: const Text('TIẾP TỤC'),
-            ),
-          ],
+              const SizedBox(height: 30),
+              CustomButton(
+                text: 'TIẾP TỤC',
+                onPressed: () {},
+              ),
+            ],
+          ),
         ),
       ),
     );
