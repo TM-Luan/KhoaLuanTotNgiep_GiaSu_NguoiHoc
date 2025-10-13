@@ -1,0 +1,58 @@
+lib/
+│
+├── main.dart                              # Điểm khởi chạy ứng dụng (runApp)
+│
+├── app/                                   # Cấu hình và khởi tạo toàn ứng dụng
+│   ├── app.dart                           # Chứa class App (MaterialApp, theme, routes, MultiBlocProvider)
+│   ├── router.dart                        # Định nghĩa tuyến đường (route) và điều hướng (Navigator)
+│   └── di.dart                            # Khởi tạo dependency injection (get_it), đăng ký repository, bloc, api,...
+│
+├── core/                                  # Tầng lõi - chứa phần dùng chung cho toàn app
+│   ├── network/
+│   │   └── api_client.dart                # Client gọi API chung (Dio hoặc http), có sẵn baseUrl, header, interceptor
+│   │
+│   ├── constants/                         # Các hằng số toàn cục
+│   │   ├── app_colors.dart                # Màu sắc chung
+│   │   ├── app_texts.dart                 # Chuỗi text chung
+│   │   ├── endpoints.dart                 # URL endpoint API
+│   │   └── assets.dart                    # Đường dẫn tới asset (ảnh, icon,...)
+│   │
+│   ├── utils/                             # Hàm tiện ích dùng chung
+│   │   ├── validators.dart                # Hàm kiểm tra dữ liệu (email, password, v.v.)
+│   │   ├── formatters.dart                # Định dạng dữ liệu (ngày, số, chuỗi,...)
+│   │   └── extensions.dart                # Extension methods (ví dụ: context.showSnackBar)
+│   │
+│   └── widgets/                           # Widget tái sử dụng toàn app
+│       ├── app_button.dart                # Nút bấm chuẩn của app
+│       ├── app_text_field.dart            # Ô nhập liệu chuẩn của app
+│       └── loading_indicator.dart         # Widget hiển thị loading
+│
+└── features/                              # Mỗi module / chức năng riêng biệt của app
+    │
+    ├── auth/                              # Module Authentication (đăng nhập / đăng ký)
+    │    │
+    │    ├── data/                         # Tầng dữ liệu (Data Layer)
+    │    │   ├── models/
+    │    │   │   └── user_model.dart       # Model ánh xạ dữ liệu từ API (UserModel.fromJson)
+    │    │   │
+    │    │   ├── repositories/
+    │    │   │   └── auth_repository.dart  # Repository: gọi API, xử lý dữ liệu, trả về model
+    │    │   │
+    │    │   └── datasources/
+    │    │       └── auth_api_service.dart # Lớp chứa hàm request cụ thể (login, register,...)
+    │    │
+    │    ├── bloc/                         # Tầng logic / State Management
+    │    │   ├── auth_bloc.dart            # Bloc chính, xử lý sự kiện & cập nhật state
+    │    │   ├── auth_event.dart           # Định nghĩa các sự kiện (LoginRequested, LogoutRequested,...)
+    │    │   └── auth_state.dart           # Định nghĩa các state (Initial, Loading, Success, Failure)
+    │    │
+    │    ├── pages/                        # Tầng giao diện (UI Page)
+    │    │   └── login_page.dart           # Màn hình đăng nhập (chứa BlocProvider, BlocListener,...)
+    │    │
+    │    └── widgets/                      # Widget nhỏ trong module này
+    │        └── login_form.dart           # Form nhập username/password, gọi bloc.add(LoginRequested)
+    │
+    └── home/                              # Module trang chủ
+         ├── bloc/                         # Bloc quản lý logic của trang Home
+         ├── pages/                        # Các màn hình trong trang Home
+         └── widgets/                      # Các widget riêng của Home

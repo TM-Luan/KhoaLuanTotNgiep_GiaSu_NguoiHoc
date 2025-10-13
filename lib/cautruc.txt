@@ -8,20 +8,29 @@ lib/
 │   └── di.dart              # Khởi tạo các dependency (nếu dùng get_it)
 │
 ├── core/
+│   ├── network/
+│   │   └── api_client.dart  # Hàm gọi API dùng chung (Dio, http,...)
 │   ├── constants/           # Chứa hằng số, màu sắc, endpoint
 │   ├── utils/               # Hàm tiện ích, định dạng dữ liệu
 │   └── widgets/             # Widget dùng chung (button, textfield, v.v.)
 │
 └── features/
     ├── auth/                # Chức năng đăng nhập
-    │   ├── bloc/
-    │   │   ├── auth_bloc.dart
-    │   │   ├── auth_event.dart
-    │   │   └── auth_state.dart
-    │   ├── pages/
-    │   │   └── login_page.dart
-    │   └── widgets/
-    │       └── login_form.dart
+    │    ├── data/
+    │    │   ├── models/
+    │    │   │   └── user_model.dart
+    │    │   ├── repositories/
+    │    │   │   └── auth_repository.dart   # Nơi gọi API
+    │    │   └── datasources/
+    │    │       └── auth_api_service.dart  # Nơi chứa request cụ thể
+    │    ├── bloc/
+    │    │   ├── auth_bloc.dart
+    │    │   ├── auth_event.dart
+    │    │   └── auth_state.dart
+    │    ├── pages/
+    │    │   └── login_page.dart
+    │    └── widgets/
+    │        └── login_form.dart
     │
     └── home/
         ├── bloc/
