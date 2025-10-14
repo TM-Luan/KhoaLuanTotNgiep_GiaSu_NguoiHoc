@@ -6,6 +6,7 @@ class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
   final bool obscureText;
   final int maxLines;
+  final TextInputType? keyboardType; // ✅ Thêm dòng này
 
   const CustomTextField({
     super.key,
@@ -13,7 +14,8 @@ class CustomTextField extends StatelessWidget {
     required this.icon,
     required this.controller,
     this.obscureText = false,
-    required this.maxLines,
+    this.maxLines = 1,
+    this.keyboardType, // ✅ Và dòng này
   });
 
   @override
@@ -22,6 +24,7 @@ class CustomTextField extends StatelessWidget {
       controller: controller,
       obscureText: obscureText,
       maxLines: maxLines,
+      keyboardType: keyboardType, // ✅ Thêm dòng này
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),

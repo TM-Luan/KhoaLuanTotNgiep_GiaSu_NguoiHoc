@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/features/auth/widgets/custom_button.dart';
-import '../../../core/widgets/custom_text_field.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/features/auth/widgets/custom_text_field.dart';
 import '../../../core/constants/app_colors.dart';
 
 
@@ -80,7 +80,7 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   const Text('Không có tài khoản? '),
                   GestureDetector(
-                    onTap: () => Navigator.pushNamed(context, '/welcome'),
+                    onTap: () => Navigator.pushNamed(context, '/register'),
                     child: const Text(
                       'Đăng ký ngay',
                       style: TextStyle(color: AppColors.primaryBlue),

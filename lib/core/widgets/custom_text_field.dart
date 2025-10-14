@@ -11,7 +11,7 @@ class CustomTextField extends StatelessWidget {
     required this.label,
     required this.icon,
     this.obscureText = false,
-    required this.controller, required int maxLines,
+    required this.controller, required int maxLines, required TextInputType keyboardType,
   });
 
   @override
