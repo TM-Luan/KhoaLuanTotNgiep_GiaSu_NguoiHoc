@@ -1,3 +1,3 @@
-# khoa_luan_tot_ngiep_gia_su_nguoi_hoc
+# Khóa Luận Tốt Nghiệp Ứng dụng kết nối gia sư và người học
 
-A new Flutter project.
+
