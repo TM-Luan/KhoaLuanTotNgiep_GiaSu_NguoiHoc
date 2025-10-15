@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../features/auth/widgets/custom_button.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/features/auth/widgets/custom_text_field.dart';
-
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_imgs.dart';
+import '../constants/app_colors.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/custom_text_field.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -19,14 +19,12 @@ class _RegisterPageState extends State<RegisterPage> {
   final confirmPassCtrl = TextEditingController();
 
   bool agreeTerms = false;
-  String role = 'gia_su'; // mặc định là Gia sư
+  String role = '';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Đăng ký'),
-        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -35,22 +33,18 @@ class _RegisterPageState extends State<RegisterPage> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            Image.asset(AppImgs.logo, width: 80, height: 80),
             const SizedBox(height: 10),
-            const Text(
-              'Nhập thông tin của bạn:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 10),
-
-            // Lựa chọn vai trò
+            const Text('Đăng ký', style: TextStyle(fontSize: 22)),
+            const SizedBox(height: 30),
             Row(
               children: [
                 Expanded(
                   child: RadioListTile<String>(
                     title: const Text('Gia sư'),
-                    value: 'gia_su',
+                    value: '',
                     groupValue: role,
                     onChanged: (value) {
                       setState(() => role = value!);
@@ -60,7 +54,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 Expanded(
                   child: RadioListTile<String>(
                     title: const Text('Học viên'),
-                    value: 'hoc_vien',
+                    value: '',
                     groupValue: role,
                     onChanged: (value) {
                       setState(() => role = value!);
@@ -72,14 +66,14 @@ class _RegisterPageState extends State<RegisterPage> {
 
             const SizedBox(height: 10),
             CustomTextField(
-              label: 'Họ tên (bắt buộc)*',
+              label: 'Họ tên',
               icon: Icons.person_outline,
               controller: nameCtrl,
-              maxLines: 1,
+              maxLines: 1, keyboardType: TextInputType.name,
             ),
             const SizedBox(height: 15),
             CustomTextField(
-              label: 'Số điện thoại (bắt buộc)*',
+              label: 'Số điện thoại',
               icon: Icons.phone_outlined,
               controller: phoneCtrl,
               keyboardType: TextInputType.phone,
@@ -87,7 +81,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
             const SizedBox(height: 15),
             CustomTextField(
-              label: 'Email (nên nhập)',
+              label: 'Email',
               icon: Icons.email_outlined,
               controller: emailCtrl,
               keyboardType: TextInputType.emailAddress,
@@ -99,7 +93,8 @@ class _RegisterPageState extends State<RegisterPage> {
               icon: Icons.lock_outline,
               obscureText: true,
               controller: passCtrl,
-              maxLines: 1, keyboardType: null,
+              maxLines: 1,
+              keyboardType: TextInputType.visiblePassword,
             ),
             const SizedBox(height: 15),
             CustomTextField(
@@ -107,7 +102,8 @@ class _RegisterPageState extends State<RegisterPage> {
               icon: Icons.lock_outline,
               obscureText: true,
               controller: confirmPassCtrl,
-              maxLines: 1, keyboardType: null,
+              maxLines: 1,
+              keyboardType: TextInputType.visiblePassword,
             ),
 
             const SizedBox(height: 10),
@@ -129,11 +125,11 @@ class _RegisterPageState extends State<RegisterPage> {
                         child: const Text(
                           'quy định',
                           style: TextStyle(
-                              color: Colors.blue,
-                              decoration: TextDecoration.underline),
+                            color: AppColors.primaryBlue,
+                            decoration: TextDecoration.underline,
+                          ),
                         ),
                       ),
-                      const Text(' của HTCon.'),
                     ],
                   ),
                 ),
@@ -144,23 +140,20 @@ class _RegisterPageState extends State<RegisterPage> {
             CustomButton(
               text: 'Đăng ký',
               onPressed: () {
-                if (!agreeTerms) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Vui lòng đồng ý với quy định.')),
-                  );
-                  return;
-                }
-
-                // Sau khi đăng ký có thể điều hướng sang màn hình riêng:
-             // Sau khi đăng ký thành công thì quay về màn hình đăng nhập
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đăng ký thành công!')),
-                );
+                // if (!agreeTerms) {
+                //   ScaffoldMessenger.of(context).showSnackBar(
+                //     const SnackBar(
+                //       content: Text('Vui lòng đồng ý với quy định.'),
+                //     ),
+                //   );
+                //   return;
+                // }
+                // ScaffoldMessenger.of(context).showSnackBar(
+                //   const SnackBar(content: Text('Đăng ký thành công!')),
+                // );
                 Navigator.pushReplacementNamed(context, '/login');
-
-                              },
-                            ),
+              },
+            ),
 
             const SizedBox(height: 15),
             Row(

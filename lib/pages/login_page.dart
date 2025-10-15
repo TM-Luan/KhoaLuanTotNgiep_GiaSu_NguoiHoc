@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/features/auth/widgets/custom_button.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/features/auth/widgets/custom_text_field.dart';
-import '../../../core/constants/app_colors.dart';
-
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_imgs.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/custom_button.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/custom_text_field.dart';
+import '../constants/app_colors.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -24,15 +24,13 @@ class _LoginPageState extends State<LoginPage> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Đăng nhập'),
-        centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              Image.asset('assets/logo.png', width: 80, height: 80),
+              Image.asset(AppImgs.logo, width: 80, height: 80),
               const SizedBox(height: 10),
               const Text('Đăng nhập', style: TextStyle(fontSize: 22)),
               const SizedBox(height: 30),
@@ -41,6 +39,7 @@ class _LoginPageState extends State<LoginPage> {
                 icon: Icons.email_outlined,
                 controller: emailCtrl,
                 maxLines: 1,
+                keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 15),
               CustomTextField(
@@ -49,6 +48,7 @@ class _LoginPageState extends State<LoginPage> {
                 obscureText: true,
                 controller: passCtrl,
                 maxLines: 1,
+                keyboardType: TextInputType.visiblePassword,
               ),
               Row(
                 children: [
@@ -59,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
                         rememberMe = value ?? false;
                       });
                     },
-                    activeColor: Colors.purple,
+                    activeColor: AppColors.primaryBlue,
                   ),
                   const Text('Nhớ mật khẩu'),
                   const Spacer(),
@@ -70,10 +70,7 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
               const SizedBox(height: 10),
-              CustomButton(
-                text: 'ĐĂNG NHẬP',
-                onPressed: () {},
-              ),
+              CustomButton(text: 'ĐĂNG NHẬP', onPressed: () {}),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -85,9 +82,9 @@ class _LoginPageState extends State<LoginPage> {
                       'Đăng ký ngay',
                       style: TextStyle(color: AppColors.primaryBlue),
                     ),
-                  )
+                  ),
                 ],
-              )
+              ),
             ],
           ),
         ),

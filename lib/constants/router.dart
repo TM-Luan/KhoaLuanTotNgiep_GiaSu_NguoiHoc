@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../features/auth/pages/splash_page.dart';
-import '../features/auth/pages/login_page.dart';
-import '../features/auth/pages/register_page.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/login_page.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/register_page.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/splash_page.dart';
+
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -11,6 +12,8 @@ class AppRouter {
       case '/login':
         return MaterialPageRoute(builder: (_) => const LoginPage());
       case '/register':
+        return MaterialPageRoute(builder: (_) => const RegisterPage());
+         case '/hometutor':
         return MaterialPageRoute(builder: (_) => const RegisterPage());
       default:
         return MaterialPageRoute(

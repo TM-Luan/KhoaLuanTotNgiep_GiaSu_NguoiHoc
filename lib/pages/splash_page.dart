@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_imgs.dart';
+import '../constants/app_colors.dart';
 
 class SplashPage extends StatelessWidget {
   const SplashPage({super.key});
@@ -7,7 +8,7 @@ class SplashPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primaryBlue,
+      backgroundColor: AppColors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -17,24 +18,28 @@ class SplashPage extends StatelessWidget {
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                color: AppColors.white,
+                color: AppColors.black,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Kết nối người học',
-              style: TextStyle(color: Colors.white70, fontSize: 14),
+              style: TextStyle(color: AppColors.black, fontSize: 14),
             ),
             const SizedBox(height: 30),
-            Image.asset('assets/logo.png', width: 100, height: 100),            const SizedBox(height: 60),
+            Image.asset(AppImgs.logo, width: 100, height: 100),
+            const SizedBox(height: 60),
             TextButton.icon(
               onPressed: () => Navigator.pushNamed(context, '/login'),
-              icon: const Icon(Icons.arrow_forward, color: AppColors.white),
+              icon: const Icon(
+                Icons.arrow_forward,
+                color: AppColors.primaryBlue,
+              ),
               label: const Text(
                 "Tiếp tục ứng dụng",
-                style: TextStyle(color: AppColors.white),
+                style: TextStyle(color: AppColors.primaryBlue),
               ),
-            )
+            ),
           ],
         ),
       ),
