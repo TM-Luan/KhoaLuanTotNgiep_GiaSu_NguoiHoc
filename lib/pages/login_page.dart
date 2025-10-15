@@ -16,6 +16,39 @@ class _LoginPageState extends State<LoginPage> {
   final passCtrl = TextEditingController();
   bool rememberMe = false;
 
+  // ✅ HÀM XỬ LÝ ĐĂNG NHẬP TẠM THỜI
+  void _handleLogin() {
+    final email = emailCtrl.text.trim().toLowerCase();
+
+    // Lấy tên người dùng từ phần trước dấu @ của email để chào hỏi
+    String userName = "User";
+    if (email.isNotEmpty && email.contains('@')) {
+      userName = email.split('@').first;
+      // Viết hoa chữ cái đầu
+      userName = "${userName[0].toUpperCase()}${userName.substring(1)}";
+    }
+
+    // =================================================================
+    // TẠM THỜI: Logic chuyển trang dựa vào email nhập vào.
+    // Sau này khi có database, bạn sẽ thay thế phần này.
+    // =================================================================
+    if (email.contains('tutor')) {
+      // Nếu email có chữ "tutor", chuyển đến trang của gia sư
+      Navigator.pushReplacementNamed(
+        context,
+        '/tutor-dashboard',
+        arguments: {'userName': userName},
+      );
+    } else {
+      // Ngược lại, chuyển đến trang của sinh viên
+      Navigator.pushReplacementNamed(
+        context,
+        '/student-home',
+        arguments: {'userName': userName},
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,7 +103,8 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
               const SizedBox(height: 10),
-              CustomButton(text: 'ĐĂNG NHẬP', onPressed: () {}),
+              // ✅ GỌI HÀM _handleLogin KHI NHẤN NÚT
+              CustomButton(text: 'ĐĂNG NHẬP', onPressed: _handleLogin),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
