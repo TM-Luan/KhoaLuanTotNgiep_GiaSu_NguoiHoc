@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/account_page.dart'; // Thêm AccountPage
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/tutor_detail_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/tutor_home_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/login_page.dart';
@@ -16,18 +17,22 @@ class AppRouter {
       case '/register':
         return MaterialPageRoute(builder: (_) => const RegisterPage());
       case '/student':
-        return MaterialPageRoute(builder: (_) => const LearnerHomePage());
+        return MaterialPageRoute(builder: (_) => const LearnerHomePage()); 
       case '/tutor':
-        return MaterialPageRoute(builder: (_) => const TutorListPage());
+        return MaterialPageRoute(builder: (_) => const TutorListPage()); 
       case '/TutorDetail':
         return MaterialPageRoute(builder: (_) => const TutorDetailPage());
+      case '/account':
+        return MaterialPageRoute(builder: (_) => const AccountPage());
 
       default:
         return MaterialPageRoute(
-          builder:
-              (_) => const Scaffold(
-                body: Center(child: Text('Trang không tồn tại')),
-              ),
+          builder: (
+            _
+          ) =>
+              const Scaffold(
+            body: Center(child: Text('Trang không tồn tại')),
+          ),
         );
     }
   }
