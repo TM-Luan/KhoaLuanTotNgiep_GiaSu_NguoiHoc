@@ -75,17 +75,12 @@ class _LoginPageState extends State<LoginPage> {
                 onPressed: () {
                   Navigator.pushNamedAndRemoveUntil(
                     context,
-                    '/tutor',
+                    '/home',
                     (route) => false,
                   );
-
-                  // Navigator.pushNamedAndRemoveUntil(
-                  //   context,
-                  //   '/student',
-                  //   (route) => false,
-                  // );
                 },
               ),
+
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

@@ -1,95 +1,9 @@
 import 'package:flutter/material.dart';
-// import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/custom_bottom_nav_bar.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/custom_button.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/LopHoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/custom_searchBar.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/student_card.dart';
 
-// ============= MODEL =============
-class LopHoc {
-  final String maLop;
-  final String tenLop;
-  final String tenHocVien;
-  final String diaChi;
-  final int hocPhi;
-  final int phiNhanLop;
-
-  LopHoc({
-    required this.maLop,
-    required this.tenLop,
-    required this.tenHocVien,
-    required this.diaChi,
-    required this.hocPhi,
-    required this.phiNhanLop,
-  });
-}
-
-// ============= CARD HIỂN THỊ MỖI LỚP =============
-class LopHocCard extends StatelessWidget {
-  final LopHoc lopHoc;
-  final VoidCallback onDeNghiDay;
-
-  const LopHocCard({super.key, required this.lopHoc, required this.onDeNghiDay});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Mã lớp: ${lopHoc.maLop} - ${lopHoc.tenLop}",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.person, size: 18, color: Colors.grey),
-                const SizedBox(width: 4),
-                Text(lopHoc.tenHocVien),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.location_on, size: 18, color: Colors.grey),
-                const SizedBox(width: 4),
-                Expanded(child: Text(lopHoc.diaChi)),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.attach_money, size: 18, color: Colors.grey),
-                const SizedBox(width: 4),
-                Text("${lopHoc.hocPhi} vnd/Buổi"),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.receipt_long, size: 18, color: Colors.grey),
-                const SizedBox(width: 4),
-                Text("Phí nhận lớp: ${lopHoc.phiNhanLop} vnd"),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: CustomButton(text: "Đề nghị dạy", onPressed: onDeNghiDay),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ============= TRANG DANH SÁCH LỚP =============
 class TutorListPage extends StatelessWidget {
   const TutorListPage({super.key});
 
@@ -98,26 +12,7 @@ class TutorListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        titleSpacing: 0,
-        title: Row(
-          children: [
-            const CircleAvatar(radius: 20, backgroundImage: AssetImage('')),
-            const SizedBox(width: 8),
-            const Expanded(
-              child: Text(
-                'Xin chào, Trần Minh Luân',
-                style: TextStyle(fontSize: 14),
-              ),
-            ),
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.notifications_none),
-            ),
-          ],
-        ),
-      ),
+      backgroundColor: AppColors.lightGrey,
       body: SafeArea(
         child: Column(
           children: [
@@ -139,7 +34,6 @@ class TutorListPage extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
                 children: [
-                  // 👉 DANH SÁCH LỚP HIỂN THỊ Ở ĐÂY
                   ...dsLopHoc.map(
                     (lop) => LopHocCard(
                       lopHoc: lop,
@@ -158,33 +52,11 @@ class TutorListPage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        role: 'tutor',
-        currentIndex: 0,
-        onTap: (i) {
-          if (i == curentIndex) return;
-          if (i == 0) {
-            Navigator.pushNamedAndRemoveUntil(
-              context,
-              '/tutor',
-              (route) => false,
-            );
-          } else if (i == 1) {
-            // CẬP NHẬT: Điều hướng đến trang Lịch Dạy mới
-            Navigator.pushNamed(context, '/tutorSchedule');
-          } else if (i == 2) {
-            Navigator.pushNamed(context, '/my-classes');
-          } else {
-            Navigator.pushNamed(context, '/account');
-          }
-        },
-      ),
     );
   }
 }
 
-// ============= DỮ LIỆU GIẢ LẬP =============
-final dsLopHoc = [
+final List<LopHoc> dsLopHoc = [
   LopHoc(
     maLop: "0001",
     tenLop: "Anh văn 12 + Toán",

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/custom_bottom_nav_bar.dart';
 
 class TutorDetailPage extends StatelessWidget {
   static const routeName = '/tutor-detail';
@@ -19,13 +18,7 @@ class TutorDetailPage extends StatelessWidget {
               : 'Không có dữ liệu.',
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        role: 'learner',
-        currentIndex: 1,
-        onTap: (i) {
-          // chuyển trang tương tự
-        },
-      ),
+     
     );
   }
 }

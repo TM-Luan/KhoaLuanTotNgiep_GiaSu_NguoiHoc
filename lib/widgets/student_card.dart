@@ -1,16 +1,12 @@
-
 import 'package:flutter/material.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/LopHoc.dart';
 
 class LopHocCard extends StatelessWidget {
   final LopHoc lopHoc;
   final VoidCallback onDeNghiDay;
 
-  const LopHocCard({
-    Key? key,
-    required this.lopHoc,
-    required this.onDeNghiDay,
-  }) : super(key: key);
+  const LopHocCard({super.key, required this.lopHoc, required this.onDeNghiDay});
 
   @override
   Widget build(BuildContext context) {
@@ -70,9 +66,12 @@ class LopHocCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text("Đề nghị dạy"),
+                child: Text(
+                  "Đề nghị dạy",
+                  style: TextStyle(color: AppColors.white),
+                ),
               ),
-            )
+            ),
           ],
         ),
       ),

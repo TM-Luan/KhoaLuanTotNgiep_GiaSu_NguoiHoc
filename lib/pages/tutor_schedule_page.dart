@@ -46,7 +46,8 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
       ),
     },
     {
-      DateTime.now().add(const Duration(days: 1)): const LichHoc( // Ngày mai
+      DateTime.now().add(const Duration(days: 1)): const LichHoc(
+        // Ngày mai
         maLH: 'LH003',
         tenLop: 'Ôn thi THPT QG - Lý',
         tenGiaSu: 'Trần Văn B',
@@ -70,7 +71,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
   void _initializeWeek() {
     _weekDays = [];
     DateTime now = DateTime.now();
-    
+
     int currentDayOfWeek = now.weekday;
     DateTime monday = now.subtract(Duration(days: currentDayOfWeek - 1));
 
@@ -82,23 +83,32 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
   void _filterSchedulesByDate(DateTime date) {
     setState(() {
       _selectedDate = DateTime(date.year, date.month, date.day);
-      _dailySchedules = _allSchedulesWithDate
-          .where((map) => map.keys.any((scheduleDate) =>
-              scheduleDate.year == _selectedDate.year &&
-              scheduleDate.month == _selectedDate.month &&
-              scheduleDate.day == _selectedDate.day))
-          .map((map) => map.values.first)
-          .toList();
+      _dailySchedules =
+          _allSchedulesWithDate
+              .where(
+                (map) => map.keys.any(
+                  (scheduleDate) =>
+                      scheduleDate.year == _selectedDate.year &&
+                      scheduleDate.month == _selectedDate.month &&
+                      scheduleDate.day == _selectedDate.day,
+                ),
+              )
+              .map((map) => map.values.first)
+              .toList();
     });
   }
 
   bool _hasSchedule(DateTime date) {
-    return _allSchedulesWithDate.any((map) => map.keys.any((scheduleDate) =>
-        scheduleDate.year == date.year &&
-        scheduleDate.month == date.month &&
-        scheduleDate.day == date.day));
+    return _allSchedulesWithDate.any(
+      (map) => map.keys.any(
+        (scheduleDate) =>
+            scheduleDate.year == date.year &&
+            scheduleDate.month == date.month &&
+            scheduleDate.day == date.day,
+      ),
+    );
   }
-  
+
   Widget _emptyState() {
     return const Center(
       child: Padding(
@@ -123,19 +133,16 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
       ),
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
-    String headerText = DateFormat('dd/MM/yyyy').format(_selectedDate) == DateFormat('dd/MM/yyyy').format(DateTime.now())
-        ? 'LỊCH DẠY HÔM NAY'
-        : 'LỊCH DẠY ${DateFormat('dd/MM/yyyy').format(_selectedDate)}';
+    String headerText =
+        DateFormat('dd/MM/yyyy').format(_selectedDate) ==
+                DateFormat('dd/MM/yyyy').format(DateTime.now())
+            ? 'LỊCH DẠY HÔM NAY'
+            : 'LỊCH DẠY ${DateFormat('dd/MM/yyyy').format(_selectedDate)}';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lịch Dạy'),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: AppColors.white,
-      ),
       body: Column(
         children: [
           Container(
@@ -144,26 +151,39 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [AppColors.primaryBlue, AppColors.primaryBlue.withOpacity(0.8)],
+                colors: [
+                  AppColors.primaryBlue,
+                  AppColors.primaryBlue.withOpacity(0.8),
+                ],
               ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Xin chào, Thầy Nguyễn! 👋', style: TextStyle(color: AppColors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text('Chúc bạn một ngày làm việc hiệu quả', style: TextStyle(color: AppColors.white.withOpacity(0.9), fontSize: 13)),
-                
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Tuần này', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.white)),
+                    const Text(
+                      'Tuần này',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.white,
+                      ),
+                    ),
                     TextButton.icon(
                       onPressed: () {},
-                      icon: const Icon(Icons.calendar_month, size: 18, color: AppColors.white),
+                      icon: const Icon(
+                        Icons.calendar_month,
+                        size: 18,
+                        color: AppColors.white,
+                      ),
                       label: Text(
                         DateFormat('MMMM, yyyy').format(DateTime.now()),
-                        style: const TextStyle(fontSize: 13, color: AppColors.white),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.white,
+                        ),
                       ),
                     ),
                   ],
@@ -177,7 +197,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
               ],
             ),
           ),
-          
+
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
@@ -187,29 +207,51 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _StatCard(title: 'Tổng buổi dạy', value: '24', color: Color(0xFFE3F2FD), textColor: Color(0xFF2196F3), icon: '🎓'),
-                      _StatCard(title: 'Hoàn thành', value: '18', color: Color(0xFFE8F5E9), textColor: Color(0xFF4CAF50), icon: '✅'),
-                      _StatCard(title: 'Sắp tới', value: '6', color: Color(0xFFFFF3E0), textColor: Color(0xFFFF9800), icon: '⏰'),
+                      _StatCard(
+                        title: 'Tổng buổi dạy',
+                        value: '24',
+                        color: Color(0xFFE3F2FD),
+                        textColor: Color(0xFF2196F3),
+                        icon: '🎓',
+                      ),
+                      _StatCard(
+                        title: 'Hoàn thành',
+                        value: '18',
+                        color: Color(0xFFE8F5E9),
+                        textColor: Color(0xFF4CAF50),
+                        icon: '✅',
+                      ),
+                      _StatCard(
+                        title: 'Sắp tới',
+                        value: '6',
+                        color: Color(0xFFFFF3E0),
+                        textColor: Color(0xFFFF9800),
+                        icon: '⏰',
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),
 
                   Text(
                     headerText,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 12),
 
                   if (_dailySchedules.isEmpty)
                     _emptyState()
                   else
-                    ..._dailySchedules.map((schedule) => ScheduleCard(
-                          schedule: schedule,
-                          role: 'tutor',
-                          onDetails: () {},
-                          onPrimaryAction: () {},
-                        )),
-                  
+                    ..._dailySchedules.map(
+                      (schedule) => ScheduleCard(
+                        schedule: schedule,
+                        role: 'tutor',
+                        onDetails: () {},
+                        onPrimaryAction: () {},
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -217,9 +259,11 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-        },
-        label: const Text('Thêm Lịch Dạy Mới', style: TextStyle(color: AppColors.white)),
+        onPressed: () {},
+        label: const Text(
+          'Thêm Lịch Dạy Mới',
+          style: TextStyle(color: AppColors.white),
+        ),
         icon: const Icon(Icons.add, color: AppColors.white),
         backgroundColor: AppColors.primaryBlue,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
@@ -264,7 +308,11 @@ class _StatCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               value,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
