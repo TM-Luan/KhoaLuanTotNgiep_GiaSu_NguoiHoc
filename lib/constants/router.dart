@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/account_page.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/student_class_detail_page.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/student_my_classes_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/tutor_detail_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/tutor_home_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/login_page.dart';
@@ -32,6 +34,17 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const LearnerSchedulePage());
       case '/tutorSchedule': 
         return MaterialPageRoute(builder: (_) => const TutorSchedulePage());
+      case '/my-classes':
+        return MaterialPageRoute(builder: (_) => const StudentMyClassesPage());
+        
+      // THÊM ROUTE CHO TRANG CHI TIẾT LỚP HỌC
+      case '/class-detail':
+        // Lấy dữ liệu ClassDetail được truyền qua arguments
+        final classDetail = settings.arguments as ClassDetail; 
+        return MaterialPageRoute(
+          builder: (_) => ClassDetailPage(classDetail: classDetail),
+        );
+
 
       default:
         return MaterialPageRoute(
