@@ -105,7 +105,8 @@ class LearnerHomePage extends StatelessWidget {
               (route) => false,
             );
           } else if (i == 1) {
-            Navigator.pushNamed(context, '/schedule');
+            // CẬP NHẬT: Điều hướng đến trang Lịch Học mới
+            Navigator.pushNamed(context, '/learnerSchedule');
           } else if (i == 2) {
             Navigator.pushNamed(context, '/my-classes');
           } else {

@@ -28,8 +28,7 @@ class LopHocCard extends StatelessWidget {
   final LopHoc lopHoc;
   final VoidCallback onDeNghiDay;
 
-  const LopHocCard({Key? key, required this.lopHoc, required this.onDeNghiDay})
-    : super(key: key);
+  const LopHocCard({super.key, required this.lopHoc, required this.onDeNghiDay});
 
   @override
   Widget build(BuildContext context) {
@@ -171,7 +170,8 @@ class TutorListPage extends StatelessWidget {
               (route) => false,
             );
           } else if (i == 1) {
-            Navigator.pushNamed(context, '/schedule');
+            // CẬP NHẬT: Điều hướng đến trang Lịch Dạy mới
+            Navigator.pushNamed(context, '/tutorSchedule');
           } else if (i == 2) {
             Navigator.pushNamed(context, '/my-classes');
           } else {

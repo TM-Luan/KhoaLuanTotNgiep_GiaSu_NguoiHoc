@@ -73,17 +73,17 @@ class _LoginPageState extends State<LoginPage> {
               CustomButton(
                 text: 'ĐĂNG NHẬP',
                 onPressed: () {
-                  // Navigator.pushNamedAndRemoveUntil(
-                  //   context,
-                  //   '/tutor',
-                  //   (route) => false,
-                  // );
-
                   Navigator.pushNamedAndRemoveUntil(
                     context,
-                    '/student',
+                    '/tutor',
                     (route) => false,
                   );
+
+                  // Navigator.pushNamedAndRemoveUntil(
+                  //   context,
+                  //   '/student',
+                  //   (route) => false,
+                  // );
                 },
               ),
               const SizedBox(height: 20),
