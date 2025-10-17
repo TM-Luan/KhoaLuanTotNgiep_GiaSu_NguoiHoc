@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/account_page.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/student_my_classes_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/student_schedule_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/student_home_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/tutor_home_page.dart';
@@ -14,7 +15,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-final String role = "gia ";
+final String role = "gia sư ";
 
 class _HomePageState extends State<HomePage> {
   int pageIndex = 0;
@@ -26,7 +27,10 @@ class _HomePageState extends State<HomePage> {
       const TutorSchedulePage()
     else
       const LearnerSchedulePage(),
-    const LopCuaToi(),
+      if (role == "gia sư") 
+      const Placeholder() // TODO: Thay bằng trang lớp của gia sư nếu có
+    else 
+      const StudentMyClassesPage(),
     const Account(),
   ];
   @override
@@ -256,16 +260,16 @@ class DanhSachLopChuaGiao extends StatelessWidget {
   }
 }
 
-class LopCuaToi extends StatelessWidget {
-  const LopCuaToi({Key? key}) : super(key: key);
+// class LopCuaToi extends StatelessWidget {
+//   const LopCuaToi({Key? key}) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        "Thông tin lớp của tôi sẽ hiển thị ở đây.",
-        style: TextStyle(fontSize: 18),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Center(
+//       child: Text(
+//         "Thông tin lớp của tôi sẽ hiển thị ở đây.",
+//         style: TextStyle(fontSize: 18),
+//       ),
+//     );
+//   }
+// }

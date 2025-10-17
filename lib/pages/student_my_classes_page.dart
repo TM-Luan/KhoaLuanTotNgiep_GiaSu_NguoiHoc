@@ -37,7 +37,7 @@ class StudentMyClassesPage extends StatelessWidget {
       onTap: () {
         // 1. Chuẩn bị dữ liệu chi tiết (ClassDetail)
         final ClassDetail detailData = myClass.isPendingForTutor 
-            ? ClassDetail.samplePendingClass() // Lớp chờ duyệt dùng dữ liệu mẫu
+            ? ClassDetail.sample() // Lớp chờ duyệt dùng dữ liệu mẫu
             : ClassDetail(
                   // Lớp đang dạy dùng dữ liệu giả định
                   status: myClass.status,
@@ -288,65 +288,6 @@ class StudentMyClassesPage extends StatelessWidget {
               },
             ),
 
-      // === BottomNavigationBar: Giữ nguyên ===
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.5),
-              spreadRadius: 2,
-              blurRadius: 7,
-              offset: const Offset(0, 3), 
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: myClassesIndex, 
-          selectedItemColor: Colors.blue,
-          unselectedItemColor: Colors.grey,
-          showUnselectedLabels: true,
-          type: BottomNavigationBarType.fixed,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Trang chủ',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today_outlined), // Giả định index 1 là Lịch học
-              activeIcon: Icon(Icons.calendar_today),
-              label: 'Lịch học', 
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline), // Giả định index 2 là Lớp của tôi
-              activeIcon: Icon(Icons.person),
-              label: 'Lớp của tôi', 
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings_outlined),
-              activeIcon: Icon(Icons.settings),
-              label: 'Cài đặt',
-            ),
-          ],
-          onTap: (index) {
-            if (index == homeIndex) {
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/student', 
-                (route) => false, 
-              );
-            } else if (index == scheduleIndex) {
-              Navigator.pushNamed(context, '/learnerSchedule');
-            } else if (index == myClassesIndex) {
-              return; // Đang ở trang LỚP CỦA TÔI
-            } else if (index == settingsIndex) {
-              // Giả sử đường dẫn cho Cài đặt là '/account'
-              Navigator.pushNamed(context, '/account');
-            }
-          },
-        ),
-      ),
     );
   }
 }
