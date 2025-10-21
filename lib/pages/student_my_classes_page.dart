@@ -1,6 +1,7 @@
 // File: student_my_classes_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/add_class_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/student_class_detail_page.dart';
 // THAY THẾ: Import model và dữ liệu giả lập từ data/LopHoc.dart
 // import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/LopHoc.dart'; 
@@ -231,6 +232,10 @@ class StudentMyClassesPage extends StatelessWidget {
             padding: const EdgeInsets.only(right: 8.0),
             child: ElevatedButton(
               onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AddClassPage()),
+                );
                 // TODO: Logic thêm lớp mới
               },
               style: ElevatedButton.styleFrom(
@@ -265,6 +270,7 @@ class StudentMyClassesPage extends StatelessWidget {
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
                       onPressed: () {
+                        
                         // TODO: Logic điều hướng đến trang tạo yêu cầu lớp học
                       },
                       icon: const Icon(Icons.add),
