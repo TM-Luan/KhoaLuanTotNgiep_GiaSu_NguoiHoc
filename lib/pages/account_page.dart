@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/flutter_secure_storage.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/splash_page.dart';
 
 class Account extends StatefulWidget {
@@ -60,11 +62,32 @@ class _AccountState extends State<Account> {
             _buildAccountItem(
               title: 'Đăng xuất',
               icon: Icons.exit_to_app,
-              onTap: () {
+              onTap: () async {
+                final repo = AuthRepository();
+                final token = await SecureStorage.getToken();
+                if (token == null) return;
+
+                // Gọi API (phần bất đồng bộ)
+                final res = await repo.logout(token);
+
+                // Sau khi có kết quả, mới kiểm tra widget còn tồn tại
+                if (!context.mounted) return;
+
+                // Dùng context an toàn
+                final msg =
+                    res.success
+                        ? (res.data ?? 'Đã đăng xuất')
+                        : (res.message ?? 'Đăng xuất thất bại');
+
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(msg)));
+                await SecureStorage.deleteToken();
+
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (context) => SplashPage()),
-                  (Route<dynamic> route) => false,
+                  MaterialPageRoute(builder: (_) => SplashPage()),
+                  (route) => false,
                 );
               },
             ),

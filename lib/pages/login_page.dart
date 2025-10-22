@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_imgs.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/flutter_secure_storage.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/custom_button.dart';
@@ -76,34 +77,40 @@ class _LoginPageState extends State<LoginPage> {
               CustomButton(
                 text: 'ĐĂNG NHẬP',
                 onPressed: () async {
-  final email = emailCtrl.text.trim();
-  final pass = passCtrl.text.trim();
+                  final email = emailCtrl.text.trim();
+                  final pass = passCtrl.text.trim();
 
-  if (email.isEmpty || pass.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Vui lòng nhập đầy đủ Email và Mật khẩu')),
-    );
-    return;
-  }
+                  if (email.isEmpty || pass.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Vui lòng nhập đầy đủ Email và Mật khẩu'),
+                      ),
+                    );
+                    return;
+                  }
 
-  final repo = AuthRepository();
-  final res = await repo.login(email, pass);
+                  final repo = AuthRepository();
+                  final res = await repo.login(email, pass);
 
-  // Kiểm tra nếu widget đã dispose
-  if (!context.mounted) return;
+                  // Kiểm tra nếu widget đã dispose
+                  if (!context.mounted) return;
 
-  if (res.success) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Xin chào: ${res.data?.email}')),
-    );
-    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(res.message ?? 'Đăng nhập thất bại')),
-    );
-  }
-},
+                  if (res.success) {
+                    await SecureStorage.saveToken(res.data!.token);
 
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/home',
+                      (route) => false,
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(res.message ?? 'Đăng nhập thất bại'),
+                      ),
+                    );
+                  }
+                },
               ),
 
               const SizedBox(height: 20),
