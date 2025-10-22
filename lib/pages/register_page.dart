@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_imgs.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
 import '../constants/app_colors.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
@@ -19,7 +20,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final confirmPassCtrl = TextEditingController();
 
   bool agreeTerms = false;
-  String role = '';
+  String role = ''; // '2' = Gia sư, '3' = Học viên
 
   @override
   Widget build(BuildContext context) {
@@ -39,26 +40,24 @@ class _RegisterPageState extends State<RegisterPage> {
             const SizedBox(height: 10),
             const Text('Đăng ký', style: TextStyle(fontSize: 22)),
             const SizedBox(height: 30),
+
+            // Chọn vai trò
             Row(
               children: [
                 Expanded(
                   child: RadioListTile<String>(
                     title: const Text('Gia sư'),
-                    value: '',
+                    value: '2',
                     groupValue: role,
-                    onChanged: (value) {
-                      setState(() => role = value!);
-                    },
+                    onChanged: (value) => setState(() => role = value!),
                   ),
                 ),
                 Expanded(
                   child: RadioListTile<String>(
                     title: const Text('Học viên'),
-                    value: '',
+                    value: '3',
                     groupValue: role,
-                    onChanged: (value) {
-                      setState(() => role = value!);
-                    },
+                    onChanged: (value) => setState(() => role = value!),
                   ),
                 ),
               ],
@@ -69,7 +68,8 @@ class _RegisterPageState extends State<RegisterPage> {
               label: 'Họ tên',
               icon: Icons.person_outline,
               controller: nameCtrl,
-              maxLines: 1, keyboardType: TextInputType.name,
+              maxLines: 1,
+              keyboardType: TextInputType.name,
             ),
             const SizedBox(height: 15),
             CustomTextField(
@@ -111,9 +111,8 @@ class _RegisterPageState extends State<RegisterPage> {
               children: [
                 Checkbox(
                   value: agreeTerms,
-                  onChanged: (value) {
-                    setState(() => agreeTerms = value ?? false);
-                  },
+                  onChanged:
+                      (value) => setState(() => agreeTerms = value ?? false),
                   activeColor: AppColors.primaryBlue,
                 ),
                 Expanded(
@@ -139,19 +138,67 @@ class _RegisterPageState extends State<RegisterPage> {
             const SizedBox(height: 20),
             CustomButton(
               text: 'Đăng ký',
-              onPressed: () {
-                // if (!agreeTerms) {
-                //   ScaffoldMessenger.of(context).showSnackBar(
-                //     const SnackBar(
-                //       content: Text('Vui lòng đồng ý với quy định.'),
-                //     ),
-                //   );
-                //   return;
-                // }
-                // ScaffoldMessenger.of(context).showSnackBar(
-                //   const SnackBar(content: Text('Đăng ký thành công!')),
-                // );
-                Navigator.pushReplacementNamed(context, '/login');
+              onPressed: () async {
+                final hoTen = nameCtrl.text.trim();
+                final email = emailCtrl.text.trim();
+                final matKhau = passCtrl.text.trim();
+                final confirmPass = confirmPassCtrl.text.trim();
+                final soDienThoai = phoneCtrl.text.trim();
+                final vaiTro = int.tryParse(role) ?? 0;
+
+                // Kiểm tra hợp lệ
+                if (hoTen.isEmpty ||
+                    email.isEmpty ||
+                    matKhau.isEmpty ||
+                    confirmPass.isEmpty ||
+                    soDienThoai.isEmpty ||
+                    vaiTro == 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Vui lòng nhập đầy đủ thông tin'),
+                    ),
+                  );
+                  return;
+                }
+
+                if (matKhau != confirmPass) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Mật khẩu xác nhận không khớp'),
+                    ),
+                  );
+                  return;
+                }
+
+                if (!agreeTerms) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Vui lòng đồng ý điều khoản')),
+                  );
+                  return;
+                }
+
+                final repo = AuthRepository();
+                final res = await repo.register(
+                  hoTen: hoTen,
+                  email: email,
+                  matKhau: matKhau,
+                  soDienThoai: soDienThoai,
+                  vaiTro: vaiTro,
+                );
+
+                // Kiểm tra widget còn tồn tại
+                if (!context.mounted) return;
+
+                if (res.success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(res.data ?? 'Đăng ký thành công')),
+                  );
+                  Navigator.pushReplacementNamed(context, '/login');
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(res.message ?? 'Đăng ký thất bại')),
+                  );
+                }
               },
             ),
 
