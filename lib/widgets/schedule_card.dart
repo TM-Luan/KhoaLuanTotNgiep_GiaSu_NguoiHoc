@@ -1,7 +1,7 @@
 // widgets/schedule_card.dart
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/schedule_data.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc.dart';
 
 class ScheduleCard extends StatelessWidget {
   final LichHoc schedule;

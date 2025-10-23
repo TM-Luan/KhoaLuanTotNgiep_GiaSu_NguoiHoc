@@ -1,8 +1,8 @@
 // File: student_my_classes_page.dart
 
 import 'package:flutter/material.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/add_class_page.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/student_class_detail_page.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/add_class_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_class_detail_screen.dart';
 // THAY THẾ: Import model và dữ liệu giả lập từ data/LopHoc.dart
 // import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/LopHoc.dart'; 
 

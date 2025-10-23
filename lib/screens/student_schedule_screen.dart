@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/schedule_data.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/schedule_card.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/week_day_selector.dart';
 

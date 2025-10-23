@@ -20,6 +20,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final confirmPassCtrl = TextEditingController();
 
   bool agreeTerms = false;
+  bool isLoading = false;
   String role = ''; // '2' = Gia sư, '3' = Học viên
 
   @override
@@ -136,71 +137,10 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
 
             const SizedBox(height: 20),
-            CustomButton(
-              text: 'Đăng ký',
-              onPressed: () async {
-                final hoTen = nameCtrl.text.trim();
-                final email = emailCtrl.text.trim();
-                final matKhau = passCtrl.text.trim();
-                final confirmPass = confirmPassCtrl.text.trim();
-                final soDienThoai = phoneCtrl.text.trim();
-                final vaiTro = int.tryParse(role) ?? 0;
-
-                // Kiểm tra hợp lệ
-                if (hoTen.isEmpty ||
-                    email.isEmpty ||
-                    matKhau.isEmpty ||
-                    confirmPass.isEmpty ||
-                    soDienThoai.isEmpty ||
-                    vaiTro == 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Vui lòng nhập đầy đủ thông tin'),
-                    ),
-                  );
-                  return;
-                }
-
-                if (matKhau != confirmPass) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Mật khẩu xác nhận không khớp'),
-                    ),
-                  );
-                  return;
-                }
-
-                if (!agreeTerms) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Vui lòng đồng ý điều khoản')),
-                  );
-                  return;
-                }
-
-                final repo = AuthRepository();
-                final res = await repo.register(
-                  hoTen: hoTen,
-                  email: email,
-                  matKhau: matKhau,
-                  soDienThoai: soDienThoai,
-                  vaiTro: vaiTro,
-                );
-
-                // Kiểm tra widget còn tồn tại
-                if (!context.mounted) return;
-
-                if (res.success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(res.data ?? 'Đăng ký thành công')),
-                  );
-                  Navigator.pushReplacementNamed(context, '/login');
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(res.message ?? 'Đăng ký thất bại')),
-                  );
-                }
-              },
-            ),
+            if (isLoading)
+              const CircularProgressIndicator()
+            else
+              CustomButton(text: 'Đăng ký', onPressed: _handleRegister),
 
             const SizedBox(height: 15),
             Row(
@@ -220,5 +160,100 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleRegister() async {
+    final hoTen = nameCtrl.text.trim();
+    final email = emailCtrl.text.trim();
+    final matKhau = passCtrl.text.trim();
+    final confirmPass = confirmPassCtrl.text.trim();
+    final soDienThoai = phoneCtrl.text.trim();
+    final vaiTro = int.tryParse(role) ?? 0;
+
+    // Kiểm tra hợp lệ
+    if (hoTen.isEmpty ||
+        email.isEmpty ||
+        matKhau.isEmpty ||
+        confirmPass.isEmpty ||
+        soDienThoai.isEmpty ||
+        vaiTro == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập đầy đủ thông tin')),
+      );
+      return;
+    }
+
+    if (matKhau != confirmPass) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Mật khẩu xác nhận không khớp')),
+      );
+      return;
+    }
+
+    if (matKhau.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Mật khẩu phải có ít nhất 6 ký tự')),
+      );
+      return;
+    }
+
+    if (!agreeTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng đồng ý điều khoản')),
+      );
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final repo = AuthRepository();
+      final res = await repo.register(
+        hoTen: hoTen,
+        email: email,
+        matKhau: matKhau,
+        confirmPass:confirmPass,
+        soDienThoai: soDienThoai,
+        vaiTro: vaiTro,
+      );
+
+      // Kiểm tra widget còn tồn tại
+      if (!context.mounted) return;
+
+      if (res.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(res.message ?? 'Đăng ký thành công')),
+        );
+        Navigator.pushReplacementNamed(context, '/login');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(res.message ?? 'Đăng ký thất bại')),
+        );
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    nameCtrl.dispose();
+    phoneCtrl.dispose();
+    emailCtrl.dispose();
+    passCtrl.dispose();
+    confirmPassCtrl.dispose();
+    super.dispose();
   }
 }

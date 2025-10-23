@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/home_page.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/student_class_detail_page.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/student_my_classes_page.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/tutor_detail_page.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/tutor_home_page.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/login_page.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/register_page.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/splash_page.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/student_home_page.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/student_schedule_page.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/pages/tutor_schedule_page.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/home_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_class_detail_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_my_classes_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_detail_page.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_home_page.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/login_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/register_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/splash_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_home_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_schedule_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_schedule_page.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {

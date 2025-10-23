@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/tutor.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/giasu.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/tutor_card.dart';
 import 'tutor_detail_page.dart';
 import '../widgets/custom_searchBar.dart';
