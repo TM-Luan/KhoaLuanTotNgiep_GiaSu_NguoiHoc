@@ -1,6 +1,7 @@
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_config.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_service.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/profile.dart';
 import '../models/user_model.dart';
 
 class AuthRepository {
@@ -92,10 +93,10 @@ class AuthRepository {
     );
   }
 
-  Future<ApiResponse<UserModel>> getProfile() async {
-    return await _apiService.get<UserModel>(
+  Future<ApiResponse<Profile>> getProfile() async {
+    return await _apiService.get<Profile>(
       ApiConfig.profile,
-      fromJsonT: (json) => UserModel.fromJson(json),
+      fromJsonT: (json) => Profile.fromJson(json),
     );
   }
 }
