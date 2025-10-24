@@ -21,7 +21,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   bool agreeTerms = false;
   bool isLoading = false;
-  String role = ''; // '2' = Gia sư, '3' = Học viên
+  String role = '';
 
   @override
   Widget build(BuildContext context) {
@@ -214,23 +214,22 @@ class _RegisterPageState extends State<RegisterPage> {
         hoTen: hoTen,
         email: email,
         matKhau: matKhau,
-        confirmPass:confirmPass,
+        confirmPass: confirmPass,
         soDienThoai: soDienThoai,
         vaiTro: vaiTro,
       );
 
-      // Kiểm tra widget còn tồn tại
       if (!context.mounted) return;
 
       if (res.success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(res.message ?? 'Đăng ký thành công')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(res.message)));
         Navigator.pushReplacementNamed(context, '/login');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(res.message ?? 'Đăng ký thất bại')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(res.message)));
       }
     } catch (e) {
       if (!context.mounted) return;

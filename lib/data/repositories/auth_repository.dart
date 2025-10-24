@@ -17,13 +17,6 @@ class AuthRepository {
         data: {'Email': email, 'MatKhau': password},
       );
 
-      print('🔍 AUTH REPO - Raw API response:');
-      print('  - success: ${response.success}');
-      print('  - message: ${response.message}');
-      print('  - statusCode: ${response.statusCode}');
-      print('  - data: ${response.data}');
-      print('  - data type: ${response.data?.runtimeType}');
-
       // FIX: response.data bây giờ là Map<String, dynamic> chứa toàn bộ response
       if (response.success &&
           response.data != null &&
@@ -32,19 +25,11 @@ class AuthRepository {
         final token = responseData['token'];
         final userData = responseData['data'];
 
-        print('✅ Token from response: $token');
-        print('✅ User data from response: $userData');
-
         if (token != null && token is String && token.isNotEmpty) {
           final loginResponse = LoginResponse.fromJson({
             'token': token,
             'data': userData ?? {},
           });
-
-          print('✅ LoginResponse created successfully');
-          print('  - Token: ${loginResponse.token}');
-          print('  - User ID: ${loginResponse.user.taiKhoanID}');
-          print('  - User Name: ${loginResponse.user.hoTen}');
 
           return ApiResponse<LoginResponse>(
             success: true,
@@ -54,15 +39,12 @@ class AuthRepository {
           );
         }
       }
-
-      print('❌ Login failed - no valid token or invalid response format');
       return ApiResponse<LoginResponse>(
         success: false,
-        message: response.message ?? 'Đăng nhập thất bại',
+        message: response.message,
         statusCode: response.statusCode,
       );
     } catch (e) {
-      print('❌ AuthRepository login error: $e');
       return ApiResponse<LoginResponse>(
         success: false,
         message: 'Lỗi đăng nhập: $e',

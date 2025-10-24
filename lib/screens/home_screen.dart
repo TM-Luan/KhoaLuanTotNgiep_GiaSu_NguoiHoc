@@ -6,7 +6,6 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_schedule_sc
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_home_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_home_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_schedule_page.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/custom_searchbar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,18 +14,16 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-// SỬA: Đặt biến role trong class để dễ quản lý
 class _HomePageState extends State<HomePage> {
   int pageIndex = 0;
-  final String role = "gia sư"; // Có thể thay đổi thành "học viên" để test
+  final String role = "gia sư";
 
-  // SỬA: Khai báo pages trong build method hoặc dùng getter
   List<Widget> get pages {
     if (role == "gia sư") {
       return [
         const TutorListPage(),
         const TutorSchedulePage(),
-        const Placeholder(), // TODO: Thay bằng trang lớp của gia sư nếu có
+        const Placeholder(),
         const Account(),
       ];
     } else {
@@ -45,11 +42,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
         leading: CircleAvatar(
-          // Thêm child để CircleAvatar hiển thị đúng
-          child: Text(
-            "L", // Chữ cái đầu của tên
-            style: TextStyle(color: AppColors.white),
-          ),
+          child: Text("L", style: TextStyle(color: AppColors.white)),
         ),
         title: Text(
           "Xin chào, Trần Minh Luân",
@@ -61,7 +54,6 @@ class _HomePageState extends State<HomePage> {
         ),
         centerTitle: true,
         actions: [
-          // Thêm hiển thị vai trò
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: Center(

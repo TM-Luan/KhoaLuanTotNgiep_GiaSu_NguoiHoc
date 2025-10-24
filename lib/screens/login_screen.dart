@@ -104,10 +104,7 @@ class _LoginPageState extends State<LoginPage> {
     final email = emailCtrl.text.trim();
     final pass = passCtrl.text.trim();
 
-    print('🔐 Attempting login with email: $email');
-
     if (email.isEmpty || pass.isEmpty) {
-      print('❌ Empty email or password');
       _showSnackBar('Vui lòng nhập đầy đủ Email và Mật khẩu');
       return;
     }
@@ -118,58 +115,31 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       final repo = AuthRepository();
-      print('📡 Calling login API...');
       final res = await repo.login(email, pass);
-
-      print('📊 Login API response:');
-      print('  - success: ${res.success}');
-      print('  - message: ${res.message}');
-      print('  - data: ${res.data}');
-      print('  - data type: ${res.data?.runtimeType}');
-
       if (!mounted) {
-        print('❌ Context not mounted after API call');
         return;
       }
 
       if (res.success && res.data != null) {
-        print('✅ Login successful, saving token...');
         await SecureStorage.saveToken(res.data!.token);
 
-        // Verify token was saved
-        final savedToken = await SecureStorage.getToken();
-        print('💾 Token saved: ${savedToken != null && savedToken.isNotEmpty}');
-        print('📝 Token length: ${savedToken?.length}');
-
-        _showSnackBar(res.message ?? 'Đăng nhập thành công');
+        _showSnackBar(res.message);
 
         await Future.delayed(const Duration(milliseconds: 500));
 
         if (!mounted) {
-          print('❌ Context not mounted after delay');
           return;
         }
 
-        print('🔄 Starting navigation to HomePage...');
-
-        // THỬ CÁCH 1: Navigation đơn giản
-        try {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const HomePage()),
-            (route) => false,
-          );
-          print('✅ Navigation command executed');
-        } catch (e) {
-          print('❌ Navigation error: $e');
-        }
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
+          (route) => false,
+        );
       } else {
-        print('❌ Login failed in API response');
-        _showSnackBar(res.message ?? 'Đăng nhập thất bại');
+        _showSnackBar(res.message);
       }
-    } catch (e, stackTrace) {
-      print('❌ Login exception: $e');
-      print('📋 Stack trace: $stackTrace');
+    } catch (e) {
       if (!mounted) return;
       _showSnackBar('Lỗi: $e');
     } finally {
@@ -177,7 +147,6 @@ class _LoginPageState extends State<LoginPage> {
         setState(() {
           isLoading = false;
         });
-        print('🔄 Loading state set to false');
       }
     }
   }

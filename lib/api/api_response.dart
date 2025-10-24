@@ -14,15 +14,16 @@ class ApiResponse<T> {
   });
 
   factory ApiResponse.fromJson(
-    Map<String, dynamic> json, 
-    T Function(Map<String, dynamic>)? fromJsonT
+    Map<String, dynamic> json,
+    T Function(Map<String, dynamic>)? fromJsonT,
   ) {
     return ApiResponse<T>(
       success: json['success'] ?? false,
       message: json['message'] ?? '',
-      data: fromJsonT != null && json['data'] != null 
-          ? fromJsonT(json['data']) 
-          : null,
+      data:
+          fromJsonT != null && json['data'] != null
+              ? fromJsonT(json['data'])
+              : null,
       error: json['error'],
       statusCode: 200,
     );

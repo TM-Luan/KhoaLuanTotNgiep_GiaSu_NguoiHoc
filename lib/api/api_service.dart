@@ -57,13 +57,12 @@ class ApiService {
           )
           .timeout(ApiConfig.receiveTimeout);
 
-      // ĐẶC BIỆT: Cho endpoint login, luôn trả về Map<String, dynamic>
       if (endpoint == ApiConfig.login && fromJsonT == null) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
         return ApiResponse<T>(
           success: responseData['success'] ?? false,
           message: responseData['message'] ?? '',
-          data: responseData as T, // Trả về toàn bộ responseData
+          data: responseData as T,
           error: responseData['error'],
           statusCode: response.statusCode,
         );
@@ -131,12 +130,6 @@ class ApiService {
   ) {
     try {
       final Map<String, dynamic> responseData = jsonDecode(response.body);
-
-      print('🔍 API SERVICE - Raw response body: ${response.body}');
-      print('🔍 API SERVICE - Parsed response data: $responseData');
-
-      // QUAN TRỌNG: Truyền toàn bộ responseData cho fromJsonT
-      // Vì token và data đều nằm ở root level
       return ApiResponse<T>(
         success: responseData['success'] ?? false,
         message: responseData['message'] ?? '',
@@ -145,7 +138,6 @@ class ApiService {
         statusCode: response.statusCode,
       );
     } catch (e) {
-      print('❌ Parse error: $e');
       return ApiResponse<T>(
         success: false,
         message: 'Lỗi parse dữ liệu: $e',

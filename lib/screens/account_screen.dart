@@ -66,18 +66,10 @@ class _AccountState extends State<Account> {
                 final repo = AuthRepository();
                 final token = await SecureStorage.getToken();
                 if (token == null) return;
-
-                // Gọi API (phần bất đồng bộ)
                 final res = await repo.logout(token);
-
-                // Sau khi có kết quả, mới kiểm tra widget còn tồn tại
                 if (!context.mounted) return;
-
-                // Dùng context an toàn
                 final msg =
-                    res.success
-                        ? (res.data ?? 'Đã đăng xuất')
-                        : (res.message ?? 'Đăng xuất thất bại');
+                    res.success ? (res.data ?? 'Đã đăng xuất') : (res.message);
 
                 ScaffoldMessenger.of(
                   context,

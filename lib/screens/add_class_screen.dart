@@ -6,7 +6,6 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/addclass_widgets/su
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/addclass_widgets/summary_section.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/addclass_widgets/class_detail_section.dart'; // ✅ thêm dòng này
 
-
 class AddClassPage extends StatefulWidget {
   const AddClassPage({super.key});
 
