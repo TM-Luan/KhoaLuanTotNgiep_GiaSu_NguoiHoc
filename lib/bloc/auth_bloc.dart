@@ -13,6 +13,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RegisterRequested>(_onRegister);
     on<FetchProfileRequested>(_onFetchProfile);
     on<LogoutRequested>(_onLogout);
+    on<UpdateProfileRequested>(_onUpdateProfile);
   }
 
   Future<void> _onLogin(LoginRequested e, Emitter<AuthState> emit) async {
@@ -67,5 +68,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } catch (_) {}
     await SecureStorage.clearToken();
     emit(const AuthLoggedOut());
+  }
+
+  Future<void> _onUpdateProfile(
+    UpdateProfileRequested e,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final r = await authRepository.updateProfile(e.user);
+    if (r.success && r.data != null) {
+      emit(AuthAuthenticated(r.data!));
+    } else {
+      emit(AuthError(r.message));
+    }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
 
 abstract class AuthEvent extends Equatable {
   const AuthEvent();
@@ -47,4 +48,8 @@ class FetchProfileRequested extends AuthEvent {
 
 class LogoutRequested extends AuthEvent {
   const LogoutRequested();
+}
+class UpdateProfileRequested extends AuthEvent {
+  final UserProfile user;
+  const UpdateProfileRequested(this.user);
 }

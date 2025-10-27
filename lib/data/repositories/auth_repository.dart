@@ -127,4 +127,27 @@ class AuthRepository {
       );
     }
   }
+
+  Future<ApiResponse<UserProfile>> updateProfile(UserProfile user) async {
+    try {
+      final response = await _apiService.put<UserProfile>(
+        ApiConfig.updateProfile,
+        data: user.toJson(),
+        fromJsonT: (json) => UserProfile.fromJson(json['data'] ?? json),
+      );
+
+      return ApiResponse<UserProfile>(
+        success: response.success,
+        message: response.message,
+        data: response.data,
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse<UserProfile>(
+        success: false,
+        message: 'Lỗi cập nhật thông tin: $e',
+        statusCode: 0,
+      );
+    }
+  }
 }
