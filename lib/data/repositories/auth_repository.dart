@@ -1,8 +1,7 @@
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_config.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_service.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/profile.dart';
-import '../models/user_model.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
 
 class AuthRepository {
   final ApiService _apiService = ApiService();
@@ -12,34 +11,35 @@ class AuthRepository {
     String password,
   ) async {
     try {
-      // THAY ĐỔI: Sử dụng dynamic thay vì Map<String, dynamic>
-      final response = await _apiService.post<dynamic>(
+      final response = await _apiService.post<Map<String, dynamic>>(
         ApiConfig.login,
         data: {'Email': email, 'MatKhau': password},
+        fromJsonT: (json) => json, // Trả về raw data
       );
 
-      // FIX: response.data bây giờ là Map<String, dynamic> chứa toàn bộ response
-      if (response.success &&
-          response.data != null &&
-          response.data is Map<String, dynamic>) {
-        final responseData = response.data as Map<String, dynamic>;
-        final token = responseData['token'];
-        final userData = responseData['data'];
-
-        if (token != null && token is String && token.isNotEmpty) {
-          final loginResponse = LoginResponse.fromJson({
-            'token': token,
-            'data': userData ?? {},
-          });
-
+      if (response.success && response.data != null) {
+        final responseData = response.data!;
+        
+        // Validate dữ liệu trước khi parse
+        if (!responseData.containsKey('token') || 
+            !responseData.containsKey('data')) {
           return ApiResponse<LoginResponse>(
-            success: true,
-            message: response.message,
-            data: loginResponse,
+            success: false,
+            message: 'Dữ liệu phản hồi không đúng định dạng',
             statusCode: response.statusCode,
           );
         }
+
+        final loginResponse = LoginResponse.fromJson(responseData);
+        
+        return ApiResponse<LoginResponse>(
+          success: true,
+          message: response.message,
+          data: loginResponse,
+          statusCode: response.statusCode,
+        );
       }
+
       return ApiResponse<LoginResponse>(
         success: false,
         message: response.message,
@@ -62,41 +62,69 @@ class AuthRepository {
     required int vaiTro,
     required String confirmPass,
   }) async {
-    final response = await _apiService.post<dynamic>(
-      ApiConfig.register,
-      data: {
-        'HoTen': hoTen,
-        'Email': email,
-        'MatKhau': matKhau,
-        'MatKhau_confirmation': confirmPass,
-        'SoDienThoai': soDienThoai,
-        'VaiTro': vaiTro,
-      },
-    );
+    try {
+      final response = await _apiService.post<Map<String, dynamic>>(
+        ApiConfig.register,
+        data: {
+          'HoTen': hoTen,
+          'Email': email,
+          'MatKhau': matKhau,
+          'MatKhau_confirmation': confirmPass,
+          'SoDienThoai': soDienThoai,
+          'VaiTro': vaiTro,
+        },
+        fromJsonT: (json) => json,
+      );
 
-    return ApiResponse<String>(
-      success: response.success,
-      message: response.message,
-      data: response.data?.toString(),
-      statusCode: response.statusCode,
-    );
+      return ApiResponse<String>(
+        success: response.success,
+        message: response.message,
+        data: response.data?.toString(),
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse<String>(
+        success: false,
+        message: 'Lỗi đăng ký: $e',
+        statusCode: 0,
+      );
+    }
   }
 
   Future<ApiResponse<String>> logout(String token) async {
-    final response = await _apiService.post<dynamic>(ApiConfig.logout);
+    try {
+      final response = await _apiService.post<Map<String, dynamic>>(
+        ApiConfig.logout,
+        fromJsonT: (json) => json,
+      );
 
-    return ApiResponse<String>(
-      success: response.success,
-      message: response.message,
-      data: response.data?.toString(),
-      statusCode: response.statusCode,
-    );
+      return ApiResponse<String>(
+        success: response.success,
+        message: response.message,
+        data: response.data?.toString(),
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse<String>(
+        success: false,
+        message: 'Lỗi đăng xuất: $e',
+        statusCode: 0,
+      );
+    }
   }
 
-  Future<ApiResponse<Profile>> getProfile() async {
-    return await _apiService.get<Profile>(
-      ApiConfig.profile,
-      fromJsonT: (json) => Profile.fromJson(json),
-    );
+  Future<ApiResponse<UserProfile>> getProfile() async {
+    try {
+      return await _apiService.get<UserProfile>(
+        ApiConfig.profile,
+        fromJsonT: (json) => UserProfile.fromJson(json['data'] ?? {}),
+      );
+    } catch (e) {
+      return ApiResponse<UserProfile>(
+        success: false,
+        message: 'Lỗi lấy thông tin: $e',
+        statusCode: 0,
+      );
+    }
   }
 }

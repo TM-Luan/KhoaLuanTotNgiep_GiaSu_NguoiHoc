@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_config.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
@@ -11,13 +13,12 @@ class ApiService {
 
   Future<Map<String, String>> _getHeaders() async {
     final String? token = await SecureStorage.getToken();
-
-    Map<String, String> headers = ApiConfig.headers;
-
-    if (token != null) {
+    Map<String, String> headers = Map.from(ApiConfig.headers);
+    
+    if (token != null && token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
     }
-
+    
     return headers;
   }
 
@@ -34,12 +35,14 @@ class ApiService {
           .timeout(ApiConfig.receiveTimeout);
 
       return _handleResponse<T>(response, fromJsonT);
+    } on SocketException {
+      return _errorResponse('Không có kết nối internet');
+    } on TimeoutException {
+      return _errorResponse('Kết nối quá thời gian');
+    } on FormatException {
+      return _errorResponse('Dữ liệu không hợp lệ');
     } catch (e) {
-      return ApiResponse<T>(
-        success: false,
-        message: 'Lỗi kết nối: $e',
-        statusCode: 0,
-      );
+      return _errorResponse('Lỗi kết nối: $e');
     }
   }
 
@@ -57,24 +60,15 @@ class ApiService {
           )
           .timeout(ApiConfig.receiveTimeout);
 
-      if (endpoint == ApiConfig.login && fromJsonT == null) {
-        final Map<String, dynamic> responseData = jsonDecode(response.body);
-        return ApiResponse<T>(
-          success: responseData['success'] ?? false,
-          message: responseData['message'] ?? '',
-          data: responseData as T,
-          error: responseData['error'],
-          statusCode: response.statusCode,
-        );
-      }
-
       return _handleResponse<T>(response, fromJsonT);
+    } on SocketException {
+      return _errorResponse('Không có kết nối internet');
+    } on TimeoutException {
+      return _errorResponse('Kết nối quá thời gian');
+    } on FormatException {
+      return _errorResponse('Dữ liệu không hợp lệ');
     } catch (e) {
-      return ApiResponse<T>(
-        success: false,
-        message: 'Lỗi kết nối: $e',
-        statusCode: 0,
-      );
+      return _errorResponse('Lỗi kết nối: $e');
     }
   }
 
@@ -93,12 +87,14 @@ class ApiService {
           .timeout(ApiConfig.receiveTimeout);
 
       return _handleResponse<T>(response, fromJsonT);
+    } on SocketException {
+      return _errorResponse('Không có kết nối internet');
+    } on TimeoutException {
+      return _errorResponse('Kết nối quá thời gian');
+    } on FormatException {
+      return _errorResponse('Dữ liệu không hợp lệ');
     } catch (e) {
-      return ApiResponse<T>(
-        success: false,
-        message: 'Lỗi kết nối: $e',
-        statusCode: 0,
-      );
+      return _errorResponse('Lỗi kết nối: $e');
     }
   }
 
@@ -115,12 +111,14 @@ class ApiService {
           .timeout(ApiConfig.receiveTimeout);
 
       return _handleResponse<T>(response, fromJsonT);
+    } on SocketException {
+      return _errorResponse('Không có kết nối internet');
+    } on TimeoutException {
+      return _errorResponse('Kết nối quá thời gian');
+    } on FormatException {
+      return _errorResponse('Dữ liệu không hợp lệ');
     } catch (e) {
-      return ApiResponse<T>(
-        success: false,
-        message: 'Lỗi kết nối: $e',
-        statusCode: 0,
-      );
+      return _errorResponse('Lỗi kết nối: $e');
     }
   }
 
@@ -130,19 +128,67 @@ class ApiService {
   ) {
     try {
       final Map<String, dynamic> responseData = jsonDecode(response.body);
-      return ApiResponse<T>(
-        success: responseData['success'] ?? false,
-        message: responseData['message'] ?? '',
-        data: fromJsonT != null ? fromJsonT(responseData) : null,
-        error: responseData['error'],
-        statusCode: response.statusCode,
-      );
+      
+      // Kiểm tra status code
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return ApiResponse<T>(
+          success: responseData['success'] ?? true,
+          message: responseData['message'] ?? 'Thành công',
+          data: fromJsonT != null && responseData['data'] != null
+              ? fromJsonT(responseData)
+              : responseData as T?,
+          statusCode: response.statusCode,
+        );
+      } else if (response.statusCode == 401) {
+        return ApiResponse<T>(
+          success: false,
+          message: 'Phiên đăng nhập hết hạn',
+          error: responseData['error'],
+          statusCode: response.statusCode,
+        );
+      } else if (response.statusCode == 403) {
+        return ApiResponse<T>(
+          success: false,
+          message: 'Không có quyền truy cập',
+          error: responseData['error'],
+          statusCode: response.statusCode,
+        );
+      } else if (response.statusCode == 404) {
+        return ApiResponse<T>(
+          success: false,
+          message: 'Không tìm thấy dữ liệu',
+          error: responseData['error'],
+          statusCode: response.statusCode,
+        );
+      } else if (response.statusCode >= 500) {
+        return ApiResponse<T>(
+          success: false,
+          message: 'Lỗi máy chủ',
+          error: responseData['error'],
+          statusCode: response.statusCode,
+        );
+      } else {
+        return ApiResponse<T>(
+          success: false,
+          message: responseData['message'] ?? 'Có lỗi xảy ra',
+          error: responseData['error'],
+          statusCode: response.statusCode,
+        );
+      }
     } catch (e) {
       return ApiResponse<T>(
         success: false,
-        message: 'Lỗi parse dữ liệu: $e',
+        message: 'Lỗi xử lý dữ liệu: $e',
         statusCode: response.statusCode,
       );
     }
+  }
+
+  ApiResponse<T> _errorResponse<T>(String message) {
+    return ApiResponse<T>(
+      success: false,
+      message: message,
+      statusCode: 0,
+    );
   }
 }

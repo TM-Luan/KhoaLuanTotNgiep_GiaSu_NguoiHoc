@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/profile.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -11,7 +11,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  Profile? _userProfile;
+  UserProfile? _userProfile;
   bool _isLoading = true;
 
   @override
@@ -72,7 +72,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final userData = _userProfile?.data;
+    final userData = _userProfile;
 
     return Scaffold(
       appBar: AppBar(

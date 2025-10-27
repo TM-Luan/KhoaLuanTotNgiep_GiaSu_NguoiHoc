@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/profile.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/account_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_my_classes_screen.dart';
@@ -18,7 +18,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int pageIndex = 0;
-  Profile? currentProfile;
+  UserProfile? currentProfile;
   bool _isLoading = true;
 
   @override
@@ -46,7 +46,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   String get role {
-    final userRole = currentProfile?.data?.vaiTro ?? 0;
+    final userRole = currentProfile?.vaiTro ?? 0;
     if (userRole == 2) {
       return "gia sư";
     } else if (userRole == 3) {
@@ -57,16 +57,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   String get displayName {
-    return currentProfile?.data?.hoTen ?? 'Người dùng';
+    return currentProfile?.hoTen ?? 'Người dùng';
   }
 
   String get avatarText {
-    final userName = currentProfile?.data?.hoTen ?? '';
+    final userName = currentProfile?.hoTen ?? '';
     return userName.isNotEmpty ? userName[0] : 'U';
   }
 
   List<Widget> get pages {
-    final userRole = currentProfile?.data?.vaiTro ?? 0;
+    final userRole = currentProfile?.vaiTro ?? 0;
 
     if (userRole == 2) {
       return [
