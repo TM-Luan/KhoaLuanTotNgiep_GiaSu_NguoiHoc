@@ -19,9 +19,9 @@ class AuthRepository {
 
       if (response.success && response.data != null) {
         final responseData = response.data!;
-        
+
         // Validate dữ liệu trước khi parse
-        if (!responseData.containsKey('token') || 
+        if (!responseData.containsKey('token') ||
             !responseData.containsKey('data')) {
           return ApiResponse<LoginResponse>(
             success: false,
@@ -31,7 +31,7 @@ class AuthRepository {
         }
 
         final loginResponse = LoginResponse.fromJson(responseData);
-        
+
         return ApiResponse<LoginResponse>(
           success: true,
           message: response.message,

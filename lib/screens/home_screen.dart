@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth_event.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth_state.dart';
+
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/account_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_my_classes_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_schedule_screen.dart';
@@ -9,40 +13,21 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_home_screen
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_home_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_schedule_page.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomeScreenState extends State<HomeScreen> {
   int pageIndex = 0;
   UserProfile? currentProfile;
-  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadUserProfile();
-  }
-
-  Future<void> _loadUserProfile() async {
-    try {
-      final repo = AuthRepository();
-      final response = await repo.getProfile();
-
-      setState(() {
-        if (response.success && response.data != null) {
-          currentProfile = response.data;
-        }
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    context.read<AuthBloc>().add(const FetchProfileRequested());
   }
 
   String get role {
@@ -69,76 +54,78 @@ class _HomePageState extends State<HomePage> {
     final userRole = currentProfile?.vaiTro ?? 0;
 
     if (userRole == 2) {
-      return [
-        const TutorListPage(),
-        const TutorSchedulePage(),
-        const Placeholder(),
-        const Account(),
+      return const [
+        TutorListPage(),
+        TutorSchedulePage(),
+        Placeholder(),
+        Account(),
       ];
     } else if (userRole == 3) {
-      return [
-        const LearnerHomePage(),
-        const LearnerSchedulePage(),
-        const StudentMyClassesPage(),
-        const Account(),
+      return const [
+        LearnerHomeScreen(),
+        LearnerSchedulePage(),
+        StudentMyClassesPage(),
+        Account(),
       ];
     } else {
-      return [
-        const Center(child: Text('Vui lòng cập nhật vai trò')),
-        const Center(child: Text('Vui lòng cập nhật vai trò')),
-        const Center(child: Text('Vui lòng cập nhật vai trò')),
-        const Account(),
+      return const [
+        Center(child: Text('Vui lòng cập nhật vai trò')),
+        Center(child: Text('Vui lòng cập nhật vai trò')),
+        Center(child: Text('Vui lòng cập nhật vai trò')),
+        Account(),
       ];
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    return BlocConsumer<AuthBloc, AuthState>(
+      listenWhen:
+          (previousState, currentState) =>
+              currentState is AuthAuthenticated ||
+              currentState is AuthLoggedOut ||
+              currentState is AuthError,
+      listener: (context, currentState) {
+        if (currentState is AuthAuthenticated) {
+          setState(() => currentProfile = currentState.user);
+        } else if (currentState is AuthLoggedOut) {
+          Navigator.pushReplacementNamed(context, '/login');
+        } else if (currentState is AuthError) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(currentState.message)));
+        }
+      },
+      buildWhen: (previousState, currentState) => true,
+      builder: (context, state) {
+        final isLoading = state is AuthLoading && currentProfile == null;
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppColors.primaryBlue,
-        leading: CircleAvatar(
-          child: Text(avatarText, style: TextStyle(color: AppColors.white)),
-        ),
-        title: Text(
-          "Xin chào, $displayName",
-          style: TextStyle(
-            color: AppColors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: false,
-        elevation: 0,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: Center(
-              child: Text(
-                role.toUpperCase(),
-                style: TextStyle(
-                  color: AppColors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+        if (isLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            backgroundColor: AppColors.primaryBlue,
+            elevation: 0,
+            title: Row(
+              children: [
+                CircleAvatar(child: Text(avatarText)),
+                const SizedBox(width: 10),
+                Text('Xin chào, $displayName'),
+              ],
             ),
           ),
-          IconButton(
-            icon: Icon(Icons.notifications),
-            onPressed: () {},
-            color: AppColors.white,
-          ),
-        ],
-      ),
-      body: pages[pageIndex],
-      bottomNavigationBar: buildMyNavBar(context),
+          body: pages[pageIndex],
+          bottomNavigationBar: buildMyNavBar(context),
+        );
+      },
     );
   }
+
+  // ------------------ NAV BAR TÙY CHỈNH ------------------
 
   Container buildMyNavBar(BuildContext context) {
     return Container(
@@ -149,6 +136,13 @@ class _HomePageState extends State<HomePage> {
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            offset: const Offset(0, -2),
+            blurRadius: 6,
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,

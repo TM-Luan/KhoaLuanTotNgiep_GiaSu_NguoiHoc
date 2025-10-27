@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth_event.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth_state.dart';
+
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -11,32 +15,11 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  UserProfile? _userProfile;
-  bool _isLoading = true;
-
   @override
   void initState() {
     super.initState();
-    _loadProfile();
-  }
-
-  Future<void> _loadProfile() async {
-    try {
-      final repo = AuthRepository();
-      final response = await repo.getProfile();
-
-      if (response.success && response.data != null) {
-        setState(() {
-          _userProfile = response.data;
-        });
-      }
-    } catch (e) {
-      print('Error loading profile: $e');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    // Lấy hồ sơ từ BLoC
+    context.read<AuthBloc>().add(const FetchProfileRequested());
   }
 
   String _getRoleText(int? vaiTro) {
@@ -68,100 +51,106 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    return BlocBuilder<AuthBloc, AuthState>(
+      buildWhen: (previousState, currentState) => true,
+      builder: (context, state) {
+        if (state is AuthLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    final userData = _userProfile;
+        UserProfile? userData;
+        if (state is AuthAuthenticated) {
+          userData = state.user;
+        }
 
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: false,
-        elevation: 0,
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: Colors.white,
-        title: const Text("Trang cá nhân"),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Column(
-          children: [
-            ProfilePic(
-              image:
-                  userData?.anhDaiDien ??
-                  "https://i.postimg.cc/cCsYDjvj/user-2.png",
-            ),
-            Text(
-              userData?.hoTen ?? "Chưa có tên",
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _getRoleText(userData?.vaiTro),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-                fontSize: 16,
-              ),
-            ),
-            const Divider(height: 32.0),
-
-            // Thông tin cá nhân
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Thông tin cá nhân",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            Info(
-              infoKey: "Mã tài khoản",
-              info: userData?.taiKhoanID?.toString() ?? "N/A",
-            ),
-            Info(infoKey: "Email", info: userData?.email ?? "Chưa cập nhật"),
-            Info(
-              infoKey: "Số điện thoại",
-              info: userData?.soDienThoai ?? "Chưa cập nhật",
-            ),
-            Info(
-              infoKey: "Giới tính",
-              info: _getGenderText(userData?.gioiTinh),
-            ),
-            Info(infoKey: "Ngày sinh", info: _formatDate(userData?.ngaySinh)),
-            Info(infoKey: "Địa chỉ", info: userData?.diaChi ?? "Chưa cập nhật"),
-
-            // Thông tin học vấn (nếu là gia sư)
-            if (userData?.vaiTro == 2) ...[
-              const SizedBox(height: 24),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Thông tin học vấn",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        return Scaffold(
+          appBar: AppBar(
+            centerTitle: false,
+            elevation: 0,
+            backgroundColor: AppColors.primaryBlue,
+            foregroundColor: Colors.white,
+            title: const Text("Trang cá nhân"),
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              children: [
+                ProfilePic(
+                  image:
+                      userData?.anhDaiDien ??
+                      "https://i.postimg.cc/cCsYDjvj/user-2.png",
                 ),
-              ),
-              const SizedBox(height: 16),
-              Info(
-                infoKey: "Bằng cấp",
-                info: userData?.bangCap ?? "Chưa cập nhật",
-              ),
-              Info(
-                infoKey: "Kinh nghiệm",
-                info: userData?.kinhNghiem ?? "Chưa cập nhật",
-              ),
-            ],
+                Text(
+                  userData?.hoTen ?? "Chưa có tên",
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _getRoleText(userData?.vaiTro),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[600],
+                    fontSize: 16,
+                  ),
+                ),
+                const Divider(height: 32.0),
 
-            const SizedBox(height: 32),
-          ],
-        ),
-      ),
+                // Thông tin cá nhân
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Thông tin cá nhân",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                Info(
+                  infoKey: "Mã tài khoản",
+                  info: userData?.taiKhoanID?.toString() ?? "Chưa cập nhật",
+                ),
+                Info(
+                  infoKey: "Email",
+                  info: userData?.email ?? "Chưa cập nhật",
+                ),
+                Info(
+                  infoKey: "Số điện thoại",
+                  info: userData?.soDienThoai ?? "Chưa cập nhật",
+                ),
+                Info(
+                  infoKey: "Giới tính",
+                  info: _getGenderText(userData?.gioiTinh),
+                ),
+                Info(
+                  infoKey: "Ngày sinh",
+                  info: _formatDate(userData?.ngaySinh),
+                ),
+                Info(
+                  infoKey: "Địa chỉ",
+                  info: userData?.diaChi ?? "Chưa cập nhật",
+                ),
+                Info(
+                  infoKey: "Bằng cấp",
+                  info: userData?.bangCap ?? "Chưa cập nhật",
+                ),
+                Info(
+                  infoKey: "Kinh nghiệm",
+                  info: userData?.kinhNghiem ?? "Chưa cập nhật",
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
+
+// ======= UI components giữ nguyên phong cách gốc =======
 
 class ProfilePic extends StatelessWidget {
   const ProfilePic({
@@ -194,10 +183,7 @@ class ProfilePic extends StatelessWidget {
           CircleAvatar(
             radius: 50,
             backgroundImage: NetworkImage(image),
-            onBackgroundImageError: (exception, stackTrace) {
-              // Fallback nếu ảnh lỗi
-              return;
-            },
+            onBackgroundImageError: (_, __) {},
             child: image.isEmpty ? const Icon(Icons.person, size: 50) : null,
           ),
           if (isShowPhotoUpload)
