@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/home_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/profile_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_class_detail_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_my_classes_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_detail_page.dart';
@@ -17,11 +18,11 @@ class AppRouter {
       case '/splash':
         return MaterialPageRoute(builder: (_) => const SplashPage());
       case '/login':
-        return MaterialPageRoute(builder: (_) => const LoginPage());
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
       case '/register':
-        return MaterialPageRoute(builder: (_) => const RegisterPage());
+        return MaterialPageRoute(builder: (_) => const RegisterScreen());
       case '/student':
-        return MaterialPageRoute(builder: (_) => const LearnerHomePage());
+        return MaterialPageRoute(builder: (_) => const LearnerHomeScreen());
       case '/tutor':
         return MaterialPageRoute(builder: (_) => const TutorListPage());
       case '/TutorDetail':
@@ -34,7 +35,9 @@ class AppRouter {
       case '/my-classes':
         return MaterialPageRoute(builder: (_) => const StudentMyClassesPage());
       case '/home':
-        return MaterialPageRoute(builder: (_) => const HomePage());
+        return MaterialPageRoute(builder: (_) => const HomeScreen());
+      case '/profile':
+        return MaterialPageRoute(builder: (_) => const ProfileScreen());
 
       // THÊM ROUTE CHO TRANG CHI TIẾT LỚP HỌC
       case '/class-detail':

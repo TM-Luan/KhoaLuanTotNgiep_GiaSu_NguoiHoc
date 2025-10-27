@@ -8,6 +8,7 @@ class ApiConfig {
   static const String register = '/register';
   static const String logout = '/logout';
   static const String profile = '/profile';
+  static const String updateProfile = '/profile';
 
   // Headers
   static Map<String, String> get headers => {

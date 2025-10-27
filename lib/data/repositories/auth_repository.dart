@@ -19,9 +19,9 @@ class AuthRepository {
 
       if (response.success && response.data != null) {
         final responseData = response.data!;
-        
+
         // Validate dữ liệu trước khi parse
-        if (!responseData.containsKey('token') || 
+        if (!responseData.containsKey('token') ||
             !responseData.containsKey('data')) {
           return ApiResponse<LoginResponse>(
             success: false,
@@ -31,7 +31,7 @@ class AuthRepository {
         }
 
         final loginResponse = LoginResponse.fromJson(responseData);
-        
+
         return ApiResponse<LoginResponse>(
           success: true,
           message: response.message,
@@ -123,6 +123,29 @@ class AuthRepository {
       return ApiResponse<UserProfile>(
         success: false,
         message: 'Lỗi lấy thông tin: $e',
+        statusCode: 0,
+      );
+    }
+  }
+
+  Future<ApiResponse<UserProfile>> updateProfile(UserProfile user) async {
+    try {
+      final response = await _apiService.put<UserProfile>(
+        ApiConfig.updateProfile,
+        data: user.toJson(),
+        fromJsonT: (json) => UserProfile.fromJson(json['data'] ?? json),
+      );
+
+      return ApiResponse<UserProfile>(
+        success: response.success,
+        message: response.message,
+        data: response.data,
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse<UserProfile>(
+        success: false,
+        message: 'Lỗi cập nhật thông tin: $e',
         statusCode: 0,
       );
     }

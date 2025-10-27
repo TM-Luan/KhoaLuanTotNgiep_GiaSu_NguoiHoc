@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
-import 'app.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/app.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
 
 void main() {
-  runApp(const GiaSuApp());
+  final authRepository = AuthRepository();
+  runApp(
+    BlocProvider(
+      create: (_) => AuthBloc(authRepository),
+      child: const GiaSuApp(),
+    ),
+  );
 }

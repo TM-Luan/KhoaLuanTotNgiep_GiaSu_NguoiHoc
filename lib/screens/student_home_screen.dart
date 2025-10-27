@@ -4,8 +4,8 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/tutor_card.dart';
 import 'tutor_detail_page.dart';
 import '../widgets/custom_searchBar.dart';
 
-class LearnerHomePage extends StatelessWidget {
-  const LearnerHomePage({super.key});
+class LearnerHomeScreen extends StatelessWidget {
+  const LearnerHomeScreen({super.key});
   final curentIndex = 0;
   @override
   Widget build(BuildContext context) {
