@@ -1,3 +1,4 @@
+// FILE 2: CẬP NHẬT UI CARD ĐỂ DÙNG MODEL MỚI
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
@@ -20,7 +21,8 @@ class LopHocCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Mã lớp: ${lopHoc.maLop} - ${lopHoc.tenLop}",
+              // Đã sửa: dùng .toString() và .tieuDeLop
+              "Mã lớp: ${lopHoc.maLop.toString()} - ${lopHoc.tieuDeLop}",
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 4),
@@ -28,7 +30,8 @@ class LopHocCard extends StatelessWidget {
               children: [
                 const Icon(Icons.person, size: 18, color: Colors.grey),
                 const SizedBox(width: 4),
-                Text(lopHoc.tenHocVien),
+                // Đã sửa: dùng .tenNguoiHoc
+                Text(lopHoc.tenNguoiHoc),
               ],
             ),
             const SizedBox(height: 4),
@@ -36,7 +39,8 @@ class LopHocCard extends StatelessWidget {
               children: [
                 const Icon(Icons.location_on, size: 18, color: Colors.grey),
                 const SizedBox(width: 4),
-                Expanded(child: Text(lopHoc.diaChi)),
+                // Đã sửa: Thêm kiểm tra null ??
+                Expanded(child: Text(lopHoc.diaChi ?? 'Chưa cập nhật địa chỉ')),
               ],
             ),
             const SizedBox(height: 4),
@@ -44,17 +48,14 @@ class LopHocCard extends StatelessWidget {
               children: [
                 const Icon(Icons.attach_money, size: 18, color: Colors.grey),
                 const SizedBox(width: 4),
-                Text("${lopHoc.hocPhi.toString()} vnd/Buổi"),
+                // Đã sửa: .hocPhi (vì nó đã là String)
+                Text(lopHoc.hocPhi),
               ],
             ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.receipt_long, size: 18, color: Colors.grey),
-                const SizedBox(width: 4),
-                Text("Phí nhận lớp: ${lopHoc.phiNhanLop} vnd"),
-              ],
-            ),
+            
+            // Đã xóa: Dòng "Phí nhận lớp"
+            // Vì LopHocYeuCauResource.php của bạn không trả về trường này
+
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,

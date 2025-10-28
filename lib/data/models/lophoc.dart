@@ -1,61 +1,40 @@
+// // FILE 1: TẠO MODEL LỚP HỌC
+// File này định nghĩa đối tượng LopHoc trong app Flutter
+// Các tên trường (MaLop, TieuDeLop...) khớp với
+// file LopHocYeuCauResource.php (backend) của bạn.
+
+// FILE 1: SỬA LẠI MODEL CHO ĐÚNG VỚI API
+// Model này khớp với các key JSON từ LopHocYeuCauResource.php
+
 class LopHoc {
-  final String maLop;
-  final String tenLop;
-  final String tenHocVien;
-  final String diaChi;
-  final int hocPhi;
-  final int phiNhanLop;
+  final int maLop; // API trả về int
+  final String tieuDeLop; // API trả về TieuDeLop
+  final String tenNguoiHoc; // API trả về TenNguoiHoc
+  final String? diaChi;
+  final String hocPhi; // API trả về String (đã định dạng)
+  final String? moTaChiTiet;
 
   LopHoc({
     required this.maLop,
-    required this.tenLop,
-    required this.tenHocVien,
-    required this.diaChi,
+    required this.tieuDeLop,
+    required this.tenNguoiHoc,
+    this.diaChi,
     required this.hocPhi,
-    required this.phiNhanLop,
+    this.moTaChiTiet,
   });
+
+  // Hàm "factory" này rất quan trọng
+  // Nó biết cách "đọc" JSON từ API
+  factory LopHoc.fromJson(Map<String, dynamic> json) {
+    return LopHoc(
+      // Key 'MaLop' phải khớp với JSON từ backend
+      maLop: json['MaLop'] as int,
+      tieuDeLop: json['TieuDeLop'] as String,
+      tenNguoiHoc: json['TenNguoiHoc'] as String,
+      diaChi: json['DiaChi'] as String?,
+      hocPhi: json['HocPhi'] as String,
+      moTaChiTiet: json['MoTaChiTiet'] as String?,
+    );
+  }
 }
 
-// ============= DỮ LIỆU GIẢ LẬP =============
-final dsLopHoc = [
-  LopHoc(
-    maLop: "0001",
-    tenLop: "Anh văn 12 + Toán",
-    tenHocVien: "Trần Minh Luân",
-    diaChi: "Ấp 5, Tân Tây, Gò Công Đông, Tiền Giang",
-    hocPhi: 180000,
-    phiNhanLop: 650000,
-  ),
-  LopHoc(
-    maLop: "0002",
-    tenLop: "Toán 9 + Lý 9",
-    tenHocVien: "Nguyễn Hồng Anh",
-    diaChi: "Ấp 3, Phước Lâm, Cần Giuộc, Long An",
-    hocPhi: 150000,
-    phiNhanLop: 500000,
-  ),
-  LopHoc(
-    maLop: "0003",
-    tenLop: "Hóa 11 + Sinh 11",
-    tenHocVien: "Lê Hữu Đạt",
-    diaChi: "Phú Mỹ, Tân Thành, Bà Rịa - Vũng Tàu",
-    hocPhi: 200000,
-    phiNhanLop: 700000,
-  ),
-  LopHoc(
-    maLop: "0004",
-    tenLop: "Toán 12 + Lý 12",
-    tenHocVien: "Phạm Thùy Dương",
-    diaChi: "Phước Vĩnh An, Củ Chi, TP.HCM",
-    hocPhi: 220000,
-    phiNhanLop: 800000,
-  ),
-  LopHoc(
-    maLop: "0005",
-    tenLop: "Toán 6 + Tiếng Anh 6",
-    tenHocVien: "Ngô Văn Minh",
-    diaChi: "Bình Chánh, TP.HCM",
-    hocPhi: 130000,
-    phiNhanLop: 400000,
-  ),
-];

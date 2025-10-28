@@ -1,13 +1,70 @@
+
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart'; // Import Repository
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/custom_searchBar.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/student_card.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart'; // Import ApiResponse
 
-class TutorListPage extends StatelessWidget {
+// Đổi thành StatefulWidget
+class TutorListPage extends StatefulWidget {
   const TutorListPage({super.key});
 
-  final curentIndex = 0;
+  @override
+  State<TutorListPage> createState() => _TutorListPageState();
+}
+
+class _TutorListPageState extends State<TutorListPage> {
+  // Khai báo Repository
+  final LopHocRepository _lopHocRepo = LopHocRepository();
+
+  // Biến trạng thái
+  bool _isLoading = true;
+  List<LopHoc> _lopHocList = [];
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    // Gọi API khi màn hình khởi tạo
+    _fetchLopHocChuaGiao();
+  }
+
+  // Hàm gọi API
+  Future<void> _fetchLopHocChuaGiao() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null; // Reset lỗi cũ
+    });
+
+    final ApiResponse<List<LopHoc>> response =
+        await _lopHocRepo.getLopHocTimGiaSu();
+
+    if (mounted) { // Kiểm tra xem Widget còn tồn tại không
+      if (response.isSuccess && response.data != null) {
+        setState(() {
+          _lopHocList = response.data!;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = response.message;
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // Hàm xử lý khi nhấn "Đề nghị dạy" (ví dụ)
+  void _handleDeNghiDay(LopHoc lop) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã đề nghị dạy lớp ${lop.maLop}'),
+        ),
+      );
+      // Ở đây bạn có thể gọi API khác để gửi yêu cầu nhận lớp
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,9 +73,9 @@ class TutorListPage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            SearchBarCustom(onFilter: () {}),
+            SearchBarCustom(onFilter: () {}), // Giữ lại thanh tìm kiếm
             const SizedBox(height: 8),
-            const Padding(
+            const Padding( // Giữ lại tiêu đề
               padding: EdgeInsets.symmetric(vertical: 8.0),
               child: Text(
                 'DANH SÁCH LỚP CHƯA GIAO',
@@ -30,71 +87,59 @@ class TutorListPage extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
+            // === Phần hiển thị danh sách ===
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-                children: [
-                  ...dsLopHoc.map(
-                    (lop) => LopHocCard(
-                      lopHoc: lop,
-                      onDeNghiDay: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Đã đề nghị dạy lớp ${lop.maLop}'),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+              child: _buildLopHocList(), // Gọi hàm xây dựng danh sách
             ),
           ],
         ),
       ),
     );
   }
+
+  // Hàm xây dựng nội dung danh sách (Loading, Lỗi, hoặc Danh sách thật)
+  Widget _buildLopHocList() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator()); // Hiển thị loading
+    }
+
+    if (_errorMessage != null) {
+      return Center( // Hiển thị lỗi
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Lỗi: $_errorMessage', textAlign: TextAlign.center),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: _fetchLopHocChuaGiao, // Nút thử lại
+                child: const Text('Thử lại'),
+              )
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_lopHocList.isEmpty) {
+        return const Center(child: Text('Không có lớp nào cần tìm gia sư.')); // Thông báo rỗng
+    }
+
+    // Hiển thị danh sách thật dùng ListView.builder
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 100), // Giảm padding ngang
+      itemCount: _lopHocList.length,
+      itemBuilder: (context, index) {
+        final lop = _lopHocList[index];
+        return LopHocCard(
+          lopHoc: lop,
+          onDeNghiDay: () => _handleDeNghiDay(lop), // Truyền hàm xử lý
+        );
+      },
+    );
+  }
 }
 
-final List<LopHoc> dsLopHoc = [
-  LopHoc(
-    maLop: "0001",
-    tenLop: "Anh văn 12 + Toán",
-    tenHocVien: "Trần Minh Luân",
-    diaChi: "Ấp 5, Tân Tây, Gò Công Đông, Tiền Giang",
-    hocPhi: 180000,
-    phiNhanLop: 650000,
-  ),
-  LopHoc(
-    maLop: "0002",
-    tenLop: "Toán 9 + Lý 9",
-    tenHocVien: "Nguyễn Hồng Anh",
-    diaChi: "Ấp 3, Phước Lâm, Cần Giuộc, Long An",
-    hocPhi: 150000,
-    phiNhanLop: 500000,
-  ),
-  LopHoc(
-    maLop: "0003",
-    tenLop: "Hóa 11 + Sinh 11",
-    tenHocVien: "Lê Hữu Đạt",
-    diaChi: "Phú Mỹ, Tân Thành, Bà Rịa - Vũng Tàu",
-    hocPhi: 200000,
-    phiNhanLop: 700000,
-  ),
-  LopHoc(
-    maLop: "0004",
-    tenLop: "Toán 12 + Lý 12",
-    tenHocVien: "Phạm Thùy Dương",
-    diaChi: "Phước Vĩnh An, Củ Chi, TP.HCM",
-    hocPhi: 220000,
-    phiNhanLop: 800000,
-  ),
-  LopHoc(
-    maLop: "0005",
-    tenLop: "Toán 6 + Tiếng Anh 6",
-    tenHocVien: "Ngô Văn Minh",
-    diaChi: "Bình Chánh, TP.HCM",
-    hocPhi: 130000,
-    phiNhanLop: 400000,
-  ),
-];
+// XÓA DỮ LIỆU GIẢ LẬP Ở ĐÂY
+// final List<LopHoc> dsLopHoc = [ ... ];
