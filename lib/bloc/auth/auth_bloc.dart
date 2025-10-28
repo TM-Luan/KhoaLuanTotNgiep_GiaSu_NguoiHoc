@@ -14,6 +14,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<FetchProfileRequested>(_onFetchProfile);
     on<LogoutRequested>(_onLogout);
     on<UpdateProfileRequested>(_onUpdateProfile);
+    on<ChangePasswordRequested>(_onChangePassword);
+    on<ForgotPasswordRequested>(_onForgotPassword);
   }
 
   Future<void> _onLogin(LoginRequested e, Emitter<AuthState> emit) async {
@@ -78,6 +80,40 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final r = await authRepository.updateProfile(e.user);
     if (r.success && r.data != null) {
       emit(AuthAuthenticated(r.data!));
+    } else {
+      emit(AuthError(r.message));
+    }
+  }
+
+  Future<void> _onChangePassword(
+    ChangePasswordRequested e,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final r = await authRepository.changePassword(
+      currentPassword: e.currentPassword,
+      newPassword: e.newPassword,
+      confirmPassword: e.confirmPassword,
+    );
+    if (r.success) {
+      emit(PasswordChanged(r.message));
+    } else {
+      emit(AuthError(r.message));
+    }
+  }
+
+  Future<void> _onForgotPassword(
+    ForgotPasswordRequested e,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final r = await authRepository.forgotPassword(
+      email: e.email,
+      newPassword: e.newPassword,
+      confirmPassword: e.confirmPassword,
+    );
+    if (r.success) {
+      emit(PasswordReset(r.message));
     } else {
       emit(AuthError(r.message));
     }

@@ -150,4 +150,66 @@ class AuthRepository {
       );
     }
   }
+
+  Future<ApiResponse<String>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      final response = await _apiService.post<Map<String, dynamic>>(
+        ApiConfig.changePassword,
+        data: {
+          'MatKhauHienTai': currentPassword,
+          'MatKhauMoi': newPassword,
+          'MatKhauMoi_confirmation': confirmPassword,
+        },
+        fromJsonT: (json) => json,
+      );
+
+      return ApiResponse<String>(
+        success: response.success,
+        message: response.message,
+        data: response.data?.toString(),
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse<String>(
+        success: false,
+        message: 'Lỗi đổi mật khẩu: $e',
+        statusCode: 0,
+      );
+    }
+  }
+
+  Future<ApiResponse<String>> forgotPassword({
+    required String email,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      final response = await _apiService.post<Map<String, dynamic>>(
+        ApiConfig.resetPassword,
+        data: {
+          'Email': email,
+          'MatKhauMoi': newPassword,
+          'MatKhauMoi_confirmation': confirmPassword,
+        },
+        fromJsonT: (json) => json,
+      );
+
+      return ApiResponse<String>(
+        success: response.success,
+        message: response.message,
+        data: response.data?.toString(),
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse<String>(
+        success: false,
+        message: 'Lỗi đặt lại mật khẩu: $e',
+        statusCode: 0,
+      );
+    }
+  }
 }
