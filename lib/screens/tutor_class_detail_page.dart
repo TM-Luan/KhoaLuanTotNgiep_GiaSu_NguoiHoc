@@ -1,27 +1,23 @@
-// FILE 2: CẬP NHẬT/VIẾT LẠI FILE NÀY
-// (File này để chữa lỗi 'StudentClassDetailScreen(classId: ...)' )
-// Tên file: student_class_detail_screen.dart
-
+// FILE 3: TẠO MỚI tutor_class_detail_page.dart
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 
-class StudentClassDetailScreen extends StatefulWidget {
-  final int classId; // Sửa tên biến để khớp với hàm gọi
+class TutorClassDetailPage extends StatefulWidget {
+  final int lopHocId; // Nhận ID từ trang danh sách
 
-  const StudentClassDetailScreen({super.key, required this.classId});
+  const TutorClassDetailPage({super.key, required this.lopHocId});
 
   @override
-  State<StudentClassDetailScreen> createState() =>
-      _StudentClassDetailScreenState();
+  State<TutorClassDetailPage> createState() => _TutorClassDetailPageState();
 }
 
-class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
+class _TutorClassDetailPageState extends State<TutorClassDetailPage> {
   final LopHocRepository _lopHocRepo = LopHocRepository();
 
   bool _isLoading = true;
-  LopHoc? _lopHoc;
+  LopHoc? _lopHoc; // Dữ liệu chi tiết, có thể null ban đầu
   String? _errorMessage;
 
   @override
@@ -36,8 +32,9 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
       _errorMessage = null;
     });
 
+    // Gọi hàm API chi tiết bằng ID
     final ApiResponse<LopHoc> response =
-        await _lopHocRepo.getLopHocById(widget.classId); // Dùng widget.classId
+        await _lopHocRepo.getLopHocById(widget.lopHocId);
 
     if (mounted) {
       if (response.isSuccess && response.data != null) {
@@ -58,22 +55,24 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chi tiết lớp học'), // Tiêu đề chung
-        backgroundColor: Colors.white,
+      title: const Text('Chi tiết lớp học'),
+        backgroundColor:  Color(0xFF0865B3),
         elevation: 1,
       ),
-      body: _buildBody(),
-      // TODO: Thêm các nút bấm ở cuối trang nếu cần (ví dụ: Hủy lớp, ...)
+      body: _buildBody(), // Gọi hàm xây dựng body
+      bottomNavigationBar: _buildBottomButton(), // Nút "Đề nghị dạy"
     );
   }
 
   // Hàm xây dựng nội dung Body
+ // Hàm xây dựng nội dung Body
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (_errorMessage != null) {
+      // ... (code xử lý lỗi giữ nguyên) ...
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -96,19 +95,13 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
       return const Center(child: Text('Không tìm thấy chi tiết lớp học.'));
     }
 
-    // Hiển thị chi tiết khi có dữ liệu
+    // === CODE ĐÃ SỬA LẠI ===
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Tiêu đề
-          Text(
-            _lopHoc!.tieuDeLop,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-
+          
           // Phần Trạng thái
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0), 
@@ -147,20 +140,25 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
           ),
           
           const SizedBox(height: 8), 
+          
+          // Mã lớp
           Text(
             'Mã lớp: ${_lopHoc!.maLop}',
             style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
+          
+          // --- NGÀY TẠO MỚI THÊM VÀO ---
           const SizedBox(height: 8), 
           Text(
             'Ngày đăng: ${_lopHoc!.ngayTao ?? "N/A"}',
             style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
+          // --- KẾT THÚC PHẦN THÊM MỚI ---
           
           const Divider(height: 32),
 
           // Thông tin chính
-          _buildDetailRow(Icons.person, 'Gia sư', _lopHoc!.tenGiaSu ?? 'Chưa có'),
+          _buildDetailRow(Icons.person, 'Người đăng', _lopHoc!.tenNguoiHoc),
           _buildDetailRow(Icons.location_on, 'Địa chỉ', _lopHoc!.diaChi ?? 'Chưa cập nhật'),
           _buildDetailRow(Icons.attach_money, 'Học phí', _lopHoc!.hocPhi),
 
@@ -170,8 +168,11 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
           _buildDetailRow(Icons.calendar_today, 'Thời gian học', _lopHoc!.thoiGianHoc ?? 'N/A'),
           _buildDetailRow(Icons.school, 'Đối tượng', _lopHoc!.doiTuong ?? 'N/A'),
           _buildDetailRow(Icons.people, 'Số lượng', _lopHoc!.soLuong?.toString() ?? 'N/A'),
+
+          // --- ID MỚI THÊM VÀO (NẾU BẠN MUỐN HIỂN THỊ) ---
           _buildDetailRow(Icons.book_outlined, 'Môn học', _lopHoc!.tenMon ?? 'N/A'),
           _buildDetailRow(Icons.stairs_outlined, 'Khối lớp', _lopHoc!.tenKhoiLop ?? 'N/A'),
+          // --- KẾT THÚC PHẦN THÊM MỚI ---
 
           const Divider(height: 32),
           const Text(
@@ -187,7 +188,6 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
       ),
     );
   }
-
   // Widget con để hiển thị từng dòng thông tin
   Widget _buildDetailRow(IconData icon, String title, String value) {
     return Padding(
@@ -203,12 +203,42 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
               Text(title, style: const TextStyle(color: Colors.grey)),
               const SizedBox(height: 2),
               SizedBox(
-                width: MediaQuery.of(context).size.width - 80, 
+                width: MediaQuery.of(context).size.width - 80, // Giúp text tự xuống dòng
                 child: Text(value, style: const TextStyle(fontSize: 16)),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  // Nút "Đề nghị dạy" ở cuối trang
+  Widget? _buildBottomButton() {
+    if (_isLoading || _lopHoc == null) return null; // Ẩn khi đang tải
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: ElevatedButton(
+        onPressed: () {
+          // Xử lý logic đề nghị dạy (gọi API, ...)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Đã đề nghị dạy lớp ${_lopHoc!.maLop}')),
+          );
+          // Có thể Pop về trang chủ sau khi đề nghị
+          // Navigator.pop(context);
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blueAccent,
+          minimumSize: const Size(double.infinity, 50), // Full-width
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        child: const Text(
+          "Đề nghị dạy",
+          style: TextStyle(fontSize: 18, color: Colors.white),
+        ),
       ),
     );
   }

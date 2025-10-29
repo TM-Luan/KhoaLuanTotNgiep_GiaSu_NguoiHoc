@@ -1,17 +1,22 @@
+// FILE: user_profile.dart
+// (Đã thêm trường nguoiHocID)
+
 class UserProfile {
   bool? success;
   int? taiKhoanID;
   String? email;
   String? hoTen;
   String? soDienThoai;
-  int? vaiTro;
+  int? vaiTro; // Số nguyên (ví dụ: 1-Admin, 2-GiaSu, 3-NguoiHoc)
   int? trangThai;
   String? diaChi;
   String? gioiTinh;
-  String? ngaySinh;
+  String? ngaySinh; // API trả về dạng String?
   String? bangCap;
   String? kinhNghiem;
   String? anhDaiDien;
+  // === THÊM TRƯỜNG MỚI ===
+  int? nguoiHocID; // Để nhận ID từ API login khi vaiTro là 3
 
   UserProfile({
     this.success,
@@ -27,12 +32,15 @@ class UserProfile {
     this.bangCap,
     this.kinhNghiem,
     this.anhDaiDien,
+    // Thêm vào constructor
+    this.nguoiHocID,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
-    final data = json['data'] ?? json; // xử lý trường hợp có hoặc không có 'data'
+    // API login trả về object user trong key 'data'
+    final data = json['data'] ?? json; // Lấy object data (hoặc json nếu không có data)
     return UserProfile(
-      success: json['success'],
+      success: json['success'], // Key success thường ở ngoài cùng
       taiKhoanID: data['TaiKhoanID'],
       email: data['Email'],
       hoTen: data['HoTen'],
@@ -45,10 +53,15 @@ class UserProfile {
       bangCap: data['BangCap'],
       kinhNghiem: data['KinhNghiem'],
       anhDaiDien: data['AnhDaiDien'],
+      // === PARSE TRƯỜNG MỚI ===
+      // API đã trả về NguoiHocID ngang hàng trong object 'data'
+      nguoiHocID: data['NguoiHocID'],
     );
   }
 
   Map<String, dynamic> toJson() {
+    // Hàm này dùng khi gửi UserProfile lên API (ví dụ: updateProfile)
+    // Thêm nguoiHocID vào nếu cần thiết, nhưng thường không cần gửi ID này đi
     return {
       'success': success,
       'TaiKhoanID': taiKhoanID,
@@ -63,9 +76,12 @@ class UserProfile {
       'BangCap': bangCap,
       'KinhNghiem': kinhNghiem,
       'AnhDaiDien': anhDaiDien,
+      // 'NguoiHocID': nguoiHocID, // Thường không cần gửi ID này khi cập nhật
     };
   }
 }
+
+// Model LoginResponse không cần sửa
 class LoginResponse {
   final String token;
   final UserProfile user;
@@ -74,8 +90,9 @@ class LoginResponse {
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     return LoginResponse(
-      token: json['token'] ?? '', // Xử lý null
-      user: UserProfile.fromJson(json['data'] ?? {}), // Xử lý null
+      token: json['token'] ?? '',
+      // UserProfile.fromJson sẽ tự xử lý key 'data' bên trong nó
+      user: UserProfile.fromJson(json),
     );
   }
 }
