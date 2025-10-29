@@ -1,9 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_imgs.dart';
-import '../constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/flutter_secure_storage.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/home_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/login_screen.dart';
 
-class SplashPage extends StatelessWidget {
+class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
+
+  @override
+  State<SplashPage> createState() => _SplashPageState();
+}
+
+class _SplashPageState extends State<SplashPage> {
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    await Future.delayed(const Duration(seconds: 2)); // Hiệu ứng chờ nhẹ
+    final token = await SecureStorage.getToken();
+
+    if (!mounted) return;
+
+    if (token != null && token.isNotEmpty) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (_) => false,
+      );
+    } else {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (_) => false,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,17 +64,7 @@ class SplashPage extends StatelessWidget {
             const SizedBox(height: 30),
             Image.asset(AppImgs.logo, width: 100, height: 100),
             const SizedBox(height: 60),
-            TextButton.icon(
-              onPressed: () => Navigator.pushNamed(context, '/login'),
-              icon: const Icon(
-                Icons.arrow_forward,
-                color: AppColors.primaryBlue,
-              ),
-              label: const Text(
-                "Tiếp tục ứng dụng",
-                style: TextStyle(color: AppColors.primaryBlue),
-              ),
-            ),
+            const CircularProgressIndicator(color: AppColors.primaryBlue),
           ],
         ),
       ),

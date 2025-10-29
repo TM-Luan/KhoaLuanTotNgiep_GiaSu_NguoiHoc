@@ -34,8 +34,8 @@ class AppRouter {
        return MaterialPageRoute(builder: (_) => const LearnerHomeScreen());
      case '/tutor': // Trang chủ gia sư (danh sách lớp)
        return MaterialPageRoute(builder: (_) => const TutorHomePage()); // Dùng tên mới
-     // case '/TutorDetail': // Route này có vẻ không được dùng, xem xét xóa?
-     //   return MaterialPageRoute(builder: (_) => const TutorDetailPage());
+     case '/TutorDetail': // Route này có vẻ không được dùng, xem xét xóa?
+       return MaterialPageRoute(builder: (_) => const TutorDetailPage());
 
      case '/learnerSchedule':
        return MaterialPageRoute(builder: (_) => const LearnerSchedulePage());

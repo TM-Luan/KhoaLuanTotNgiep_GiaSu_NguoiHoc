@@ -15,8 +15,7 @@ class UserProfile {
   String? bangCap;
   String? kinhNghiem;
   String? anhDaiDien;
-  // === THÊM TRƯỜNG MỚI ===
-  int? nguoiHocID; // Để nhận ID từ API login khi vaiTro là 3
+  int? nguoiHocID;
 
   UserProfile({
     this.success,
@@ -38,7 +37,8 @@ class UserProfile {
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     // API login trả về object user trong key 'data'
-    final data = json['data'] ?? json; // Lấy object data (hoặc json nếu không có data)
+    final data =
+        json['data'] ?? json; // Lấy object data (hoặc json nếu không có data)
     return UserProfile(
       success: json['success'], // Key success thường ở ngoài cùng
       taiKhoanID: data['TaiKhoanID'],

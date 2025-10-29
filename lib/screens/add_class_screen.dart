@@ -1,14 +1,14 @@
 // FILE: add_class_screen.dart
-// (Thay thế toàn bộ file)
+// (Đã xóa các dòng print)
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/flutter_secure_storage.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
-import 'package:flutter/services.dart';
-// Import repository và model mới
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/dropdown_repository.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
 
 class AddClassPage extends StatefulWidget {
   const AddClassPage({super.key});
@@ -20,10 +20,11 @@ class AddClassPage extends StatefulWidget {
 class _AddClassPageState extends State<AddClassPage> {
   final _formKey = GlobalKey<FormState>();
   final _lopHocRepo = LopHocRepository();
-  final _dropdownRepo = DropdownRepository(); // Repository mới
-  
-  bool _isSubmitting = false; // Trạng thái khi nhấn nút "Tạo Lớp"
-  bool _isDropdownLoading = true; // Trạng thái khi tải dữ liệu dropdown
+  final _dropdownRepo = DropdownRepository();
+  final _authRepo = AuthRepository();
+
+  bool _isSubmitting = false;
+  bool _isDropdownLoading = true;
   String? _dropdownError;
 
   // Controllers cho các ô Text
@@ -39,7 +40,7 @@ class _AddClassPageState extends State<AddClassPage> {
   int? _selectedDoiTuongID;
   int? _selectedThoiGianDayID;
 
-  // === BIẾN MỚI: Danh sách dữ liệu thật từ API ===
+  // Danh sách dữ liệu thật từ API
   List<DropdownItem> _monHocList = [];
   List<DropdownItem> _khoiLopList = [];
   List<DropdownItem> _doiTuongList = [];
@@ -51,10 +52,34 @@ class _AddClassPageState extends State<AddClassPage> {
     _loadDropdownData();
   }
 
-  // === HÀM MỚI: Tải dữ liệu cho 4 dropdown ===
+  // === HÀM MỚI: Lấy NguoiHocID từ Profile API ===
+  Future<int?> _getNguoiHocIDFromProfile() async {
+    try {
+      final ApiResponse<UserProfile> response = await _authRepo.getProfile();
+
+      if (response.success && response.data != null) {
+        final UserProfile user = response.data!;
+
+        // Kiểm tra vai trò Người học
+        if (user.vaiTro == 3) {
+          if (user.nguoiHocID != null) {
+            return user.nguoiHocID; // ← Dùng NguoiHocID thật
+          } else {
+            throw Exception('Tài khoản không có thông tin Người học');
+          }
+        } else {
+          throw Exception('Chỉ tài khoản Người học mới được tạo lớp');
+        }
+      } else {
+        throw Exception('Không thể lấy thông tin profile: ${response.message}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<void> _loadDropdownData() async {
     try {
-      // Gọi cả 4 API song song
       final responses = await Future.wait([
         _dropdownRepo.getMonHocList(),
         _dropdownRepo.getKhoiLopList(),
@@ -69,7 +94,7 @@ class _AddClassPageState extends State<AddClassPage> {
         _khoiLopList = responses[1];
         _doiTuongList = responses[2];
         _thoiGianDayList = responses[3];
-        _isDropdownLoading = false; // Tải xong
+        _isDropdownLoading = false;
       });
     } catch (e) {
       setState(() {
@@ -89,34 +114,28 @@ class _AddClassPageState extends State<AddClassPage> {
     super.dispose();
   }
 
-  // Hàm xử lý khi nhấn nút "Tạo Lớp"
-  // === HÀM _submitForm ĐÃ ĐƯỢC VIẾT LẠI ===
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
-      return; // Dừng nếu form không hợp lệ
+      return;
     }
 
     setState(() {
-      _isSubmitting = true; // Bắt đầu gửi, khóa UI
+      _isSubmitting = true;
     });
 
-    String? errorMessage; // Biến tạm lưu lỗi
-
     try {
-      // --- LẤY ID NGƯỜI HỌC THẬT ---
-      final String? nguoiHocIdStr = await SecureStorage.getNguoiHocID(); // Gọi hàm lấy ID đã lưu
+      // --- LẤY NguoiHocID TỪ PROFILE API ---
+      final int? currentNguoiHocID = await _getNguoiHocIDFromProfile();
 
-      if (nguoiHocIdStr == null || nguoiHocIdStr.isEmpty) {
-        errorMessage = 'Lỗi: Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.';
-        throw Exception(errorMessage); // Ném lỗi để dừng hàm
+      if (currentNguoiHocID == null) {
+        throw Exception(
+          'Không tìm thấy thông tin người học. Vui lòng đăng nhập lại.',
+        );
       }
 
-      final int currentNguoiHocID = int.parse(nguoiHocIdStr); // Chuyển ID sang số
-      // --- KẾT THÚC LẤY ID ---
-
-      // Tạo dữ liệu để gửi đi
+      // Tạo dữ liệu để gửi đi - DÙNG NguoiHocID
       Map<String, dynamic> lopHocData = {
-        'NguoiHocID': currentNguoiHocID, // Dùng ID thật
+        'NguoiHocID': currentNguoiHocID, // ← DÙNG NguoiHocID THẬT
         'HinhThuc': _hinhThucController.text,
         'HocPhi': double.tryParse(_hocPhiController.text) ?? 0,
         'ThoiLuong': _thoiLuongController.text,
@@ -129,36 +148,29 @@ class _AddClassPageState extends State<AddClassPage> {
       };
 
       // Gọi API tạo lớp
-      final ApiResponse<LopHoc> response =
-          await _lopHocRepo.createLopHoc(lopHocData);
+      final ApiResponse<LopHoc> response = await _lopHocRepo.createLopHoc(
+        lopHocData,
+      );
 
-      if (!mounted) return; // Kiểm tra nếu widget đã bị hủy
+      if (!mounted) return;
 
       if (response.isSuccess) {
-        // Thành công: Hiển thị thông báo và quay về trang trước
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Tạo lớp học mới thành công!'),
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context, true); // true để báo trang trước cần reload
+        Navigator.pop(context, true);
       } else {
-        // Thất bại từ API: Lấy lỗi từ response
-        errorMessage = response.message;
-        throw Exception(errorMessage); // Ném lỗi để hiển thị
+        throw Exception(response.message);
       }
     } catch (e) {
-      // Bắt lỗi chung (lỗi mạng, lỗi parse ID, lỗi từ API...)
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage ?? 'Lỗi không xác định: $e'), // Hiển thị lỗi cụ thể nếu có
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
       );
     } finally {
-      // Luôn chạy cuối cùng: Mở khóa UI
       if (mounted) {
         setState(() {
           _isSubmitting = false;
@@ -166,7 +178,7 @@ class _AddClassPageState extends State<AddClassPage> {
       }
     }
   }
-  // === KẾT THÚC HÀM _submitForm ===
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -175,12 +187,10 @@ class _AddClassPageState extends State<AddClassPage> {
         backgroundColor: Colors.white,
         elevation: 1,
       ),
-      // Hiển thị Body dựa trên trạng thái tải
       body: _buildBody(),
     );
   }
 
-  // Widget xây dựng Body
   Widget _buildBody() {
     if (_isDropdownLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -196,13 +206,12 @@ class _AddClassPageState extends State<AddClassPage> {
             ElevatedButton(
               onPressed: _loadDropdownData,
               child: const Text('Thử lại'),
-            )
+            ),
           ],
         ),
       );
     }
 
-    // Nếu đang gửi form thì khóa UI lại
     if (_isSubmitting) {
       return const Center(
         child: Column(
@@ -216,11 +225,9 @@ class _AddClassPageState extends State<AddClassPage> {
       );
     }
 
-    // Hiển thị form
     return _buildForm();
   }
 
-  // Widget xây dựng Form
   Widget _buildForm() {
     return Form(
       key: _formKey,
@@ -235,14 +242,15 @@ class _AddClassPageState extends State<AddClassPage> {
             ),
             const SizedBox(height: 20),
 
-            // === DROPDOWN ĐÃ CẬP NHẬT DÙNG DỮ LIỆU THẬT ===
             _buildDropdown(
               value: _selectedMonID,
               hint: 'Chọn Môn Học',
               icon: Icons.book_outlined,
               items: _monHocList,
               onChanged: (value) {
-                setState(() { _selectedMonID = value; });
+                setState(() {
+                  _selectedMonID = value;
+                });
               },
             ),
             _buildDropdown(
@@ -251,7 +259,9 @@ class _AddClassPageState extends State<AddClassPage> {
               icon: Icons.stairs_outlined,
               items: _khoiLopList,
               onChanged: (value) {
-                setState(() { _selectedKhoiLopID = value; });
+                setState(() {
+                  _selectedKhoiLopID = value;
+                });
               },
             ),
             _buildDropdown(
@@ -260,7 +270,9 @@ class _AddClassPageState extends State<AddClassPage> {
               icon: Icons.school_outlined,
               items: _doiTuongList,
               onChanged: (value) {
-                setState(() { _selectedDoiTuongID = value; });
+                setState(() {
+                  _selectedDoiTuongID = value;
+                });
               },
             ),
             _buildDropdown(
@@ -269,11 +281,12 @@ class _AddClassPageState extends State<AddClassPage> {
               icon: Icons.calendar_today_outlined,
               items: _thoiGianDayList,
               onChanged: (value) {
-                setState(() { _selectedThoiGianDayID = value; });
+                setState(() {
+                  _selectedThoiGianDayID = value;
+                });
               },
             ),
 
-            // --- Các ô Text (giữ nguyên) ---
             _buildTextFormField(
               controller: _hinhThucController,
               label: 'Hình thức (ví dụ: Online, Offline)',
@@ -290,7 +303,7 @@ class _AddClassPageState extends State<AddClassPage> {
               label: 'Thời lượng (ví dụ: 90 phút/buổi)',
               icon: Icons.schedule_outlined,
             ),
-             _buildTextFormField(
+            _buildTextFormField(
               controller: _soLuongController,
               label: 'Số lượng học viên',
               icon: Icons.people_outline,
@@ -305,14 +318,16 @@ class _AddClassPageState extends State<AddClassPage> {
 
             const SizedBox(height: 24),
 
-            // --- Nút Submit ---
             ElevatedButton(
               onPressed: _submitForm,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textStyle: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               child: const Text('Tạo Lớp'),
             ),
@@ -322,7 +337,6 @@ class _AddClassPageState extends State<AddClassPage> {
     );
   }
 
-  // Widget helper để xây dựng Dropdown
   Widget _buildDropdown({
     required int? value,
     required String hint,
@@ -339,19 +353,19 @@ class _AddClassPageState extends State<AddClassPage> {
           prefixIcon: Icon(icon),
           border: const OutlineInputBorder(),
         ),
-        items: items.map((item) {
-          return DropdownMenuItem<int>(
-            value: item.id,
-            child: Text(item.ten),
-          );
-        }).toList(),
+        items:
+            items.map((item) {
+              return DropdownMenuItem<int>(
+                value: item.id,
+                child: Text(item.ten),
+              );
+            }).toList(),
         onChanged: onChanged,
         validator: (value) => value == null ? 'Vui lòng chọn' : null,
       ),
     );
   }
 
-  // Widget helper để xây dựng TextFormField (giữ nguyên)
   Widget _buildTextFormField({
     required TextEditingController controller,
     required String label,
@@ -370,9 +384,10 @@ class _AddClassPageState extends State<AddClassPage> {
           border: const OutlineInputBorder(),
         ),
         keyboardType: keyboardType,
-        inputFormatters: keyboardType == TextInputType.number
-            ? [FilteringTextInputFormatter.digitsOnly]
-            : [],
+        inputFormatters:
+            keyboardType == TextInputType.number
+                ? [FilteringTextInputFormatter.digitsOnly]
+                : [],
         validator: (value) {
           if (value == null || value.isEmpty) {
             return 'Vui lòng không để trống';
