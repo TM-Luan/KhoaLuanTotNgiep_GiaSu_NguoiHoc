@@ -236,7 +236,6 @@ class StudentMyClassesPage extends StatelessWidget {
                   context,
                   MaterialPageRoute(builder: (context) => const AddClassPage()),
                 );
-                // TODO: Logic thêm lớp mới
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
@@ -271,7 +270,6 @@ class StudentMyClassesPage extends StatelessWidget {
                     ElevatedButton.icon(
                       onPressed: () {
                         
-                        // TODO: Logic điều hướng đến trang tạo yêu cầu lớp học
                       },
                       icon: const Icon(Icons.add),
                       label: const Text('Đăng Yêu Cầu Lớp'),

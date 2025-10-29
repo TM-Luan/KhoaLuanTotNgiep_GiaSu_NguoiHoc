@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import '../widgets/class_info_row.dart';
 import '../widgets/class_schedule_table.dart';

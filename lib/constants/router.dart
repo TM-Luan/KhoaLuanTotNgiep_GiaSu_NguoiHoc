@@ -1,59 +1,85 @@
+// constants/router.dart
+
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/home_screen.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/profile_screen.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_class_detail_screen.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_my_classes_screen.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_detail_page.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_home_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/login_screen.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/register_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/splash_screen.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_home_screen.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_schedule_screen.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_schedule_page.dart';
+// ... (các import khác giữ nguyên) ...
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_detail_page.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/giasu.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_class_detail_screen.dart'; 
+
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
+    // ===> KIỂM TRA CÁC LỆNH PRINT NÀY <===
+    print('>>> [Router] Generating route for: ${settings.name}');
+    print('>>> [Router] Arguments received: ${settings.arguments}');
+    // =====================================
+
     switch (settings.name) {
+      // ... (các case khác giữ nguyên) ...
       case '/splash':
         return MaterialPageRoute(builder: (_) => const SplashPage());
       case '/login':
         return MaterialPageRoute(builder: (_) => const LoginScreen());
-      case '/register':
-        return MaterialPageRoute(builder: (_) => const RegisterScreen());
-      case '/student':
-        return MaterialPageRoute(builder: (_) => const LearnerHomeScreen());
-      case '/tutor':
-        return MaterialPageRoute(builder: (_) => const TutorListPage());
-      case '/TutorDetail':
-        return MaterialPageRoute(builder: (_) => const TutorDetailPage());
+      // ... (thêm các case khác nếu có)
 
-      case '/learnerSchedule':
-        return MaterialPageRoute(builder: (_) => const LearnerSchedulePage());
-      case '/tutorSchedule':
-        return MaterialPageRoute(builder: (_) => const TutorSchedulePage());
-      case '/my-classes':
-        return MaterialPageRoute(builder: (_) => const StudentMyClassesPage());
-      case '/home':
-        return MaterialPageRoute(builder: (_) => const HomeScreen());
-      case '/profile':
-        return MaterialPageRoute(builder: (_) => const ProfileScreen());
+      case TutorDetailPage.routeName: // '/tutor-detail'
+         // ===> KIỂM TRA CÁC LỆNH PRINT NÀY <===
+         print('>>> [Router] Matched route: ${TutorDetailPage.routeName}');
+         Object? args = settings.arguments;
+         print('>>> [Router] Raw arguments type: ${args?.runtimeType}');
+         // =====================================
 
-      // THÊM ROUTE CHO TRANG CHI TIẾT LỚP HỌC
+         Tutor? tutor;
+         if (args is Tutor) {
+           tutor = args;
+           print('>>> [Router] Successfully cast arguments to Tutor: ${tutor.name}');
+         } else {
+           print('>>> [Router] FAILED to cast arguments to Tutor.');
+         }
+
+         if (tutor != null) {
+            print('>>> [Router] Building TutorDetailPage...');
+            return MaterialPageRoute(
+               settings: settings,
+               builder: (_) => const TutorDetailPage() // Chỉ cần tạo instance
+            );
+         }
+         print('>>> [Router] Arguments invalid or null. Building error route...');
+         return _errorRoute('Dữ liệu gia sư không hợp lệ');
+
       case '/class-detail':
-        // Lấy dữ liệu ClassDetail được truyền qua arguments
-        final classDetail = settings.arguments as ClassDetail;
-        return MaterialPageRoute(
-          builder: (_) => ClassDetailPage(classDetail: classDetail),
-        );
+        // ... (Giữ nguyên logic cho class detail) ...
+         print('>>> [Router] Matched route: /class-detail');
+        final classDetail = settings.arguments as ClassDetail?;
+         print('>>> [Router] Received ClassDetail arguments: ${classDetail?.name}');
+        if (classDetail != null) {
+          print('>>> [Router] Building ClassDetailPage...');
+          return MaterialPageRoute(
+             settings: settings,
+             builder: (_) => ClassDetailPage(classDetail: classDetail),
+          );
+        }
+         print('>>> [Router] ClassDetail arguments invalid or null. Building error route...');
+        return _errorRoute('Dữ liệu lớp học không hợp lệ');
+
 
       default:
-        return MaterialPageRoute(
-          builder:
-              (_) => const Scaffold(
-                body: Center(child: Text('Trang không tồn tại')),
-              ),
-        );
+        print('>>> [Router] Route ${settings.name} not found. Building default error route...');
+        return _errorRoute('Trang không tồn tại (${settings.name})');
     }
+  }
+
+  static Route<dynamic> _errorRoute(String message) {
+     // ... (Giữ nguyên)
+     return MaterialPageRoute(
+        builder: (_) => Scaffold(
+           appBar: AppBar(title: const Text('Lỗi')),
+           body: Center(child: Text(message)),
+        ),
+     );
   }
 }

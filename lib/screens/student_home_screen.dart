@@ -1,10 +1,13 @@
+// screens/student_home_screen.dart
+
 // ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/giasu.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/giasu_repository.dart'; // 1. Import repository mới
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/giasu_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/tutor_card.dart';
-import 'tutor_detail_page.dart';
+import 'tutor_detail_page.dart'; // Import TutorDetailPage để lấy routeName
 import '../widgets/custom_searchBar.dart';
 
 class LearnerHomeScreen extends StatefulWidget {
@@ -15,8 +18,6 @@ class LearnerHomeScreen extends StatefulWidget {
 }
 
 class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
-  final curentIndex = 0;
-
   final GiaSuRepository _giaSuRepo = GiaSuRepository();
   bool _isLoading = true;
   List<Tutor> _tutorList = [];
@@ -29,20 +30,22 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
   }
 
   Future<void> _fetchGiaSu() async {
-    setState(() {
+    // ... (phần code gọi API giữ nguyên) ...
+     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    final ApiResponse<List<Tutor>> response =
-        await _giaSuRepo.getDanhSachGiaSu();
+    final ApiResponse<List<Tutor>> response = await _giaSuRepo.getDanhSachGiaSu();
 
+    // Log kết quả API (giữ lại để kiểm tra)
     print('--- KẾT QUẢ GỌI API GIA SƯ ---');
     print('Thành công (Success): ${response.success}');
     print('StatusCode: ${response.statusCode}');
     print('Lỗi (Message): ${response.message}');
-    print('Dữ liệu (Data): ${response.data}');
+    print('Dữ liệu (Data): ${response.data}'); // Sẽ in [Instance of 'Tutor', ...] nếu thành công
     print('----------------------------------');
+
 
     if (mounted) {
       if (response.isSuccess && response.data != null) {
@@ -60,9 +63,9 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
   }
 
   Widget _buildTutorList() {
-    if (_isLoading) {
-      return const SliverFillRemaining(
-          child: Center(child: CircularProgressIndicator()));
+    // ... (phần code xử lý loading, error, empty giữ nguyên) ...
+     if (_isLoading) {
+      return const SliverFillRemaining(child: Center(child: CircularProgressIndicator()));
     }
 
     if (_errorMessage != null) {
@@ -84,9 +87,9 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
     }
 
     if (_tutorList.isEmpty) {
-      return const SliverFillRemaining(
-          child: Center(child: Text('Không có gia sư nào.')));
+      return const SliverFillRemaining(child: Center(child: Text('Không có gia sư nào.')));
     }
+
 
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
@@ -106,14 +109,21 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
                 final t = _tutorList[index];
                 return TutorCard(
                   tutor: t,
-                  onTap: () => Navigator.pushNamed(
-                    context,
-                    TutorDetailPage.routeName,
-                    arguments: t, 
-                  ),
+                  onTap: () {
+                    // ===> KIỂM TRA CÁC LỆNH PRINT NÀY <===
+                    print('>>> [TutorCard onTap] Tapped on Tutor: ${t.name} (ID: ${t.id})');
+                    print('>>> [TutorCard onTap] Navigating to: ${TutorDetailPage.routeName}');
+                    print('>>> [TutorCard onTap] Passing arguments of type: ${t.runtimeType}');
+                    // =====================================
+                    Navigator.pushNamed(
+                      context,
+                      TutorDetailPage.routeName,
+                      arguments: t, // Truyền đối tượng Tutor
+                    );
+                  },
                 );
               },
-              childCount: _tutorList.length, 
+              childCount: _tutorList.length,
             ),
           );
         },
@@ -123,8 +133,8 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-
-    return Scaffold(
+    // ... (phần code build UI giữ nguyên) ...
+     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
@@ -153,4 +163,3 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
     );
   }
 }
-

@@ -1,25 +1,27 @@
+// screens/tutor_home_page.dart
+
+// ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart'; // Import Repository
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/custom_searchBar.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/student_card.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart'; // Import ApiResponse
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/student_card.dart'; // Đổi tên thành LopHocCard nếu cần
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 
-// Đổi thành StatefulWidget
-class TutorListPage extends StatefulWidget {
-  const TutorListPage({super.key});
+// ===> ĐỔI TÊN LỚP <===
+class TutorHomePage extends StatefulWidget { // Đổi từ TutorListPage
+  const TutorHomePage({super.key}); // Đổi constructor
 
   @override
-  State<TutorListPage> createState() => _TutorListPageState();
+  // ===> ĐỔI TÊN STATE <===
+  State<TutorHomePage> createState() => _TutorHomePageState(); // Đổi State
 }
 
-class _TutorListPageState extends State<TutorListPage> {
-  // Khai báo Repository
+// ===> ĐỔI TÊN STATE <===
+class _TutorHomePageState extends State<TutorHomePage> { // Đổi từ _TutorListPageState
   final LopHocRepository _lopHocRepo = LopHocRepository();
-
-  // Biến trạng thái
   bool _isLoading = true;
   List<LopHoc> _lopHocList = [];
   String? _errorMessage;
@@ -27,21 +29,31 @@ class _TutorListPageState extends State<TutorListPage> {
   @override
   void initState() {
     super.initState();
-    // Gọi API khi màn hình khởi tạo
     _fetchLopHocChuaGiao();
   }
 
-  // Hàm gọi API
   Future<void> _fetchLopHocChuaGiao() async {
-    setState(() {
+     setState(() {
       _isLoading = true;
-      _errorMessage = null; // Reset lỗi cũ
+      _errorMessage = null;
     });
+
+    // Log bắt đầu gọi API
+    print('>>> [TutorHomePage] Calling API: getLopHocTimGiaSu...');
 
     final ApiResponse<List<LopHoc>> response =
         await _lopHocRepo.getLopHocTimGiaSu();
 
-    if (mounted) { // Kiểm tra xem Widget còn tồn tại không
+    // Log kết quả API (giữ lại để kiểm tra)
+    print('--- KẾT QUẢ API LỚP HỌC ---');
+    print('Thành công (Success): ${response.success}');
+    print('StatusCode: ${response.statusCode}');
+    print('Lỗi (Message): ${response.message}');
+    print('Dữ liệu (Data): ${response.data}'); // Sẽ in [Instance of 'LopHoc', ...] nếu thành công
+    print('-----------------------------');
+
+
+    if (mounted) {
       if (response.isSuccess && response.data != null) {
         setState(() {
           _lopHocList = response.data!;
@@ -56,14 +68,14 @@ class _TutorListPageState extends State<TutorListPage> {
     }
   }
 
-  // Hàm xử lý khi nhấn "Đề nghị dạy" (ví dụ)
   void _handleDeNghiDay(LopHoc lop) {
+      print('>>> [TutorHomePage] Đề nghị dạy lớp: ${lop.maLop}'); // Thêm log
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Đã đề nghị dạy lớp ${lop.maLop}'),
+          duration: const Duration(seconds: 1), // Giảm thời gian hiển thị
         ),
       );
-      // Ở đây bạn có thể gọi API khác để gửi yêu cầu nhận lớp
   }
 
   @override
@@ -73,9 +85,14 @@ class _TutorListPageState extends State<TutorListPage> {
       body: SafeArea(
         child: Column(
           children: [
-            SearchBarCustom(onFilter: () {}), // Giữ lại thanh tìm kiếm
+            Padding( // Thêm Padding cho SearchBar
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+              child: SearchBarCustom(onFilter: () {
+                print('>>> [TutorHomePage] Filter button tapped.'); // Thêm log
+              }),
+            ),
             const SizedBox(height: 8),
-            const Padding( // Giữ lại tiêu đề
+            const Padding(
               padding: EdgeInsets.symmetric(vertical: 8.0),
               child: Text(
                 'DANH SÁCH LỚP CHƯA GIAO',
@@ -87,9 +104,8 @@ class _TutorListPageState extends State<TutorListPage> {
                 textAlign: TextAlign.center,
               ),
             ),
-            // === Phần hiển thị danh sách ===
             Expanded(
-              child: _buildLopHocList(), // Gọi hàm xây dựng danh sách
+              child: _buildLopHocList(),
             ),
           ],
         ),
@@ -97,14 +113,13 @@ class _TutorListPageState extends State<TutorListPage> {
     );
   }
 
-  // Hàm xây dựng nội dung danh sách (Loading, Lỗi, hoặc Danh sách thật)
   Widget _buildLopHocList() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator()); // Hiển thị loading
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_errorMessage != null) {
-      return Center( // Hiển thị lỗi
+      return Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -113,7 +128,7 @@ class _TutorListPageState extends State<TutorListPage> {
               Text('Lỗi: $_errorMessage', textAlign: TextAlign.center),
               const SizedBox(height: 10),
               ElevatedButton(
-                onPressed: _fetchLopHocChuaGiao, // Nút thử lại
+                onPressed: _fetchLopHocChuaGiao,
                 child: const Text('Thử lại'),
               )
             ],
@@ -123,23 +138,20 @@ class _TutorListPageState extends State<TutorListPage> {
     }
 
     if (_lopHocList.isEmpty) {
-        return const Center(child: Text('Không có lớp nào cần tìm gia sư.')); // Thông báo rỗng
+        return const Center(child: Text('Không có lớp nào cần tìm gia sư.'));
     }
 
-    // Hiển thị danh sách thật dùng ListView.builder
+    // Đảm bảo dùng LopHocCard (tên đúng từ student_card.dart)
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(4, 4, 4, 100), // Giảm padding ngang
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 100),
       itemCount: _lopHocList.length,
       itemBuilder: (context, index) {
         final lop = _lopHocList[index];
-        return LopHocCard(
+        return LopHocCard( // Đảm bảo đây là tên widget đúng
           lopHoc: lop,
-          onDeNghiDay: () => _handleDeNghiDay(lop), // Truyền hàm xử lý
+          onDeNghiDay: () => _handleDeNghiDay(lop),
         );
       },
     );
   }
 }
-
-// XÓA DỮ LIỆU GIẢ LẬP Ở ĐÂY
-// final List<LopHoc> dsLopHoc = [ ... ];

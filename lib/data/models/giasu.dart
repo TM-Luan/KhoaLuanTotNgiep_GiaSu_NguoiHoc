@@ -1,29 +1,66 @@
 // data/models/giasu.dart
 
+// ignore_for_file: avoid_print
+
 class Tutor {
+  final int id;
   final String name;
-  final String? subject; // Đổi thành nullable hoặc gán giá trị mặc định
-  final double rating;
+  final String? diaChi;
+  final String? gioiTinh;
+  final String? ngaySinh;
+  final String? bangCap;
+  final String? kinhNghiem;
   final String image;
-  final String? diaChi; // Thêm các trường bạn muốn hiển thị
+  final double rating;
+  final String? email;
+  final String? soDienThoai;
+  final String? subject;
 
   Tutor({
+    required this.id,
     required this.name,
-    this.subject,
-    required this.rating,
-    required this.image,
     this.diaChi,
+    this.gioiTinh,
+    this.ngaySinh,
+    this.bangCap,
+    this.kinhNghiem,
+    required this.image,
+    required this.rating,
+    this.email,
+    this.soDienThoai,
+    this.subject,
   });
 
   factory Tutor.fromJson(Map<String, dynamic> json) {
-    final imageUrl = json['AnhDaiDien'] as String? ?? 'https://i.pravatar.cc/300?img=${json['GiaSuID'] ?? 1}';
+    final apiImage = json['AnhDaiDien'] as String?;
+    final imageUrl = apiImage ?? 'https://i.pravatar.cc/300?img=${json['GiaSuID'] ?? 1}';
+    final taiKhoanData = json['TaiKhoan'] as Map<String, dynamic>? ?? {};
+
+    // ===> KIỂM TRA LỆNH PRINT NÀY CÓ TỒN TẠI KHÔNG <===
+    print('>>> [Tutor.fromJson] GiaSuID: ${json['GiaSuID']}, AnhDaiDien: $apiImage, Final Image URL: $imageUrl');
+    // ===================================================
 
     return Tutor(
-      name: json['HoTen'] as String,
-      subject: json['MonHoc'] as String? ?? 'Chuyên môn chưa cập nhật', 
-      rating: (json['DiemSo'] ?? 0).toDouble(),
-      image: imageUrl,
+      id: json['GiaSuID'] as int? ?? 0,
+      name: json['HoTen'] as String? ?? 'Chưa có tên',
       diaChi: json['DiaChi'] as String?,
+      gioiTinh: json['GioiTinh'] as String?,
+      ngaySinh: json['NgaySinh'] as String?,
+      bangCap: json['BangCap'] as String?,
+      kinhNghiem: json['KinhNghiem'] as String?,
+      image: imageUrl,
+      rating: (json['DiemSo'] as num? ?? 0).toDouble(),
+      email: taiKhoanData['Email'] as String?,
+      soDienThoai: taiKhoanData['SoDienThoai'] as String?,
+      subject: json['MonHoc'] as String? ?? 'Chuyên môn chưa cập nhật',
     );
+  }
+
+  String get displayGioiTinh {
+    if (gioiTinh == null) return 'Chưa cập nhật';
+    final lowerCaseGioiTinh = gioiTinh!.toLowerCase();
+    if (lowerCaseGioiTinh == 'nam') return 'Nam';
+    if (lowerCaseGioiTinh == 'nữ' || lowerCaseGioiTinh == 'nu') return 'Nữ';
+    return gioiTinh!;
   }
 }
