@@ -1,312 +1,201 @@
-// screens/tutor_detail_page.dart
-// ignore_for_file: deprecated_member_use, use_build_context_synchronously, avoid_print
-
 import 'package:flutter/material.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
-// ===> SỬA LỖI IMPORT: Dùng dấu : thay vì . <===
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor/tutor_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/giasu.dart';
-import 'package:url_launcher/url_launcher.dart';
-// Optional: import 'package:intl/intl.dart'; // Để format ngày sinh
 
-class TutorDetailPage extends StatelessWidget {
-  static const routeName = '/tutor-detail';
+class TutorDetailPage extends StatefulWidget {
+  static const String routeName = '/tutor-detail';
+  
+  final Tutor? tutor; // Nhận từ arguments
+  final int? tutorId; // Hoặc nhận ID để fetch từ API
 
-  const TutorDetailPage({super.key});
-
-  // ===> XÓA CÁC KHAI BÁO HÀM TRÙNG LẶP Ở ĐÂY <===
-  // Widget _buildInfoRow(...) // Đã xóa
-  // Widget _buildActionButton(...) // Đã xóa
-  // Future<void> _makePhoneCall(...) // Đã xóa
-  // Future<void> _sendEmail(...) // Đã xóa
-  // Optional: // String _formatDate(...) // Đã xóa (Nếu bạn đã thêm)
+  const TutorDetailPage({
+    super.key,
+    this.tutor,
+    this.tutorId,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    // --- Phần lấy arguments ---
-    print('>>> [TutorDetailPage] Build method started.');
-    print('>>> [TutorDetailPage] Attempting to get arguments...');
-    Object? args = ModalRoute.of(context)?.settings.arguments;
-    print('>>> [TutorDetailPage] Received arguments raw object: $args');
-    print(
-      '>>> [TutorDetailPage] Received arguments raw type: ${args?.runtimeType}',
-    );
+  State<TutorDetailPage> createState() => _TutorDetailPageState();
+}
 
-    Tutor? tutor;
-    // ===> KIỂM TRA TYPE AN TOÀN HƠN <===
-    if (args is Tutor) {
-      tutor = args;
-      print(
-        '>>> [TutorDetailPage] Successfully cast arguments to Tutor: ${tutor.name}',
-      );
-    } else {
-      print(
-        '>>> [TutorDetailPage] FAILED to cast arguments to Tutor or arguments are null/wrong type.',
-      );
+class _TutorDetailPageState extends State<TutorDetailPage> {
+  @override
+  void initState() {
+    super.initState();
+    
+    // Nếu chỉ có tutorId, fetch chi tiết từ API
+    if (widget.tutorId != null && widget.tutor == null) {
+      context.read<TutorBloc>().add(LoadTutorByIdEvent(widget.tutorId!));
     }
+  }
 
-    if (tutor == null) {
-      print('>>> [TutorDetailPage] Tutor object is null. Building error view.');
-      return Scaffold(
-        appBar: AppBar(title: const Text('Lỗi')),
-        body: const Center(child: Text('Không có dữ liệu gia sư.')),
-      );
-    }
-
-    print(
-      '>>> [TutorDetailPage] Tutor object received successfully. Building detail view for ${tutor.name}...',
-    );
-
-    // --- Xác định avatarWidget ---
-    final bool isPlaceholderImage =
-        tutor.image.contains('pravatar.cc') ||
-        tutor.image.isEmpty; // Thêm kiểm tra rỗng
-    Widget avatarWidget;
-    if (isPlaceholderImage) {
-      avatarWidget = CircleAvatar(
-        radius: 50,
-        backgroundColor: AppColors.primaryBlue.withAlpha((255 * 0.1).round()),
-        child: Icon(
-          Icons.person_outline, // Dùng icon outline
-          size: 50,
-          color: AppColors.primaryBlue.withAlpha((255 * 0.7).round()),
-        ),
-      );
-    } else {
-      avatarWidget = CircleAvatar(
-        radius: 50,
-        backgroundImage: NetworkImage(tutor.image),
-        onBackgroundImageError: (_, __) {
-          print('>>> Error loading tutor image: ${tutor?.image}');
-        },
-        backgroundColor: AppColors.lightGrey,
-      );
-    }
-
-    // --- Phần UI chính ---
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Chi Tiết Gia Sư'),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: AppColors.primaryBlue,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(25),
-                  bottomRight: Radius.circular(25),
+  Widget _buildTutorDetail(Tutor tutor) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Avatar và thông tin cơ bản
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.blue[100],
+                    image: tutor.image.isNotEmpty
+                        ? DecorationImage(
+                            image: NetworkImage(tutor.image),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: tutor.image.isEmpty
+                      ? const Icon(
+                          Icons.person,
+                          size: 60,
+                          color: Colors.blue,
+                        )
+                      : null,
                 ),
-              ),
-              child: Column(
-                children: [
-                  avatarWidget,
-                  const SizedBox(height: 12),
+                const SizedBox(height: 16),
+                Text(
+                  tutor.name,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (tutor.bangCap != null)
                   Text(
-                    tutor.name,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                    tutor.bangCap!,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 18),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${tutor.rating.toStringAsFixed(1)}/5.0',
-                        style: TextStyle(
-                          color: Colors.white.withAlpha(200),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              ],
             ),
-            // Liên hệ & Hành động
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 20.0,
-              ),
-              child: Column(
-                children: [
-                  _buildInfoRow(
-                    context,
-                    Icons.phone_outlined,
-                    'Số điện thoại',
-                    tutor.soDienThoai,
-                  ),
-                  _buildInfoRow(
-                    context,
-                    Icons.email_outlined,
-                    'Email',
-                    tutor.email,
-                  ),
-                  _buildInfoRow(
-                    context,
-                    Icons.location_on_outlined,
-                    'Địa chỉ',
-                    tutor.diaChi,
-                  ),
-                  const Divider(height: 25, thickness: 1),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildActionButton(
-                        context,
-                        Icons.phone,
-                        'Gọi điện',
-                        (tutor.soDienThoai?.isNotEmpty ?? false)
-                            ? () => _makePhoneCall(context, tutor?.soDienThoai)
-                            : null,
-                      ),
-                      _buildActionButton(
-                        context,
-                        Icons.mail,
-                        'Gửi Mail',
-                        (tutor.email?.isNotEmpty ?? false)
-                            ? () => _sendEmail(context, tutor?.email)
-                            : null,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            // Thông tin cá nhân
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Card(
-                elevation: 1,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Thông tin cá nhân',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primaryBlue,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      _buildInfoRow(
-                        context,
-                        Icons.person_outline,
-                        'Giới tính',
-                        tutor.displayGioiTinh,
-                      ),
-                      // Optional: Sử dụng hàm format ngày
-                      _buildInfoRow(
-                        context,
-                        Icons.cake_outlined,
-                        'Ngày sinh',
-                        tutor.ngaySinh /* _formatDate(tutor.ngaySinh) */,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Kinh nghiệm & Bằng cấp
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Card(
-                elevation: 1,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Kinh nghiệm & Bằng cấp',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primaryBlue,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      _buildInfoRow(
-                        context,
-                        Icons.school_outlined,
-                        'Bằng cấp',
-                        tutor.bangCap,
-                      ),
-                      _buildInfoRow(
-                        context,
-                        Icons.work_outline,
-                        'Kinh nghiệm',
-                        tutor.kinhNghiem,
-                      ),
-                      _buildInfoRow(
-                        context,
-                        Icons.book_outlined,
-                        'Chuyên môn',
-                        tutor.subject,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 30),
+          ),
+
+          const SizedBox(height: 32),
+
+          // Thông tin chi tiết
+          _buildInfoSection('Thông tin liên hệ', [
+            _buildInfoItem('Email', tutor.taiKhoan.email, Icons.email),
+            _buildInfoItem('Số điện thoại', tutor.taiKhoan.soDienThoai, Icons.phone),
+          ]),
+
+          if (tutor.diaChi != null) ...[
+            const SizedBox(height: 24),
+            _buildInfoSection('Thông tin cá nhân', [
+              if (tutor.diaChi != null)
+                _buildInfoItem('Địa chỉ', tutor.diaChi!, Icons.location_on),
+              if (tutor.gioiTinh != null)
+                _buildInfoItem('Giới tính', tutor.gioiTinh!, Icons.person),
+              if (tutor.ngaySinh != null)
+                _buildInfoItem('Ngày sinh', _formatDate(tutor.ngaySinh!), Icons.cake),
+            ]),
           ],
-        ),
+
+          if (tutor.kinhNghiem != null) ...[
+            const SizedBox(height: 24),
+            _buildInfoSection('Kinh nghiệm & Đánh giá', [
+              _buildInfoItem('Kinh nghiệm', tutor.kinhNghiem!, Icons.work),
+              _buildRatingItem('Điểm đánh giá', tutor.rating),
+            ]),
+          ],
+
+          const SizedBox(height: 32),
+
+          // Nút hành động
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      // TODO: Implement contact functionality
+                      _showContactDialog(tutor);
+                    },
+                    icon: const Icon(Icons.message),
+                    label: const Text('Liên hệ ngay'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      // TODO: Implement offer teaching functionality
+                      _showOfferDialog(tutor);
+                    },
+                    icon: const Icon(Icons.school),
+                    label: const Text('Đề nghị dạy'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+        ],
       ),
     );
   }
 
-  // ===> GIỮ LẠI CÁC ĐỊNH NGHĨA HÀM HELPER ĐẦY ĐỦ Ở CUỐI LỚP <===
-  // Hàm helper để tạo một hàng thông tin
-  Widget _buildInfoRow(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String? value,
-  ) {
+  Widget _buildInfoSection(String title, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.blue,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...children,
+      ],
+    );
+  }
+
+  Widget _buildInfoItem(String label, String value, IconData icon) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Theme.of(context).primaryColor, size: 20),
-          const SizedBox(width: 16),
+          Icon(icon, size: 20, color: Colors.grey[600]),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
-                  value ?? 'Chưa cập nhật',
+                  value,
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -318,92 +207,181 @@ class TutorDetailPage extends StatelessWidget {
     );
   }
 
-  // Hàm helper để tạo nút hành động (Gọi, Mail)
-  Widget _buildActionButton(
-    BuildContext context,
-    IconData icon,
-    String label,
-    VoidCallback? onPressed,
-  ) {
-    return ElevatedButton.icon(
-      icon: Icon(icon, size: 18),
-      label: Text(label),
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+  Widget _buildRatingItem(String label, double rating) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.star, size: 20, color: Colors.amber),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      rating.toStringAsFixed(1),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ...List.generate(5, (index) {
+                      return Icon(
+                        Icons.star,
+                        size: 16,
+                        color: index < rating.floor()
+                            ? Colors.amber
+                            : Colors.grey[300],
+                      );
+                    }),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // Hàm xử lý gọi điện
-  Future<void> _makePhoneCall(BuildContext context, String? phoneNumber) async {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    if (phoneNumber == null || phoneNumber.isEmpty) {
-      if (context.mounted) {
-        scaffoldMessenger.showSnackBar(
-          const SnackBar(content: Text('Số điện thoại không có sẵn.')),
-        );
-      }
-      return;
-    }
-    final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
-    // Sử dụng launchUrl thay vì canLaunch + launch (cách mới hơn)
+  String _formatDate(String dateString) {
     try {
-      await launchUrl(launchUri);
+      final date = DateTime.parse(dateString);
+      return '${date.day}/${date.month}/${date.year}';
     } catch (e) {
-      print('>>> Error launching phone call: $e'); // Ghi log lỗi
-      if (context.mounted) {
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text('Không thể thực hiện cuộc gọi: $e'),
-          ), // Hiển thị lỗi cụ thể hơn
-        );
-      }
+      return dateString;
     }
   }
 
-  // Hàm xử lý gửi email
-  Future<void> _sendEmail(BuildContext context, String? email) async {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    if (email == null || email.isEmpty) {
-      if (context.mounted) {
-        scaffoldMessenger.showSnackBar(
-          const SnackBar(content: Text('Địa chỉ email không có sẵn.')),
-        );
-      }
-      return;
-    }
-    final Uri launchUri = Uri(
-      scheme: 'mailto',
-      path: email,
-      // queryParameters: {'subject': 'Liên hệ về việc dạy kèm'} // Optional subject
+  void _showContactDialog(Tutor tutor) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Liên hệ gia sư'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Gia sư: ${tutor.name}'),
+            const SizedBox(height: 8),
+            Text('Email: ${tutor.taiKhoan.email}'),
+            Text('SĐT: ${tutor.taiKhoan.soDienThoai}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đóng'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // TODO: Implement call/email functionality
+              Navigator.pop(context);
+            },
+            child: const Text('Gọi ngay'),
+          ),
+        ],
+      ),
     );
-    // Sử dụng launchUrl thay vì canLaunch + launch
-    try {
-      await launchUrl(launchUri);
-    } catch (e) {
-      print('>>> Error launching email app: $e'); // Ghi log lỗi
-      if (context.mounted) {
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text('Không thể mở ứng dụng email: $e'),
-          ), // Hiển thị lỗi cụ thể hơn
-        );
-      }
-    }
   }
 
-  // Optional: Hàm format ngày sinh
-  // String _formatDate(String? dateString) {
-  //   if (dateString == null || dateString.isEmpty) return 'Chưa cập nhật';
-  //   try {
-  //     final date = DateTime.parse(dateString);
-  //     return DateFormat('dd/MM/yyyy').format(date);
-  //   } catch (e) {
-  //     return dateString;
-  //   }
-  // }
+  void _showOfferDialog(Tutor tutor) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Đề nghị dạy'),
+        content: const Text('Bạn muốn gửi đề nghị dạy đến gia sư này?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // TODO: Implement offer teaching functionality
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Đã gửi đề nghị dạy thành công!'),
+                ),
+              );
+            },
+            child: const Text('Gửi đề nghị'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Nhận tutor từ arguments nếu có
+    final Tutor? tutorFromArgs = ModalRoute.of(context)?.settings.arguments as Tutor?;
+    final Tutor? tutor = widget.tutor ?? tutorFromArgs;
+
+    // Nếu đã có tutor data, hiển thị ngay
+    if (tutor != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Chi tiết gia sư'),
+          actions: [
+            IconButton(
+              onPressed: () {
+                context.read<TutorBloc>().add(RefreshTutorsEvent());
+              },
+              icon: const Icon(Icons.refresh),
+            ),
+          ],
+        ),
+        body: _buildTutorDetail(tutor),
+      );
+    }
+
+    // Nếu chưa có data, sử dụng BLoC để fetch
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Chi tiết gia sư'),
+      ),
+      body: BlocBuilder<TutorBloc, TutorState>(
+        builder: (context, state) {
+          if (state is TutorLoadingState) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (state is TutorDetailLoadedState) {
+            return _buildTutorDetail(state.tutor);
+          } else if (state is TutorErrorState) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Lỗi: ${state.message}'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (widget.tutorId != null) {
+                        context.read<TutorBloc>().add(LoadTutorByIdEvent(widget.tutorId!));
+                      }
+                    },
+                    child: const Text('Thử lại'),
+                  ),
+                ],
+              ),
+            );
+          }
+          return const Center(child: Text('Đang tải thông tin...'));
+        },
+      ),
+    );
+  }
 }

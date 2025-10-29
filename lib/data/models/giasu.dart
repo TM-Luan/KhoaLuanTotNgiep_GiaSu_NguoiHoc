@@ -1,66 +1,68 @@
-// data/models/giasu.dart
-
-// ignore_for_file: avoid_print
-
 class Tutor {
-  final int id;
-  final String name;
+  final int giaSuID;
+  final String hoTen;
   final String? diaChi;
   final String? gioiTinh;
   final String? ngaySinh;
   final String? bangCap;
   final String? kinhNghiem;
-  final String image;
-  final double rating;
-  final String? email;
-  final String? soDienThoai;
-  final String? subject;
+  final String? anhDaiDien;
+  final double diemSo;
+  final TaiKhoan taiKhoan;
+
+  String? soDienThoai;
 
   Tutor({
-    required this.id,
-    required this.name,
+    required this.giaSuID,
+    required this.hoTen,
     this.diaChi,
     this.gioiTinh,
     this.ngaySinh,
     this.bangCap,
     this.kinhNghiem,
-    required this.image,
-    required this.rating,
-    this.email,
-    this.soDienThoai,
-    this.subject,
+    this.anhDaiDien,
+    required this.diemSo,
+    required this.taiKhoan,
   });
 
   factory Tutor.fromJson(Map<String, dynamic> json) {
-    final apiImage = json['AnhDaiDien'] as String?;
-    final imageUrl = apiImage ?? 'https://i.pravatar.cc/300?img=${json['GiaSuID'] ?? 1}';
-    final taiKhoanData = json['TaiKhoan'] as Map<String, dynamic>? ?? {};
-
-    // ===> KIỂM TRA LỆNH PRINT NÀY CÓ TỒN TẠI KHÔNG <===
-    print('>>> [Tutor.fromJson] GiaSuID: ${json['GiaSuID']}, AnhDaiDien: $apiImage, Final Image URL: $imageUrl');
-    // ===================================================
-
     return Tutor(
-      id: json['GiaSuID'] as int? ?? 0,
-      name: json['HoTen'] as String? ?? 'Chưa có tên',
-      diaChi: json['DiaChi'] as String?,
-      gioiTinh: json['GioiTinh'] as String?,
-      ngaySinh: json['NgaySinh'] as String?,
-      bangCap: json['BangCap'] as String?,
-      kinhNghiem: json['KinhNghiem'] as String?,
-      image: imageUrl,
-      rating: (json['DiemSo'] as num? ?? 0).toDouble(),
-      email: taiKhoanData['Email'] as String?,
-      soDienThoai: taiKhoanData['SoDienThoai'] as String?,
-      subject: json['MonHoc'] as String? ?? 'Chuyên môn chưa cập nhật',
+      giaSuID: json['GiaSuID'],
+      hoTen: json['HoTen'],
+      diaChi: json['DiaChi'],
+      gioiTinh: json['GioiTinh'],
+      ngaySinh: json['NgaySinh'],
+      bangCap: json['BangCap'],
+      kinhNghiem: json['KinhNghiem'],
+      anhDaiDien: json['AnhDaiDien'],
+      diemSo: (json['DiemSo'] as num?)?.toDouble() ?? 0.0,
+      taiKhoan: TaiKhoan.fromJson(json['TaiKhoan']),
     );
   }
 
-  String get displayGioiTinh {
-    if (gioiTinh == null) return 'Chưa cập nhật';
-    final lowerCaseGioiTinh = gioiTinh!.toLowerCase();
-    if (lowerCaseGioiTinh == 'nam') return 'Nam';
-    if (lowerCaseGioiTinh == 'nữ' || lowerCaseGioiTinh == 'nu') return 'Nữ';
-    return gioiTinh!;
+  // Getter để tương thích với TutorCard hiện tại
+  String get name => hoTen;
+  String? get subject => bangCap;
+  double get rating => diemSo;
+  String get image => anhDaiDien ?? '';
+}
+
+class TaiKhoan {
+  final int taiKhoanID;
+  final String email;
+  final String soDienThoai;
+
+  TaiKhoan({
+    required this.taiKhoanID,
+    required this.email,
+    required this.soDienThoai,
+  });
+
+  factory TaiKhoan.fromJson(Map<String, dynamic> json) {
+    return TaiKhoan(
+      taiKhoanID: json['TaiKhoanID'],
+      email: json['Email'],
+      soDienThoai: json['SoDienThoai'],
+    );
   }
 }

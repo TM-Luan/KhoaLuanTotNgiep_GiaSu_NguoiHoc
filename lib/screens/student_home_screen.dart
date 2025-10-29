@@ -1,14 +1,9 @@
-// screens/student_home_screen.dart
-
-// ignore_for_file: avoid_print
-
 import 'package:flutter/material.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/giasu.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/giasu_repository.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor/tutor_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_detail_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/tutor_card.dart';
-import 'tutor_detail_page.dart'; // Import TutorDetailPage để lấy routeName
-import '../widgets/custom_searchBar.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/custom_searchBar.dart';
 
 class LearnerHomeScreen extends StatefulWidget {
   const LearnerHomeScreen({super.key});
@@ -18,123 +13,90 @@ class LearnerHomeScreen extends StatefulWidget {
 }
 
 class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
-  final GiaSuRepository _giaSuRepo = GiaSuRepository();
-  bool _isLoading = true;
-  List<Tutor> _tutorList = [];
-  String? _errorMessage;
-
   @override
   void initState() {
     super.initState();
-    _fetchGiaSu();
+    // Load tutors khi screen được khởi tạo
+    context.read<TutorBloc>().add(LoadAllTutorsEvent());
   }
 
-  Future<void> _fetchGiaSu() async {
-    // ... (phần code gọi API giữ nguyên) ...
-     setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    final ApiResponse<List<Tutor>> response = await _giaSuRepo.getDanhSachGiaSu();
-
-    // Log kết quả API (giữ lại để kiểm tra)
-    print('--- KẾT QUẢ GỌI API GIA SƯ ---');
-    print('Thành công (Success): ${response.success}');
-    print('StatusCode: ${response.statusCode}');
-    print('Lỗi (Message): ${response.message}');
-    print('Dữ liệu (Data): ${response.data}'); // Sẽ in [Instance of 'Tutor', ...] nếu thành công
-    print('----------------------------------');
-
-
-    if (mounted) {
-      if (response.isSuccess && response.data != null) {
-        setState(() {
-          _tutorList = response.data!;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _errorMessage = response.message;
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Widget _buildTutorList() {
-    // ... (phần code xử lý loading, error, empty giữ nguyên) ...
-     if (_isLoading) {
-      return const SliverFillRemaining(child: Center(child: CircularProgressIndicator()));
+  Widget _buildTutorList(BuildContext context, TutorState state) {
+    if (state is TutorLoadingState) {
+      return const SliverFillRemaining(
+        child: Center(child: CircularProgressIndicator()),
+      );
     }
 
-    if (_errorMessage != null) {
+    if (state is TutorErrorState) {
       return SliverFillRemaining(
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Lỗi: $_errorMessage', textAlign: TextAlign.center),
+              Text('Lỗi: ${state.message}', textAlign: TextAlign.center),
               const SizedBox(height: 10),
               ElevatedButton(
-                onPressed: _fetchGiaSu,
+                onPressed: () {
+                  context.read<TutorBloc>().add(LoadAllTutorsEvent());
+                },
                 child: const Text('Thử lại'),
-              )
+              ),
             ],
           ),
         ),
       );
     }
 
-    if (_tutorList.isEmpty) {
-      return const SliverFillRemaining(child: Center(child: Text('Không có gia sư nào.')));
-    }
+    if (state is AllTutorsLoadedState) {
+      final tutorList = state.tutors;
 
+      if (tutorList.isEmpty) {
+        return const SliverFillRemaining(
+          child: Center(child: Text('Không có gia sư nào.')),
+        );
+      }
 
-    return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
-      sliver: SliverLayoutBuilder(
-        builder: (context, constraints) {
-          final crossAxisCount = constraints.crossAxisExtent >= 420 ? 3 : 2;
+      return SliverPadding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+        sliver: SliverLayoutBuilder(
+          builder: (context, constraints) {
+            final crossAxisCount = constraints.crossAxisExtent >= 420 ? 3 : 2;
 
-          return SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              mainAxisSpacing: 14,
-              crossAxisSpacing: 14,
-              childAspectRatio: 0.66,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final t = _tutorList[index];
+            return SliverGrid(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                mainAxisSpacing: 14,
+                crossAxisSpacing: 14,
+                childAspectRatio: 0.66,
+              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final tutor = tutorList[index];
                 return TutorCard(
-                  tutor: t,
+                  tutor: tutor,
                   onTap: () {
-                    // ===> KIỂM TRA CÁC LỆNH PRINT NÀY <===
-                    print('>>> [TutorCard onTap] Tapped on Tutor: ${t.name} (ID: ${t.id})');
-                    print('>>> [TutorCard onTap] Navigating to: ${TutorDetailPage.routeName}');
-                    print('>>> [TutorCard onTap] Passing arguments of type: ${t.runtimeType}');
-                    // =====================================
                     Navigator.pushNamed(
                       context,
                       TutorDetailPage.routeName,
-                      arguments: t, // Truyền đối tượng Tutor
+                      arguments: tutor,
                     );
                   },
                 );
-              },
-              childCount: _tutorList.length,
-            ),
-          );
-        },
-      ),
+              }, childCount: tutorList.length),
+            );
+          },
+        ),
+      );
+    }
+
+    // Default state
+    return const SliverFillRemaining(
+      child: Center(child: Text('Vui lòng tải danh sách gia sư')),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // ... (phần code build UI giữ nguyên) ...
-     return Scaffold(
+    return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
@@ -142,18 +104,41 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
               child: SearchBarCustom(onFilter: () {}),
             ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 14, 16, 8),
-              child: Text(
-                'DANH SÁCH GIA SƯ',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            // CẬP NHẬT: Sử dụng Row để có tiêu đề và nút refresh
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'DANH SÁCH GIA SƯ',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      context.read<TutorBloc>().add(RefreshTutorsEvent());
+                    },
+                    icon: const Icon(Icons.refresh),
+                    iconSize: 24,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 40,
+                      minHeight: 40,
+                    ),
+                    tooltip: 'Làm mới danh sách',
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 10),
             Expanded(
               child: CustomScrollView(
                 slivers: [
-                  _buildTutorList(),
+                  BlocBuilder<TutorBloc, TutorState>(
+                    builder: (context, state) {
+                      return _buildTutorList(context, state);
+                    },
+                  ),
                 ],
               ),
             ),
