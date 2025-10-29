@@ -5,6 +5,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/flutter_secure_storage.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/change_password_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/edit_profile_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/profile_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/splash_screen.dart';
@@ -67,9 +68,7 @@ class _AccountState extends State<Account> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -100,16 +99,20 @@ class _AccountState extends State<Account> {
                 );
                 if (updated != null && mounted) {
                   setState(() => _profile = updated);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Cập nhật thành công')),
-                  );
                 }
               },
             ),
             _buildAccountItem(
               title: 'Đổi mật khẩu',
               icon: Icons.lock_outline,
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ChangePasswordPage(),
+                  ),
+                );
+              },
             ),
             _buildAccountItem(
               title: 'Đăng xuất',
@@ -120,12 +123,12 @@ class _AccountState extends State<Account> {
                 final res = await _repo.logout(token);
 
                 if (!context.mounted) return;
-                final msg = res.success
-                    ? (res.data ?? 'Đã đăng xuất')
-                    : (res.message);
+                final msg =
+                    res.success ? (res.data ?? 'Đã đăng xuất') : (res.message);
 
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text(msg)));
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(msg)));
                 await SecureStorage.deleteToken();
 
                 if (!context.mounted) return;

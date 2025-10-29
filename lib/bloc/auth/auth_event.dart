@@ -53,3 +53,31 @@ class UpdateProfileRequested extends AuthEvent {
   final UserProfile user;
   const UpdateProfileRequested(this.user);
 }
+class ChangePasswordRequested extends AuthEvent {
+  final String currentPassword;
+  final String newPassword;
+  final String confirmPassword;
+
+  const ChangePasswordRequested({
+    required this.currentPassword,
+    required this.newPassword,
+    required this.confirmPassword,
+  });
+
+  @override
+  List<Object?> get props => [currentPassword, newPassword, confirmPassword];
+}
+class ForgotPasswordRequested extends AuthEvent {
+  final String email;
+  final String newPassword;
+  final String confirmPassword;
+
+  const ForgotPasswordRequested({
+    required this.email,
+    required this.newPassword,
+    required this.confirmPassword,
+  });
+
+  @override
+  List<Object?> get props => [email, newPassword, confirmPassword];
+}

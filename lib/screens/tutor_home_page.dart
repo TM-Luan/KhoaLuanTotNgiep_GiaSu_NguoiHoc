@@ -69,7 +69,7 @@ class _TutorHomePageState extends State<TutorHomePage> { // Đổi từ _TutorLi
   }
 
   void _handleDeNghiDay(LopHoc lop) {
-      print('>>> [TutorHomePage] Đề nghị dạy lớp: ${lop.maLop}'); // Thêm log
+      print('>>> [TutorHomePage] Đề ng hị dạy lớp: ${lop.maLop}'); // Thêm log
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Đã đề nghị dạy lớp ${lop.maLop}'),
