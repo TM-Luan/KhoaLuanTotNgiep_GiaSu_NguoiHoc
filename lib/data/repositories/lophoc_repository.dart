@@ -8,6 +8,8 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 
 class LopHocRepository {
   final ApiService _apiService = ApiService();
+
+  // === HÀM getLopHocByTrangThai (Giữ nguyên) ===
   Future<ApiResponse<List<LopHoc>>> getLopHocByTrangThai(
     String trangThai,
   ) async {
@@ -29,13 +31,12 @@ class LopHocRepository {
 
           List<LopHoc> lopHocList = [];
           try {
-            lopHocList =
-                lopHocDataList
-                    .map(
-                      (lopHocJson) =>
-                          LopHoc.fromJson(lopHocJson as Map<String, dynamic>),
-                    )
-                    .toList();
+            lopHocList = lopHocDataList
+                .map(
+                  (lopHocJson) =>
+                      LopHoc.fromJson(lopHocJson as Map<String, dynamic>),
+                )
+                .toList();
           } catch (e) {
             return ApiResponse<List<LopHoc>>(
               success: false,
@@ -77,6 +78,7 @@ class LopHocRepository {
     }
   }
 
+  // === HÀM getLopHocById (Giữ nguyên) ===
   Future<ApiResponse<LopHoc>> getLopHocById(int id) async {
     final String endpoint = '${ApiConfig.lopHocYeuCau}/$id';
     try {
@@ -135,6 +137,7 @@ class LopHocRepository {
     }
   }
 
+  // === HÀM createLopHoc (Giữ nguyên) ===
   Future<ApiResponse<LopHoc>> createLopHoc(
     Map<String, dynamic> lopHocData,
   ) async {
@@ -192,6 +195,65 @@ class LopHocRepository {
       return ApiResponse<LopHoc>(
         success: false,
         message: 'Lỗi không xác định khi tạo lớp: $e',
+        statusCode: 0,
+      );
+    }
+  }
+
+  // === HÀM MỚI ĐƯỢC BỔ SUNG NỘI DUNG ===
+  // (Gọi API: GET /giasu/lopdangday)
+  Future<ApiResponse<List<LopHoc>>> getLopHocDangDayCuaGiaSu() async {
+    // Endpoint này đã được định nghĩa trong api_routes_fix.php
+    const String endpoint = '/giasu/lopdangday';
+
+    try {
+      // 1. Gọi ApiService
+      final response = await _apiService.get<Map<String, dynamic>>(
+        endpoint,
+        fromJsonT: (json) => json,
+      );
+
+      // 2. Xử lý logic parse
+      // Backend trả về collection (LopHocYeuCauResource::collection)
+      // nên nó sẽ có key 'data' ở ngoài cùng.
+      if (response.isSuccess &&
+          response.data != null &&
+          response.data!['data'] is List) {
+        List<dynamic> lopHocDataList = response.data!['data'];
+
+        List<LopHoc> lopHocList = [];
+        try {
+          lopHocList = lopHocDataList
+              .map((lopHocJson) =>
+                  LopHoc.fromJson(lopHocJson as Map<String, dynamic>))
+              .toList();
+        } catch (e) {
+          return ApiResponse<List<LopHoc>>(
+            success: false,
+            message: 'Lỗi parse dữ liệu lớp học từ API: $e',
+            statusCode: response.statusCode,
+          );
+        }
+
+        return ApiResponse<List<LopHoc>>(
+          success: true,
+          message: response.message,
+          data: lopHocList,
+          statusCode: response.statusCode,
+        );
+      } else {
+        return ApiResponse<List<LopHoc>>(
+          success: false,
+          message: response.message.isNotEmpty
+              ? response.message
+              : "API trả về dữ liệu không đúng định dạng (không phải List hoặc không có key 'data').",
+          statusCode: response.statusCode,
+        );
+      }
+    } catch (e) {
+      return ApiResponse<List<LopHoc>>(
+        success: false,
+        message: 'Lỗi không xác định khi lấy danh sách lớp: $e',
         statusCode: 0,
       );
     }

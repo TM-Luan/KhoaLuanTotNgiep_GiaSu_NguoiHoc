@@ -16,6 +16,8 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_schedule_sc
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_home_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_home_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_schedule_page.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_my_classes_screen.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -63,7 +65,8 @@ class HomeScreenState extends State<HomeScreen> {
       return [
         TutorHomePage(userProfile: currentProfile), // TRUYỀN PROFILE CHO TUTOR
         const TutorSchedulePage(),
-        const Placeholder(),
+        const TutorMyClassesScreen(),
+        // const Placeholder(),
         const Account(),
       ];
     } else if (userRole == 3) {

@@ -7,10 +7,12 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_home_screen
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_home_page.dart'; // TutorHomePage (thay vì TutorListPage)
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_detail_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_schedule_screen.dart'; // LearnerSchedulePage
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_my_classes_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_schedule_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_my_classes_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/home_screen.dart'; // Có thể là màn hình chung?
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/profile_screen.dart';
+
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -47,6 +49,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const HomeScreen());
       case '/profile':
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
+      case TutorMyClassesScreen.routeName: // '/tutor-my-classes'
+        return MaterialPageRoute(builder: (_) => const TutorMyClassesScreen());
 
       default:
         return _errorRoute('Trang không tồn tại (${settings.name})');
