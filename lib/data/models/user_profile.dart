@@ -36,11 +36,9 @@ class UserProfile {
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
-    // API login trả về object user trong key 'data'
-    final data =
-        json['data'] ?? json; // Lấy object data (hoặc json nếu không có data)
+    final data = json['data'] ?? json;
     return UserProfile(
-      success: json['success'], // Key success thường ở ngoài cùng
+      success: json['success'],
       taiKhoanID: data['TaiKhoanID'],
       email: data['Email'],
       hoTen: data['HoTen'],

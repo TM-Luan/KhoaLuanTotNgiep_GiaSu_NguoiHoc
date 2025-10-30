@@ -20,31 +20,34 @@ class TutorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap ?? () {
-        // Navigate to tutor detail using BLoC
-        context.read<TutorBloc>().add(LoadTutorByIdEvent(tutor.giaSuID));
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => BlocProvider.value(
-              value: context.read<TutorBloc>(),
-              child: TutorDetailPage(tutorId: tutor.giaSuID),
-            ),
-          ),
-        );
-      },
+      onTap:
+          onTap ??
+          () {
+            // Navigate to tutor detail using BLoC
+            context.read<TutorBloc>().add(LoadTutorByIdEvent(tutor.giaSuID));
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) => BlocProvider.value(
+                      value: context.read<TutorBloc>(),
+                      child: TutorDetailPage(tutorId: tutor.giaSuID),
+                    ),
+              ),
+            );
+          },
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.grey.withOpacity(0.5)),
+          border: Border.all(color: AppColors.grey),
           boxShadow: [
             BoxShadow(
-              color: AppColors.black.withOpacity(0.1),
+              color: const Color.fromARGB(255, 181, 181, 181),
               blurRadius: 3,
               offset: const Offset(0, 1),
-            )
+            ),
           ],
         ),
         child: ClipRRect(
@@ -52,10 +55,7 @@ class TutorCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AspectRatio(
-                aspectRatio: 1,
-                child: _buildTutorImage(),
-              ),
+              AspectRatio(aspectRatio: 1, child: _buildTutorImage()),
               Flexible(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
@@ -147,11 +147,7 @@ class TutorCard extends StatelessWidget {
       return Container(
         color: AppColors.lightGrey,
         child: Center(
-          child: Icon(
-            Icons.person_outline,
-            size: 40,
-            color: AppColors.grey.withOpacity(0.7),
-          ),
+          child: Icon(Icons.person_outline, size: 40, color: AppColors.grey),
         ),
       );
     }
@@ -163,21 +159,20 @@ class TutorCard extends StatelessWidget {
         if (loadingProgress == null) return child;
         return Container(
           color: AppColors.lightGrey,
-          child: const Center(
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
+          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         );
       },
-      errorBuilder: (context, error, stackTrace) => Container(
-        color: AppColors.lightGrey,
-        child: Center(
-          child: Icon(
-            Icons.person_outline,
-            size: 40,
-            color: AppColors.grey.withOpacity(0.7),
+      errorBuilder:
+          (context, error, stackTrace) => Container(
+            color: AppColors.lightGrey,
+            child: Center(
+              child: Icon(
+                Icons.person_outline,
+                size: 40,
+                color: AppColors.grey,
+              ),
+            ),
           ),
-        ),
-      ),
     );
   }
 }

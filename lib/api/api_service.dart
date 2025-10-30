@@ -14,11 +14,11 @@ class ApiService {
   Future<Map<String, String>> _getHeaders() async {
     final String? token = await SecureStorage.getToken();
     Map<String, String> headers = Map.from(ApiConfig.headers);
-    
+
     if (token != null && token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
     }
-    
+
     return headers;
   }
 
@@ -128,15 +128,16 @@ class ApiService {
   ) {
     try {
       final Map<String, dynamic> responseData = jsonDecode(response.body);
-      
+
       // Kiểm tra status code
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return ApiResponse<T>(
           success: responseData['success'] ?? true,
           message: responseData['message'] ?? 'Thành công',
-          data: fromJsonT != null && responseData['data'] != null
-              ? fromJsonT(responseData)
-              : responseData as T?,
+          data:
+              fromJsonT != null && responseData['data'] != null
+                  ? fromJsonT(responseData)
+                  : responseData as T?,
           statusCode: response.statusCode,
         );
       } else if (response.statusCode == 401) {
@@ -185,10 +186,6 @@ class ApiService {
   }
 
   ApiResponse<T> _errorResponse<T>(String message) {
-    return ApiResponse<T>(
-      success: false,
-      message: message,
-      statusCode: 0,
-    );
+    return ApiResponse<T>(success: false, message: message, statusCode: 0);
   }
 }

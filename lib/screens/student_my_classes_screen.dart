@@ -1,14 +1,9 @@
-// FILE: student_my_classes_screen.dart
-// (Viết lại toàn bộ)
-
 import 'package:flutter/material.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/add_class_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_class_detail_screen.dart';
-// TODO: Tạo file này ở bước 5
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_class_proposals_screen.dart'; 
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_class_proposals_screen.dart';
 
 class StudentMyClassesPage extends StatefulWidget {
   const StudentMyClassesPage({super.key});
@@ -28,7 +23,6 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
   // Danh sách cho từng tab
   List<LopHoc> _lopHocTimGiaSu = [];
   List<LopHoc> _lopHocDangDay = [];
-  // Bạn có thể thêm các list khác (Chờ duyệt, Hoàn thành...) nếu muốn
 
   @override
   void initState() {
@@ -76,7 +70,6 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
       } else if (!responses[1].isSuccess) {
         _errorMessage = responses[1].message;
       }
-
     } catch (e) {
       _errorMessage = 'Lỗi không xác định: $e';
     }
@@ -92,11 +85,11 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
       appBar: AppBar(
         title: const Text(
           'LỚP CỦA TÔI',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
-        elevation: 0,
+        elevation: 1,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
@@ -114,11 +107,14 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
               child: const Text('Thêm Lớp'),
             ),
-          )
+          ),
         ],
         // Thêm TabBar vào AppBar
         bottom: TabBar(
@@ -163,7 +159,10 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
     return TabBarView(
       controller: _tabController,
       children: [
-        _buildClassListView(_lopHocTimGiaSu, 'Không có lớp nào đang tìm gia sư.'),
+        _buildClassListView(
+          _lopHocTimGiaSu,
+          'Không có lớp nào đang tìm gia sư.',
+        ),
         _buildClassListView(_lopHocDangDay, 'Không có lớp nào đang dạy.'),
       ],
     );
@@ -240,8 +239,8 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => StudentClassDetailScreen(classId: lopHoc.maLop),
-            // TODO: Đảm bảo 'StudentClassDetailScreen' nhận 'classId'
+            builder:
+                (context) => StudentClassDetailScreen(classId: lopHoc.maLop),
           ),
         );
       },
@@ -253,7 +252,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: const Color.fromARGB(255, 175, 175, 175),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -271,30 +270,34 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
-                Icon(Icons.arrow_forward_ios, size: 16, color: Colors.blue.shade700),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.blue.shade700,
+                ),
               ],
             ),
             const SizedBox(height: 8),
 
             // Tên gia sư (lấy từ API)
             _buildInfoRow(
-              Icons.person, 
+              Icons.person,
               lopHoc.tenGiaSu ?? 'Chưa có gia sư', // Dùng dữ liệu mới
-              Colors.grey
+              Colors.grey,
             ),
-            
+
             // Địa chỉ
             _buildInfoRow(
-              Icons.location_on, 
-              lopHoc.diaChi ?? 'Chưa cập nhật', 
-              Colors.grey
+              Icons.location_on,
+              lopHoc.diaChi ?? 'Chưa cập nhật',
+              Colors.grey,
             ),
-            
+
             // Phí/Buổi
             _buildInfoRow(
               Icons.attach_money,
               lopHoc.hocPhi, // Đã có định dạng "vnd/Buoi" từ API
-              Colors.grey
+              Colors.grey,
             ),
 
             const SizedBox(height: 8),
@@ -331,7 +334,11 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
     String status = lopHoc.trangThai ?? '';
 
     // Hàm tạo kiểu cho nút
-    ElevatedButton _styledButton(String text, VoidCallback onPressed, [Color? color]) {
+    ElevatedButton styledButton(
+      String text,
+      VoidCallback onPressed, [
+      Color? color,
+    ]) {
       return ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -349,44 +356,43 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           // NÚT XEM ĐỀ NGHỊ MỚI
-          _styledButton('Xem đề nghị', () {
-             Navigator.push(
+          styledButton('Xem đề nghị', () {
+            Navigator.push(
               context,
               MaterialPageRoute(
                 // Điều hướng đến trang xem đề nghị, truyền ID lớp
-                builder: (context) => StudentClassProposalsScreen(lopHocId: lopHoc.maLop),
+                builder:
+                    (context) =>
+                        StudentClassProposalsScreen(lopHocId: lopHoc.maLop),
               ),
             );
           }, Colors.green),
           const SizedBox(width: 8),
-          _styledButton('Sửa', () { /* TODO: Logic sửa */ }),
+          styledButton('Sửa', () {}),
           const SizedBox(width: 8),
-          _styledButton('Đóng', () { /* TODO: Logic đóng */ }, Colors.red),
-        ],
-      );
-    } 
-    
-    if (status == 'DangHoc') {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          _styledButton('Xem lịch', () { /* TODO: Logic xem lịch */ }),
-        ],
-      );
-    }
-    
-    if (status == 'ChoDuyet') {
-       return Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          _styledButton('Sửa', () { /* TODO: Logic sửa */ }),
-          const SizedBox(width: 8),
-          _styledButton('Đóng', () { /* TODO: Logic đóng */ }, Colors.red),
+          styledButton('Đóng', () {}, Colors.red),
         ],
       );
     }
 
-    // Trạng thái Hoàn thành, Hủy...
-    return const SizedBox.shrink(); // Không hiển thị nút nào
+    if (status == 'DangHoc') {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [styledButton('Xem lịch', () {})],
+      );
+    }
+
+    if (status == 'ChoDuyet') {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          styledButton('Sửa', () {}),
+          const SizedBox(width: 8),
+          styledButton('Đóng', () {}, Colors.red),
+        ],
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 }

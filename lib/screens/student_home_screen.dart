@@ -1,23 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor/tutor_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_detail_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/tutor_card.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/custom_searchBar.dart';
 
 class LearnerHomeScreen extends StatefulWidget {
-  const LearnerHomeScreen({super.key});
+  final UserProfile? userProfile;
+
+  const LearnerHomeScreen({super.key, this.userProfile});
 
   @override
   State<LearnerHomeScreen> createState() => _LearnerHomeScreenState();
 }
 
 class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
+  UserProfile? currentProfile;
+
   @override
   void initState() {
     super.initState();
-    // Load tutors khi screen được khởi tạo
+    currentProfile = widget.userProfile;
     context.read<TutorBloc>().add(LoadAllTutorsEvent());
+  }
+
+  String get displayName {
+    return currentProfile?.hoTen ?? 'Người dùng';
+  }
+
+  String get avatarText {
+    final userName = currentProfile?.hoTen ?? '';
+    return userName.isNotEmpty ? userName[0].toUpperCase() : 'U';
   }
 
   Widget _buildTutorList(BuildContext context, TutorState state) {
@@ -88,7 +103,6 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
       );
     }
 
-    // Default state
     return const SliverFillRemaining(
       child: Center(child: Text('Vui lòng tải danh sách gia sư')),
     );
@@ -100,11 +114,39 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            // HIỂN THỊ TÊN NGƯỜI DÙNG
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+              color: AppColors.primaryBlue,
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: Text(
+                      avatarText,
+                      style: const TextStyle(
+                        color: AppColors.primaryBlue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Xin chào, $displayName',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // PHẦN CÒN LẠI CỦA GIAO DIỆN
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
               child: SearchBarCustom(onFilter: () {}),
             ),
-            // CẬP NHẬT: Sử dụng Row để có tiêu đề và nút refresh
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
               child: Row(

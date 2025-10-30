@@ -298,7 +298,6 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  // TODO: Mở ứng dụng Zoom với đường dẫn
                   _showZoomJoinSuccess(lichHoc);
                 },
                 child: const Text('Tham gia ngay'),
@@ -345,8 +344,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                   },
                 ),
                 Text(
-                  '${DateFormat('MMMM, yyyy').format(_currentMonth)}'
-                      .toUpperCase(),
+                  DateFormat('MMMM, yyyy').format(_currentMonth).toUpperCase(),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -492,7 +490,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${DateFormat('EEEE, dd/MM/yyyy').format(_selectedDate)}',
+                  DateFormat('EEEE, dd/MM/yyyy').format(_selectedDate),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -602,9 +600,8 @@ class LichHoc {
   });
 }
 
-// Model ThoiGianDay
 class ThoiGianDay {
-  final int thu; // 1=Chủ nhật, 2=Thứ 2, ..., 7=Thứ 7
+  final int thu;
   final String gioBatDau;
   final String gioKetThuc;
 

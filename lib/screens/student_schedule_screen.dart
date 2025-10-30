@@ -297,7 +297,6 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  // TODO: Mở ứng dụng Zoom với đường dẫn
                   _showZoomJoinSuccess(lichHoc);
                 },
                 child: const Text('Tham gia ngay'),
@@ -344,8 +343,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
                   },
                 ),
                 Text(
-                  '${DateFormat('MMMM, yyyy').format(_currentMonth)}'
-                      .toUpperCase(),
+                  DateFormat('MMMM, yyyy').format(_currentMonth).toUpperCase(),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -491,7 +489,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${DateFormat('EEEE, dd/MM/yyyy').format(_selectedDate)}',
+                  DateFormat('EEEE, dd/MM/yyyy').format(_selectedDate),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,

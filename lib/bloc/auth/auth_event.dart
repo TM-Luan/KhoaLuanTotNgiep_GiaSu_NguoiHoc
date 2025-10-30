@@ -49,10 +49,12 @@ class FetchProfileRequested extends AuthEvent {
 class LogoutRequested extends AuthEvent {
   const LogoutRequested();
 }
+
 class UpdateProfileRequested extends AuthEvent {
   final UserProfile user;
   const UpdateProfileRequested(this.user);
 }
+
 class ChangePasswordRequested extends AuthEvent {
   final String currentPassword;
   final String newPassword;
@@ -67,6 +69,7 @@ class ChangePasswordRequested extends AuthEvent {
   @override
   List<Object?> get props => [currentPassword, newPassword, confirmPassword];
 }
+
 class ForgotPasswordRequested extends AuthEvent {
   final String email;
   final String newPassword;

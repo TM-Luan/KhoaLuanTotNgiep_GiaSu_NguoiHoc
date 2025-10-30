@@ -9,16 +9,12 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/giasu_rep
 void main() {
   final authRepository = AuthRepository();
   final tutorRepository = TutorRepository();
-  
+
   runApp(
     MultiBlocProvider(
       providers: [
-        BlocProvider<AuthBloc>(
-          create: (_) => AuthBloc(authRepository),
-        ),
-        BlocProvider<TutorBloc>(
-          create: (_) => TutorBloc(tutorRepository),
-        ),
+        BlocProvider<AuthBloc>(create: (_) => AuthBloc(authRepository)),
+        BlocProvider<TutorBloc>(create: (_) => TutorBloc(tutorRepository)),
       ],
       child: const GiaSuApp(),
     ),

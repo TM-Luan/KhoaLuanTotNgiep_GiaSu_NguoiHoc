@@ -16,15 +16,9 @@ class StudentClassProposalsScreen extends StatefulWidget {
 
 class _StudentClassProposalsScreenState
     extends State<StudentClassProposalsScreen> {
-  
-  // TODO: Khai báo repository và gọi API
-  // ví dụ: _yeuCauRepo.getDanhSachDeNghi(widget.lopHocId)
-
   @override
   void initState() {
     super.initState();
-    // TODO: Gọi API để lấy danh sách các gia sư đã đề nghị
-    print('Đang xem danh sách đề nghị cho lớp ID: ${widget.lopHocId}');
   }
 
   @override
@@ -50,7 +44,6 @@ class _StudentClassProposalsScreenState
               'Chức năng này đang được phát triển.',
               style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
             ),
-            // TODO: Hiển thị ListView.builder khi có API
           ],
         ),
       ),

@@ -24,11 +24,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       e.email,
       e.password,
     );
-if (res.success && res.data != null) {
+    if (res.success && res.data != null) {
       await SecureStorage.setToken(res.data!.token);
-      emit(
-        AuthAuthenticated(res.data!.user, token: res.data!.token),
-      );
+      emit(AuthAuthenticated(res.data!.user, token: res.data!.token));
     } else {
       emit(AuthError(res.message));
     }

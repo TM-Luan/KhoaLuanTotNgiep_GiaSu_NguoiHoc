@@ -5,7 +5,6 @@ class SecureStorage {
   static const _tokenKey = 'auth_token';
   static const _nguoiHocIdKey = 'nguoiHocId'; // Đảm bảo key này đúng
 
-
   static Future<void> setToken(String token) async {
     await _storage.write(key: _tokenKey, value: token);
   }
@@ -24,15 +23,13 @@ class SecureStorage {
   }
 
   // Trong flutter_secure_storage.dart
-static Future<void> deleteNguoiHocID() async {
-  try {
-    await _storage.delete(key: _nguoiHocIdKey);
-  } catch (e) {
-    print("Lỗi khi xóa NguoiHocID khỏi SecureStorage: $e");
+  static Future<void> deleteNguoiHocID() async {
+    try {
+      await _storage.delete(key: _nguoiHocIdKey);
+    } catch (e) {
+      print("Lỗi khi xóa NguoiHocID khỏi SecureStorage: $e");
+    }
   }
-}
-
-  
 
   // ... (các hàm getToken, saveToken...)
 
@@ -48,10 +45,10 @@ static Future<void> deleteNguoiHocID() async {
 
   // Bạn cũng cần hàm lưu ID sau khi đăng nhập thành công
   static Future<void> saveNguoiHocID(String id) async {
-     try {
-       await _storage.write(key: _nguoiHocIdKey, value: id);
-     } catch (e) {
-       print("Lỗi khi lưu NguoiHocID vào SecureStorage: $e");
-     }
+    try {
+      await _storage.write(key: _nguoiHocIdKey, value: id);
+    } catch (e) {
+      print("Lỗi khi lưu NguoiHocID vào SecureStorage: $e");
+    }
   }
 }

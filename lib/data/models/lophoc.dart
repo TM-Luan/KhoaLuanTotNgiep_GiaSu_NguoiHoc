@@ -43,17 +43,11 @@ class LopHoc {
   });
 
   factory LopHoc.fromJson(Map<String, dynamic> json) {
-    // Kiểm tra nếu 'DiaChi' là object thì lấy trường con 'DiaChi' bên trong, ngược lại lấy luôn chuỗi
-    String? parsedDiaChi; 
-    if (json['DiaChi'] is Map<String, dynamic>) { 
-      // Chỉ chạy nếu API trả về Map (lỗi cũ)
-      parsedDiaChi = json['DiaChi']?['DiaChi']?.toString(); 
+    String? parsedDiaChi;
+    if (json['DiaChi'] is Map<String, dynamic>) {
+      parsedDiaChi = json['DiaChi']?['DiaChi']?.toString();
     } else {
-      // === PHẦN XỬ LÝ CHÍNH ===
-      // Nếu 'DiaChi' là String hoặc null, nó sẽ chạy vào đây
-      // .toString() an toàn vì có dấu ? -> Nếu json['DiaChi'] là null, kết quả là null
-      // Nếu json['DiaChi'] là String, kết quả là String đó
-      parsedDiaChi = json['DiaChi']?.toString(); 
+      parsedDiaChi = json['DiaChi']?.toString();
     }
 
     return LopHoc(

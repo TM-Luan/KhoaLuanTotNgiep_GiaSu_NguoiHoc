@@ -1,4 +1,3 @@
-// widgets/week_day_selector.dart
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 
@@ -6,7 +5,7 @@ class WeekDaySelector extends StatelessWidget {
   final List<DateTime> weekDays;
   final DateTime selectedDate;
   final Function(DateTime) onDateSelected;
-  final Function(DateTime) hasSchedule; // Hàm kiểm tra lịch có tồn tại không
+  final Function(DateTime) hasSchedule;
 
   const WeekDaySelector({
     super.key,
@@ -16,7 +15,6 @@ class WeekDaySelector extends StatelessWidget {
     required this.hasSchedule,
   });
 
-  // Helper để lấy tên ngày (T2, T3, CN,...)
   String _getDayName(DateTime date) {
     switch (date.weekday) {
       case 1:

@@ -1,57 +1,54 @@
-// screens/tutor_home_page.dart
-// (ĐÃ ĐƯỢC CHỈNH SỬA)
-
-// ignore_for_file: avoid_print
-
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/custom_searchBar.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/student_card.dart';import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/student_card.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_class_detail_page.dart';
 
-// === THÊM IMPORT CHO TRANG CHI TIẾT ===
-// (Đảm bảo đường dẫn này đúng với cấu trúc dự án của bạn)
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_class_detail_page.dart'; 
+class TutorHomePage extends StatefulWidget {
+  final UserProfile? userProfile; // THÊM PROPERTY
 
-
-class TutorHomePage extends StatefulWidget { 
-  const TutorHomePage({super.key}); 
+  const TutorHomePage({super.key, this.userProfile});
 
   @override
-  State<TutorHomePage> createState() => _TutorHomePageState(); 
+  State<TutorHomePage> createState() => _TutorHomePageState();
 }
 
-class _TutorHomePageState extends State<TutorHomePage> { 
+class _TutorHomePageState extends State<TutorHomePage> {
   final LopHocRepository _lopHocRepo = LopHocRepository();
   bool _isLoading = true;
   List<LopHoc> _lopHocList = [];
   String? _errorMessage;
+  UserProfile? currentProfile;
 
   @override
   void initState() {
     super.initState();
+    currentProfile = widget.userProfile; // NHẬN PROFILE TỪ WIDGET
     _fetchLopHocChuaGiao();
   }
 
-  // === SỬA LẠI HÀM NÀY ĐỂ GỌI ĐÚNG TÊN HÀM MỚI TRONG REPOSITORY ===
+  // GETTERS ĐỂ HIỂN THỊ THÔNG TIN NGƯỜI DÙNG
+  String get displayName {
+    return currentProfile?.hoTen ?? 'Gia sư';
+  }
+
+  String get avatarText {
+    final userName = currentProfile?.hoTen ?? '';
+    return userName.isNotEmpty ? userName[0].toUpperCase() : 'G';
+  }
+
   Future<void> _fetchLopHocChuaGiao() async {
-     setState(() {
+    setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    print('>>> [TutorHomePage] Calling API: getLopHocByTrangThai(\'TimGiaSu\')...');
-
-    // Sửa tên hàm: getLopHocTimGiaSu() -> getLopHocByTrangThai()
-    final ApiResponse<List<LopHoc>> response =
-        await _lopHocRepo.getLopHocByTrangThai('TimGiaSu');
-
-    // (Các log của bạn vẫn giữ nguyên)
-    print('--- KẾT QUẢ API LỚP HỌC ---');
-    print('StatusCode: ${response.statusCode}');
-    print('Lỗi (Message): ${response.message}');
-    print('-----------------------------');
+    final ApiResponse<List<LopHoc>> response = await _lopHocRepo
+        .getLopHocByTrangThai('TimGiaSu');
 
     if (mounted) {
       if (response.isSuccess && response.data != null) {
@@ -69,27 +66,22 @@ class _TutorHomePageState extends State<TutorHomePage> {
   }
 
   void _handleDeNghiDay(LopHoc lop) {
-      print('>>> [TutorHomePage] Đề nghị dạy lớp: ${lop.maLop}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Đã đề nghị dạy lớp ${lop.maLop}'),
-          duration: const Duration(seconds: 1), 
-        ),
-      );
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Đã đề nghị dạy lớp ${lop.maLop}'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
   }
 
-  // === THÊM LẠI HÀM ĐIỀU HƯỚNG (NAVIGATE) ===
   void _navigateToDetail(LopHoc lop) {
-    print('>>> [TutorHomePage] Navigating to detail for class ID: ${lop.maLop}');
     Navigator.push(
       context,
       MaterialPageRoute(
-        // Chúng ta dùng MaterialPageRoute, không dùng router.dart
         builder: (context) => TutorClassDetailPage(lopHocId: lop.maLop),
       ),
     );
   }
-  // === KẾT THÚC THÊM ===
 
   @override
   Widget build(BuildContext context) {
@@ -98,11 +90,37 @@ class _TutorHomePageState extends State<TutorHomePage> {
       body: SafeArea(
         child: Column(
           children: [
-            Padding( 
+            // HIỂN THỊ TÊN NGƯỜI DÙNG - GIỐNG NHƯ LEARNER HOME SCREEN
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+              color: AppColors.primaryBlue,
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: Text(
+                      avatarText,
+                      style: const TextStyle(
+                        color: AppColors.primaryBlue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Xin chào, $displayName',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-              child: SearchBarCustom(onFilter: () {
-                print('>>> [TutorHomePage] Filter button tapped.');
-              }),
+              child: SearchBarCustom(onFilter: () {}),
             ),
             const SizedBox(height: 8),
             const Padding(
@@ -117,9 +135,7 @@ class _TutorHomePageState extends State<TutorHomePage> {
                 textAlign: TextAlign.center,
               ),
             ),
-            Expanded(
-              child: _buildLopHocList(),
-            ),
+            Expanded(child: _buildLopHocList()),
           ],
         ),
       ),
@@ -143,7 +159,7 @@ class _TutorHomePageState extends State<TutorHomePage> {
               ElevatedButton(
                 onPressed: _fetchLopHocChuaGiao,
                 child: const Text('Thử lại'),
-              )
+              ),
             ],
           ),
         ),
@@ -151,7 +167,7 @@ class _TutorHomePageState extends State<TutorHomePage> {
     }
 
     if (_lopHocList.isEmpty) {
-        return const Center(child: Text('Không có lớp nào cần tìm gia sư.'));
+      return const Center(child: Text('Không có lớp nào cần tìm gia sư.'));
     }
 
     return ListView.builder(
@@ -159,11 +175,10 @@ class _TutorHomePageState extends State<TutorHomePage> {
       itemCount: _lopHocList.length,
       itemBuilder: (context, index) {
         final lop = _lopHocList[index];
-        return LopHocCard( 
+        return LopHocCard(
           lopHoc: lop,
           onDeNghiDay: () => _handleDeNghiDay(lop),
-          // === THÊM LẠI CALLBACK BỊ THIẾU ===
-          onCardTap: () => _navigateToDetail(lop), 
+          onCardTap: () => _navigateToDetail(lop),
         );
       },
     );

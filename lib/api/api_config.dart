@@ -12,7 +12,7 @@ class ApiConfig {
   static const String lopHocYeuCau = '/lophocyeucau';
   static const String changePassword = '/changepassword';
   static const String resetPassword = '/resetpassword';
-   static const String routeName = '/tutor-detail';
+  static const String routeName = '/tutor-detail';
 
   // Headers
   static Map<String, String> get headers => {

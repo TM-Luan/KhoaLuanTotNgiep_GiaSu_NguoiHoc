@@ -72,7 +72,15 @@ class _AccountState extends State<Account> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.white,
+      appBar: AppBar(
+        title: const Text(
+          'THÔNG TIN CÁ NHÂN',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 1,
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [

@@ -1,14 +1,10 @@
-// FILE 2: CẬP NHẬT/VIẾT LẠI FILE NÀY
-// (File này để chữa lỗi 'StudentClassDetailScreen(classId: ...)' )
-// Tên file: student_class_detail_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 
 class StudentClassDetailScreen extends StatefulWidget {
-  final int classId; // Sửa tên biến để khớp với hàm gọi
+  final int classId;
 
   const StudentClassDetailScreen({super.key, required this.classId});
 
@@ -36,8 +32,9 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
       _errorMessage = null;
     });
 
-    final ApiResponse<LopHoc> response =
-        await _lopHocRepo.getLopHocById(widget.classId); // Dùng widget.classId
+    final ApiResponse<LopHoc> response = await _lopHocRepo.getLopHocById(
+      widget.classId,
+    ); // Dùng widget.classId
 
     if (mounted) {
       if (response.isSuccess && response.data != null) {
@@ -63,7 +60,6 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
         elevation: 1,
       ),
       body: _buildBody(),
-      // TODO: Thêm các nút bấm ở cuối trang nếu cần (ví dụ: Hủy lớp, ...)
     );
   }
 
@@ -85,7 +81,7 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
               ElevatedButton(
                 onPressed: _fetchLopHocDetail,
                 child: const Text('Thử lại'),
-              )
+              ),
             ],
           ),
         ),
@@ -111,33 +107,40 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
 
           // Phần Trạng thái
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0), 
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.flag_outlined, color: Colors.blueAccent, size: 20),
+                const Icon(
+                  Icons.flag_outlined,
+                  color: Colors.blueAccent,
+                  size: 20,
+                ),
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Trạng thái', 
+                      'Trạng thái',
                       style: TextStyle(color: Colors.grey),
                     ),
-                    const SizedBox(height: 4), 
+                    const SizedBox(height: 4),
                     Chip(
                       label: Text(
                         _lopHoc!.trangThai ?? 'N/A',
                         style: const TextStyle(
-                          color: Colors.blueAccent, 
-                          fontWeight: FontWeight.bold, 
+                          color: Colors.blueAccent,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      backgroundColor: Colors.blue.shade50, 
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                      backgroundColor: Colors.blue.shade50,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 2,
+                      ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8), 
-                        side: const BorderSide(color: Colors.transparent), 
+                        borderRadius: BorderRadius.circular(8),
+                        side: const BorderSide(color: Colors.transparent),
                       ),
                     ),
                   ],
@@ -145,33 +148,69 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
               ],
             ),
           ),
-          
-          const SizedBox(height: 8), 
+
+          const SizedBox(height: 8),
           Text(
             'Mã lớp: ${_lopHoc!.maLop}',
             style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
-          const SizedBox(height: 8), 
+          const SizedBox(height: 8),
           Text(
             'Ngày đăng: ${_lopHoc!.ngayTao ?? "N/A"}',
             style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
-          
+
           const Divider(height: 32),
 
           // Thông tin chính
-          _buildDetailRow(Icons.person, 'Gia sư', _lopHoc!.tenGiaSu ?? 'Chưa có'),
-          _buildDetailRow(Icons.location_on, 'Địa chỉ', _lopHoc!.diaChi ?? 'Chưa cập nhật'),
+          _buildDetailRow(
+            Icons.person,
+            'Gia sư',
+            _lopHoc!.tenGiaSu ?? 'Chưa có',
+          ),
+          _buildDetailRow(
+            Icons.location_on,
+            'Địa chỉ',
+            _lopHoc!.diaChi ?? 'Chưa cập nhật',
+          ),
           _buildDetailRow(Icons.attach_money, 'Học phí', _lopHoc!.hocPhi),
 
           // Thông tin chi tiết lớp
-          _buildDetailRow(Icons.computer, 'Hình thức', _lopHoc!.hinhThuc ?? 'N/A'),
-          _buildDetailRow(Icons.schedule, 'Thời lượng', _lopHoc!.thoiLuong ?? 'N/A'),
-          _buildDetailRow(Icons.calendar_today, 'Thời gian học', _lopHoc!.thoiGianHoc ?? 'N/A'),
-          _buildDetailRow(Icons.school, 'Đối tượng', _lopHoc!.doiTuong ?? 'N/A'),
-          _buildDetailRow(Icons.people, 'Số lượng', _lopHoc!.soLuong?.toString() ?? 'N/A'),
-          _buildDetailRow(Icons.book_outlined, 'Môn học', _lopHoc!.tenMon ?? 'N/A'),
-          _buildDetailRow(Icons.stairs_outlined, 'Khối lớp', _lopHoc!.tenKhoiLop ?? 'N/A'),
+          _buildDetailRow(
+            Icons.computer,
+            'Hình thức',
+            _lopHoc!.hinhThuc ?? 'N/A',
+          ),
+          _buildDetailRow(
+            Icons.schedule,
+            'Thời lượng',
+            _lopHoc!.thoiLuong ?? 'N/A',
+          ),
+          _buildDetailRow(
+            Icons.calendar_today,
+            'Thời gian học',
+            _lopHoc!.thoiGianHoc ?? 'N/A',
+          ),
+          _buildDetailRow(
+            Icons.school,
+            'Đối tượng',
+            _lopHoc!.doiTuong ?? 'N/A',
+          ),
+          _buildDetailRow(
+            Icons.people,
+            'Số lượng',
+            _lopHoc!.soLuong?.toString() ?? 'N/A',
+          ),
+          _buildDetailRow(
+            Icons.book_outlined,
+            'Môn học',
+            _lopHoc!.tenMon ?? 'N/A',
+          ),
+          _buildDetailRow(
+            Icons.stairs_outlined,
+            'Khối lớp',
+            _lopHoc!.tenKhoiLop ?? 'N/A',
+          ),
 
           const Divider(height: 32),
           const Text(
@@ -203,7 +242,7 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
               Text(title, style: const TextStyle(color: Colors.grey)),
               const SizedBox(height: 2),
               SizedBox(
-                width: MediaQuery.of(context).size.width - 80, 
+                width: MediaQuery.of(context).size.width - 80,
                 child: Text(value, style: const TextStyle(fontSize: 16)),
               ),
             ],
