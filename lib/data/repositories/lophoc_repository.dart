@@ -202,60 +202,107 @@ class LopHocRepository {
 
   // === HÀM MỚI ĐƯỢC BỔ SUNG NỘI DUNG ===
   // (Gọi API: GET /giasu/lopdangday)
-  Future<ApiResponse<List<LopHoc>>> getLopHocDangDayCuaGiaSu() async {
-    // Endpoint này đã được định nghĩa trong api_routes_fix.php
-    const String endpoint = '/giasu/lopdangday';
+  // Future<ApiResponse<List<LopHoc>>> getLopHocDangDayCuaGiaSu() async {
+  //   // Endpoint này đã được định nghĩa trong api_routes_fix.php
+  //   const String endpoint = '/giasu/lopdangday';
 
-    try {
-      // 1. Gọi ApiService
-      final response = await _apiService.get<Map<String, dynamic>>(
-        endpoint,
-        fromJsonT: (json) => json,
+  //   try {
+  //     // 1. Gọi ApiService
+  //     final response = await _apiService.get<Map<String, dynamic>>(
+  //       endpoint,
+  //       fromJsonT: (json) => json,
+  //     );
+
+  //     // 2. Xử lý logic parse
+  //     // Backend trả về collection (LopHocYeuCauResource::collection)
+  //     // nên nó sẽ có key 'data' ở ngoài cùng.
+  //     if (response.isSuccess &&
+  //         response.data != null &&
+  //         response.data!['data'] is List) {
+  //       List<dynamic> lopHocDataList = response.data!['data'];
+
+  //       List<LopHoc> lopHocList = [];
+  //       try {
+  //         lopHocList = lopHocDataList
+  //             .map((lopHocJson) =>
+  //                 LopHoc.fromJson(lopHocJson as Map<String, dynamic>))
+  //             .toList();
+  //       } catch (e) {
+  //         return ApiResponse<List<LopHoc>>(
+  //           success: false,
+  //           message: 'Lỗi parse dữ liệu lớp học từ API: $e',
+  //           statusCode: response.statusCode,
+  //         );
+  //       }
+
+  //       return ApiResponse<List<LopHoc>>(
+  //         success: true,
+  //         message: response.message,
+  //         data: lopHocList,
+  //         statusCode: response.statusCode,
+  //       );
+  //     } else {
+  //       return ApiResponse<List<LopHoc>>(
+  //         success: false,
+  //         message: response.message.isNotEmpty
+  //             ? response.message
+  //             : "API trả về dữ liệu không đúng định dạng (không phải List hoặc không có key 'data').",
+  //         statusCode: response.statusCode,
+  //       );
+  //     }
+  //   } catch (e) {
+  //     return ApiResponse<List<LopHoc>>(
+  //       success: false,
+  //       message: 'Lỗi không xác định khi lấy danh sách lớp: $e',
+  //       statusCode: 0,
+  //     );
+  //   }
+  // }
+  Future<ApiResponse<List<LopHoc>>> getLopHocCuaNguoiHoc() async {
+  // Endpoint này đã được định nghĩa trong routes/api.php
+  const String endpoint = '/nguoihoc/lopcuatoi';
+
+  try {
+    final response = await _apiService.get<Map<String, dynamic>>(
+      endpoint,
+      fromJsonT: (json) => json,
+    );
+
+    // Backend trả về collection (LopHocYeuCauResource::collection)
+    // nên nó sẽ có key 'data' ở ngoài cùng.
+    if (response.isSuccess &&
+        response.data != null &&
+        response.data!['data'] is List) {
+      List<dynamic> dataList = response.data!['data'];
+
+      List<LopHoc> lopHocList = dataList
+          .map((item) => LopHoc.fromJson(item as Map<String, dynamic>))
+          .toList();
+
+      // Dòng return đã được sửa (thêm message)
+      return ApiResponse<List<LopHoc>>(
+        success: true,
+        message: response.message, // <-- SỬA LỖI NẰM Ở ĐÂY
+        data: lopHocList,
+        statusCode: response.statusCode,
       );
-
-      // 2. Xử lý logic parse
-      // Backend trả về collection (LopHocYeuCauResource::collection)
-      // nên nó sẽ có key 'data' ở ngoài cùng.
-      if (response.isSuccess &&
-          response.data != null &&
-          response.data!['data'] is List) {
-        List<dynamic> lopHocDataList = response.data!['data'];
-
-        List<LopHoc> lopHocList = [];
-        try {
-          lopHocList = lopHocDataList
-              .map((lopHocJson) =>
-                  LopHoc.fromJson(lopHocJson as Map<String, dynamic>))
-              .toList();
-        } catch (e) {
-          return ApiResponse<List<LopHoc>>(
-            success: false,
-            message: 'Lỗi parse dữ liệu lớp học từ API: $e',
-            statusCode: response.statusCode,
-          );
-        }
-
-        return ApiResponse<List<LopHoc>>(
-          success: true,
-          message: response.message,
-          data: lopHocList,
-          statusCode: response.statusCode,
-        );
-      } else {
-        return ApiResponse<List<LopHoc>>(
-          success: false,
-          message: response.message.isNotEmpty
-              ? response.message
-              : "API trả về dữ liệu không đúng định dạng (không phải List hoặc không có key 'data').",
-          statusCode: response.statusCode,
-        );
-      }
-    } catch (e) {
+    } else {
+      // Dòng return khi thất bại (đã đúng)
       return ApiResponse<List<LopHoc>>(
         success: false,
-        message: 'Lỗi không xác định khi lấy danh sách lớp: $e',
-        statusCode: 0,
+        message: response.message.isNotEmpty
+            ? response.message
+            : "API trả về dữ liệu không đúng định dạng.",
+        statusCode: response.statusCode,
       );
     }
+  } catch (e) {
+    // Dòng return khi có exception (đã đúng)
+    return ApiResponse<List<LopHoc>>(
+      success: false,
+      message: 'Lỗi không xác định khi lấy danh sách lớp của bạn: $e',
+      statusCode: 0,
+    );
   }
+}
 }

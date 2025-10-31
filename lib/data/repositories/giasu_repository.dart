@@ -38,15 +38,11 @@ class TutorRepository {
     return await _apiService.get<Map<String, dynamic>>(
       '/giasu/$giaSuId/lop',
       fromJsonT: (json) {
-        if (json is Map<String, dynamic>) {
-          // Đảm bảo có cả 2 key, tránh lỗi null
-          return {
-            'dang_day': (json['dang_day'] as List<dynamic>? ?? []),
-            'de_nghi': (json['de_nghi'] as List<dynamic>? ?? []),
-          };
-        } else {
-          throw Exception('Dữ liệu trả về không hợp lệ');
-        }
+        final Map<String, dynamic> map = Map<String, dynamic>.from(json);
+        return {
+          'dang_day': (map['dang_day'] as List<dynamic>? ?? []),
+          'de_nghi': (map['de_nghi'] as List<dynamic>? ?? []),
+        };
       },
     );
   }

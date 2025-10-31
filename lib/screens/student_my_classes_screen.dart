@@ -43,32 +43,32 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _lopHocTimGiaSu = []; // Xóa dữ liệu cũ
+      _lopHocDangDay = []; // Xóa dữ liệu cũ
     });
 
     try {
-      // Gọi API song song cho các trạng thái
-      final responses = await Future.wait([
-        _lopHocRepo.getLopHocByTrangThai('TimGiaSu'),
-        _lopHocRepo.getLopHocByTrangThai('DangHoc'),
-      ]);
+      // 1. GỌI API MỚI (CHỈ 1 LẦN)
+      final response = await _lopHocRepo.getLopHocCuaNguoiHoc();
 
       if (!mounted) return;
 
-      // Xử lý response cho "Tìm Gia Sư"
-      if (responses[0].isSuccess && responses[0].data != null) {
-        _lopHocTimGiaSu = responses[0].data!;
-      }
+      if (response.isSuccess && response.data != null) {
+        final List<LopHoc> tatCaLopCuaToi = response.data!;
 
-      // Xử lý response cho "Đang Dạy"
-      if (responses[1].isSuccess && responses[1].data != null) {
-        _lopHocDangDay = responses[1].data!;
-      }
+        // 2. TỰ LỌC RA 2 DANH SÁCH CHO 2 TAB
+        setState(() {
+          _lopHocTimGiaSu = tatCaLopCuaToi
+              .where((lop) => lop.trangThai == 'TimGiaSu' || lop.trangThai == 'ChoDuyet')
+              .toList();
 
-      // Kiểm tra nếu có bất kỳ lỗi nào
-      if (!responses[0].isSuccess) {
-        _errorMessage = responses[0].message;
-      } else if (!responses[1].isSuccess) {
-        _errorMessage = responses[1].message;
+          _lopHocDangDay = tatCaLopCuaToi
+              .where((lop) => lop.trangThai == 'DangHoc')
+              .toList();
+        });
+      } else {
+        // Nếu API thất bại
+        _errorMessage = response.message;
       }
     } catch (e) {
       _errorMessage = 'Lỗi không xác định: $e';
@@ -124,7 +124,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
           indicatorColor: Colors.blue,
           tabs: const [
             Tab(text: 'Đang Tìm Gia Sư'),
-            Tab(text: 'Đang Dạy'),
+            Tab(text: 'Đang Học'),
             // Bạn có thể thêm các tab khác ở đây
           ],
         ),
