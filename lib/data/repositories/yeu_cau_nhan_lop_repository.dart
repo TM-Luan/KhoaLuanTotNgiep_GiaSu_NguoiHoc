@@ -1,118 +1,170 @@
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_service.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_service.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/yeu_cau_nhan_lop.dart';
 
 class YeuCauNhanLopRepository {
   final ApiService _apiService = ApiService();
 
-  // API 1: Gia sư xem các yêu cầu MÌNH ĐÃ GỬI (để Hủy)
-  // GET /yeucau/dagui
-  Future<ApiResponse<List<YeuCauNhanLop>>> getDanhSachDaGui() async {
-    const String endpoint = '/yeucau/dagui'; // Khớp với routes/api.php
-    try {
-      final response = await _apiService.get<Map<String, dynamic>>(
-        endpoint,
-        fromJsonT: (json) => json,
-      );
-
-      if (response.isSuccess && response.data != null && response.data!['data'] is List) {
-        List<dynamic> dataList = response.data!['data'];
-        List<YeuCauNhanLop> yeuCauList = dataList
-            .map((item) => YeuCauNhanLop.fromJson(item as Map<String, dynamic>))
+  ApiResponse<List<YeuCauNhanLop>> _mapListResponse(
+    ApiResponse<Map<String, dynamic>> response,
+  ) {
+    if (response.isSuccess && response.data != null) {
+      final dynamic raw = response.data!['data'];
+      if (raw is List) {
+        final list = raw
+            .whereType<Map<String, dynamic>>()
+            .map(YeuCauNhanLop.fromJson)
             .toList();
-        
+
         return ApiResponse<List<YeuCauNhanLop>>(
           success: true,
           message: response.message,
-          data: yeuCauList,
-          statusCode: response.statusCode,
-        );
-      } else {
-        return ApiResponse<List<YeuCauNhanLop>>(
-          success: false,
-          message: response.message,
+          data: list,
           statusCode: response.statusCode,
         );
       }
-    } catch (e) {
+
       return ApiResponse<List<YeuCauNhanLop>>(
         success: false,
-        message: 'Lỗi parse getDanhSachDaGui: $e',
-        statusCode: 0,
+        message: 'Dữ liệu trả về không đúng định dạng.',
+        error: response.error,
+        statusCode: response.statusCode,
       );
     }
+
+    return ApiResponse<List<YeuCauNhanLop>>(
+      success: false,
+      message: response.message,
+      error: response.error,
+      statusCode: response.statusCode,
+    );
   }
 
-  // API 2: Gia sư xem các lời MỜI TỪ NGƯỜI HỌC (để Xác nhận/Từ chối)
-  // GET /yeucau/nhanduoc
-  Future<ApiResponse<List<YeuCauNhanLop>>> getDanhSachNhanDuoc() async {
-    const String endpoint = '/yeucau/nhanduoc'; // Khớp với routes/api.php
-    
-    // Logic parse tương tự getDanhSachDaGui
-    try {
-      final response = await _apiService.get<Map<String, dynamic>>(
-        endpoint,
-        fromJsonT: (json) => json,
-      );
+  Future<ApiResponse<List<YeuCauNhanLop>>> getDanhSachDaGui({
+    required int nguoiGuiTaiKhoanId,
+  }) async {
+    final response = await _apiService.get<Map<String, dynamic>>(
+      '/yeucau/dagui?NguoiGuiTaiKhoanID=$nguoiGuiTaiKhoanId',
+      fromJsonT: (json) => json,
+    );
 
-      if (response.isSuccess && response.data != null && response.data!['data'] is List) {
-        List<dynamic> dataList = response.data!['data'];
-        List<YeuCauNhanLop> yeuCauList = dataList
-            .map((item) => YeuCauNhanLop.fromJson(item as Map<String, dynamic>))
-            .toList();
-        
-        return ApiResponse<List<YeuCauNhanLop>>(
-          success: true,
-          message: response.message,
-          data: yeuCauList,
-          statusCode: response.statusCode,
-        );
-      } else {
-        return ApiResponse<List<YeuCauNhanLop>>(
-          success: false,
-          message: response.message,
-          statusCode: response.statusCode,
-        );
-      }
-    } catch (e) {
-      return ApiResponse<List<YeuCauNhanLop>>(
-        success: false,
-        message: 'Lỗi parse getDanhSachNhanDuoc: $e',
-        statusCode: 0,
-      );
-    }
+    return _mapListResponse(response);
   }
 
-  // API 3: Hủy yêu cầu (khi VaiTroNguoiGui == 'GiaSu')
-  // DELETE /yeucau/{yeuCauID}/huy
-  Future<ApiResponse<dynamic>> huyYeuCau(int yeuCauId) async {
-    // Dùng DELETE vì routes/api.php dùng Route::delete
-    return await _apiService.delete('/yeucau/$yeuCauId/huy');
+  Future<ApiResponse<List<YeuCauNhanLop>>> getDanhSachNhanDuoc({
+    required int giaSuId,
+  }) async {
+    final response = await _apiService.get<Map<String, dynamic>>(
+      '/yeucau/nhanduoc?GiaSuID=$giaSuId',
+      fromJsonT: (json) => json,
+    );
+
+    return _mapListResponse(response);
   }
 
-  // API 4: Xác nhận yêu cầu (khi VaiTroNguoiGui == 'NguoiHoc')
-  // PUT /yeucau/{yeuCauID}/xacnhan
-  Future<ApiResponse<dynamic>> xacNhanYeuCau(int yeuCauId) async {
-    // Dùng PUT vì routes/api.php dùng Route::put
-    return await _apiService.put('/yeucau/$yeuCauId/xacnhan');
+  Future<ApiResponse<List<YeuCauNhanLop>>> getDeNghiTheoLop(int lopYeuCauId) async {
+    final response = await _apiService.get<Map<String, dynamic>>(
+      '/lophocyeucau/$lopYeuCauId/de-nghi',
+      fromJsonT: (json) => json,
+    );
+
+    return _mapListResponse(response);
   }
 
-  // API 5: Từ chối yêu cầu (khi VaiTroNguoiGui == 'NguoiHoc')
-  // PUT /yeucau/{yeuCauID}/tuchoi
-  Future<ApiResponse<dynamic>> tuChoiYeuCau(int yeuCauId) async {
-    // Dùng PUT vì routes/api.php dùng Route::put
-    return await _apiService.put('/yeucau/$yeuCauId/tuchoi');
-  }
-
-  // API 6: Gia sư gửi đề nghị dạy
-  // POST /giasu/guiyeucau
-  Future<ApiResponse<dynamic>> giaSuGuiYeuCau(int lopId, String? ghiChu) async {
-    return await _apiService.post(
+  Future<ApiResponse<dynamic>> giaSuGuiYeuCau({
+    required int lopId,
+    required int giaSuId,
+    required int nguoiGuiTaiKhoanId,
+    String? ghiChu,
+  }) async {
+    return _apiService.post(
       '/giasu/guiyeucau',
       data: {
-        'lop_yeu_cau_id': lopId,
-        'ghi_chu': ghiChu,
+        'LopYeuCauID': lopId,
+        'GiaSuID': giaSuId,
+        'NguoiGuiTaiKhoanID': nguoiGuiTaiKhoanId,
+        'GhiChu': ghiChu,
       },
+    );
+  }
+
+  Future<ApiResponse<dynamic>> nguoiHocMoiGiaSu({
+    required int lopId,
+    required int giaSuId,
+    required int nguoiGuiTaiKhoanId,
+    String? ghiChu,
+  }) async {
+    return _apiService.post(
+      '/nguoihoc/moigiasu',
+      data: {
+        'LopYeuCauID': lopId,
+        'GiaSuID': giaSuId,
+        'NguoiGuiTaiKhoanID': nguoiGuiTaiKhoanId,
+        'GhiChu': ghiChu,
+      },
+    );
+  }
+
+  Future<ApiResponse<dynamic>> capNhatYeuCau({
+    required int yeuCauId,
+    required int nguoiGuiTaiKhoanId,
+    String? ghiChu,
+  }) async {
+    return _apiService.put(
+      '/yeucau/$yeuCauId',
+      data: {
+        'NguoiGuiTaiKhoanID': nguoiGuiTaiKhoanId,
+        'GhiChu': ghiChu,
+      },
+    );
+  }
+
+  Future<ApiResponse<dynamic>> huyYeuCau({
+    required int yeuCauId,
+    required int nguoiGuiTaiKhoanId,
+  }) async {
+    return _apiService.delete(
+      '/yeucau/$yeuCauId/huy?NguoiGuiTaiKhoanID=$nguoiGuiTaiKhoanId',
+    );
+  }
+
+  Future<ApiResponse<dynamic>> xacNhanYeuCau(int yeuCauId) async {
+    return _apiService.put('/yeucau/$yeuCauId/xacnhan');
+  }
+
+  Future<ApiResponse<dynamic>> tuChoiYeuCau(int yeuCauId) async {
+    return _apiService.put('/yeucau/$yeuCauId/tuchoi');
+  }
+
+  // Lấy danh sách lớp của gia sư (bao gồm cả đang dạy và đề nghị)
+  Future<ApiResponse<Map<String, dynamic>>> getLopCuaGiaSu(int giaSuId) async {
+    final response = await _apiService.get<Map<String, dynamic>>(
+      '/giasu/$giaSuId/lop',
+      fromJsonT: (json) => json,
+    );
+
+    if (response.isSuccess && response.data != null) {
+      // API trả về structure: { success: true, message: "...", data: { lopDangDay: [...], lopDeNghi: [...] } }
+      final data = response.data!;
+      print('Raw API response: $data'); // Debug log
+      
+      // Kiểm tra xem có field 'data' không, nếu có thì lấy, nếu không thì dùng trực tiếp
+      final actualData = data.containsKey('data') ? data['data'] as Map<String, dynamic> : data;
+      print('Processed data: $actualData'); // Debug log
+      
+      return ApiResponse<Map<String, dynamic>>(
+        success: true,
+        message: response.message,
+        data: actualData,
+        statusCode: response.statusCode,
+      );
+    }
+
+    return ApiResponse<Map<String, dynamic>>(
+      success: false,
+      message: response.message,
+      error: response.error,
+      statusCode: response.statusCode,
     );
   }
 }

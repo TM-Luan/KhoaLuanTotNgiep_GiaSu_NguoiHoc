@@ -38,7 +38,11 @@ class TutorRepository {
     return await _apiService.get<Map<String, dynamic>>(
       '/giasu/$giaSuId/lop',
       fromJsonT: (json) {
-        final Map<String, dynamic> map = Map<String, dynamic>.from(json);
+        final Map<String, dynamic> root = Map<String, dynamic>.from(json);
+        final Map<String, dynamic> map =
+            root.containsKey('data') && root['data'] is Map<String, dynamic>
+                ? Map<String, dynamic>.from(root['data'] as Map)
+                : root;
         return {
           'dang_day': (map['dang_day'] as List<dynamic>? ?? []),
           'de_nghi': (map['de_nghi'] as List<dynamic>? ?? []),

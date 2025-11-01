@@ -36,3 +36,13 @@ class TutorClassRequestRejected extends TutorClassesEvent {
   @override
   List<Object> get props => [yeuCauId];
 }
+
+// Gia sư chỉnh sửa ghi chú đề nghị
+class TutorClassRequestUpdated extends TutorClassesEvent {
+  final int yeuCauId;
+  final String? ghiChu;
+  const TutorClassRequestUpdated({required this.yeuCauId, this.ghiChu});
+
+  @override
+  List<Object> get props => [yeuCauId, ghiChu ?? ''];
+}

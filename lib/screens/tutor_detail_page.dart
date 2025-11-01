@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor/tutor_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/giasu.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
 
 class TutorDetailPage extends StatefulWidget {
   static const String routeName = '/tutor-detail';
@@ -16,6 +22,10 @@ class TutorDetailPage extends StatefulWidget {
 }
 
 class _TutorDetailPageState extends State<TutorDetailPage> {
+  final LopHocRepository _lopHocRepository = LopHocRepository();
+
+  bool _isProcessingInvite = false;
+
   @override
   void initState() {
     super.initState();
@@ -135,11 +145,22 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () {
-                      _showOfferDialog(tutor);
-                    },
-                    icon: const Icon(Icons.school),
-                    label: const Text('Đề nghị dạy'),
+                    onPressed:
+                        _isProcessingInvite
+                            ? null
+                            : () => _showOfferDialog(tutor),
+                    icon:
+                        _isProcessingInvite
+                            ? const SizedBox.shrink()
+                            : const Icon(Icons.school),
+                    label:
+                        _isProcessingInvite
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text('Đề nghị dạy'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
@@ -294,31 +315,218 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
   }
 
   void _showOfferDialog(Tutor tutor) {
-    showDialog(
+    final authState = context.read<AuthBloc>().state;
+
+    if (authState is! AuthAuthenticated ||
+        authState.user.nguoiHocID == null ||
+        authState.user.taiKhoanID == null) {
+      _showSnack(
+        'Vui lòng đăng nhập bằng tài khoản người học để gửi đề nghị.',
+        true,
+      );
+      return;
+    }
+
+    _loadClassesAndPrompt(authState, tutor);
+  }
+
+  Future<void> _loadClassesAndPrompt(AuthAuthenticated auth, Tutor tutor) async {
+    setState(() {
+      _isProcessingInvite = true;
+    });
+
+    final ApiResponse<List<LopHoc>> response =
+        await _lopHocRepository.getLopHocCuaNguoiHoc();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isProcessingInvite = false;
+    });
+
+    if (!response.isSuccess || response.data == null) {
+      _showSnack(
+        response.message.isNotEmpty
+            ? response.message
+            : 'Không thể lấy danh sách lớp của bạn.',
+        true,
+      );
+      return;
+    }
+
+    final availableClasses = response.data!
+        .where((lop) {
+          final status = (lop.trangThai ?? '').toUpperCase();
+          return status == 'TIMGIASU' || status == 'CHODUYET';
+        })
+        .toList();
+
+    if (availableClasses.isEmpty) {
+      _showSnack('Bạn chưa có lớp nào đang tìm gia sư để gửi đề nghị.', true);
+      return;
+    }
+
+    int selectedClassId = availableClasses.first.maLop;
+    final noteController = TextEditingController();
+
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Đề nghị dạy'),
-            content: const Text('Bạn muốn gửi đề nghị dạy đến gia sư này?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Hủy'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Đã gửi đề nghị dạy thành công!'),
-                    ),
-                  );
-                },
-                child: const Text('Gửi đề nghị'),
-              ),
-            ],
+      isScrollControlled: true,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
           ),
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Chọn lớp để mời gia sư',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int>(
+                    value: selectedClassId,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Lớp học',
+                    ),
+                    items: availableClasses
+                        .map((lop) {
+                          final title =
+                              lop.tieuDeLop.trim().isEmpty
+                                  ? 'Chưa đặt tên'
+                                  : lop.tieuDeLop;
+                          return DropdownMenuItem<int>(
+                            value: lop.maLop,
+                            child: Text('${lop.maLop} - $title'),
+                          );
+                        })
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setModalState(() {
+                          selectedClassId = value;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: noteController,
+                    maxLines: 3,
+                    maxLength: 500,
+                    decoration: const InputDecoration(
+                      hintText: 'Ghi chú cho gia sư (không bắt buộc)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Hủy'),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context, {
+                            'lopId': selectedClassId,
+                            'note': noteController.text.trim(),
+                          });
+                        },
+                        child: const Text('Gửi đề nghị'),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
     );
+
+    noteController.dispose();
+
+    if (result == null) {
+      return;
+    }
+
+    final lopId = result['lopId'] as int?;
+    final note = (result['note'] as String?) ?? '';
+
+    if (lopId == null) {
+      _showSnack('Vui lòng chọn lớp học hợp lệ.', true);
+      return;
+    }
+
+    await _sendInvite(
+      tutor: tutor,
+      lopId: lopId,
+      ghiChu: note,
+      auth: auth,
+    );
+  }
+
+  Future<void> _sendInvite({
+    required Tutor tutor,
+    required int lopId,
+    required String ghiChu,
+    required AuthAuthenticated auth,
+  }) async {
+    setState(() {
+      _isProcessingInvite = true;
+    });
+
+    final repo = context.read<YeuCauNhanLopRepository>();
+    final response = await repo.nguoiHocMoiGiaSu(
+      lopId: lopId,
+      giaSuId: tutor.giaSuID,
+      nguoiGuiTaiKhoanId: auth.user.taiKhoanID!,
+      ghiChu: ghiChu.isEmpty ? null : ghiChu,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isProcessingInvite = false;
+    });
+
+    if (response.isSuccess) {
+      _showSnack('Đã gửi đề nghị tới gia sư.', false);
+    } else {
+      _showSnack(
+        response.message.isNotEmpty
+            ? response.message
+            : 'Không thể gửi đề nghị, vui lòng thử lại.',
+        true,
+      );
+    }
+  }
+
+  void _showSnack(String message, bool isError) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: isError ? Colors.red : Colors.green,
+        ),
+      );
   }
 
   @override
