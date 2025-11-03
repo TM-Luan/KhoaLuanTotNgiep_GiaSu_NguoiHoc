@@ -52,20 +52,20 @@ class TutorCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               AspectRatio(aspectRatio: 1, child: _buildTutorImage()),
-              Expanded(
+              Flexible(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Flexible(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                             Text(
                               tutor.hoTen,
                               maxLines: 1,
@@ -89,7 +89,6 @@ class TutorCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                      ),
                       const SizedBox(height: 4),
                       Row(
                         children: [

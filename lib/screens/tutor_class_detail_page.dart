@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 
@@ -56,9 +58,16 @@ class _TutorClassDetailPageState extends State<TutorClassDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chi tiết lớp học'),
-        backgroundColor: Color(0xFF0865B3),
-        elevation: 1,
+        title: Text(
+          'Chi tiết lớp học',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: AppTypography.appBarTitle,
+          ),
+        ),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textLight,
+        elevation: 0,
       ),
       body: _buildBody(), // Gọi hàm xây dựng body
       // bottomNavigationBar: _buildBottomButton(), // Nút "Đề nghị dạy" - đã bỏ để chỉ xem thông tin

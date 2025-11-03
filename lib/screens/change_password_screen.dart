@@ -4,6 +4,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_event.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({Key? key}) : super(key: key);
@@ -46,17 +47,25 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Đổi mật khẩu'),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: Colors.white,
+        title: Text(
+          'Đổi mật khẩu',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: AppTypography.appBarTitle,
+          ),
+        ),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textLight,
+        elevation: 0,
       ),
+      backgroundColor: AppColors.backgroundGrey,
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is PasswordChanged) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: AppColors.primaryBlue,
+                backgroundColor: AppColors.success,
               ),
             );
             Navigator.of(context).pop();
@@ -64,23 +73,23 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: AppColors.error,
               ),
             );
           }
         },
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Form(
             key: _formKey,
             child: Column(
               children: [
                 _buildCurrentPasswordField(),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 _buildNewPasswordField(),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 _buildConfirmPasswordField(),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppSpacing.xxxl),
                 _buildChangePasswordButton(),
               ],
             ),
@@ -94,13 +103,39 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return TextFormField(
       controller: _currentPasswordController,
       obscureText: _obscureCurrentPassword,
+      style: TextStyle(
+        fontSize: AppTypography.body1,
+        color: AppColors.textPrimary,
+      ),
       decoration: InputDecoration(
         labelText: 'Mật khẩu hiện tại',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        prefixIcon: const Icon(Icons.lock_outline),
+        labelStyle: TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: AppTypography.body2,
+        ),
+        filled: true,
+        fillColor: AppColors.primarySurface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
+          borderSide: BorderSide(color: AppColors.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
+          borderSide: BorderSide(color: AppColors.error, width: 2),
+        ),
+        prefixIcon: Icon(
+          Icons.lock_outline,
+          color: AppColors.primary,
+          size: AppSpacing.iconSize,
+        ),
         suffixIcon: IconButton(
           icon: Icon(
             _obscureCurrentPassword ? Icons.visibility : Icons.visibility_off,
+            color: AppColors.textSecondary,
           ),
           onPressed: () {
             setState(() {
@@ -125,13 +160,39 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return TextFormField(
       controller: _newPasswordController,
       obscureText: _obscureNewPassword,
+      style: TextStyle(
+        fontSize: AppTypography.body1,
+        color: AppColors.textPrimary,
+      ),
       decoration: InputDecoration(
         labelText: 'Mật khẩu mới',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        prefixIcon: const Icon(Icons.lock_reset),
+        labelStyle: TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: AppTypography.body2,
+        ),
+        filled: true,
+        fillColor: AppColors.primarySurface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
+          borderSide: BorderSide(color: AppColors.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
+          borderSide: BorderSide(color: AppColors.error, width: 2),
+        ),
+        prefixIcon: Icon(
+          Icons.lock_reset,
+          color: AppColors.primary,
+          size: AppSpacing.iconSize,
+        ),
         suffixIcon: IconButton(
           icon: Icon(
             _obscureNewPassword ? Icons.visibility : Icons.visibility_off,
+            color: AppColors.textSecondary,
           ),
           onPressed: () {
             setState(() {
@@ -156,13 +217,39 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return TextFormField(
       controller: _confirmPasswordController,
       obscureText: _obscureConfirmPassword,
+      style: TextStyle(
+        fontSize: AppTypography.body1,
+        color: AppColors.textPrimary,
+      ),
       decoration: InputDecoration(
         labelText: 'Xác nhận mật khẩu mới',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        prefixIcon: const Icon(Icons.lock_reset),
+        labelStyle: TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: AppTypography.body2,
+        ),
+        filled: true,
+        fillColor: AppColors.primarySurface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
+          borderSide: BorderSide(color: AppColors.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
+          borderSide: BorderSide(color: AppColors.error, width: 2),
+        ),
+        prefixIcon: Icon(
+          Icons.lock_reset,
+          color: AppColors.primary,
+          size: AppSpacing.iconSize,
+        ),
         suffixIcon: IconButton(
           icon: Icon(
             _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
+            color: AppColors.textSecondary,
           ),
           onPressed: () {
             setState(() {
@@ -192,29 +279,29 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           child: ElevatedButton(
             onPressed: state is AuthLoading ? null : _changePassword,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryBlue,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textLight,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
               ),
+              elevation: 3,
             ),
-            child:
-                state is AuthLoading
-                    ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                    : const Text(
-                      'Đổi mật khẩu',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+            child: state is AuthLoading
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.textLight),
                     ),
+                  )
+                : Text(
+                    'Đổi mật khẩu',
+                    style: TextStyle(
+                      fontSize: AppTypography.body1,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
           ),
         );
       },

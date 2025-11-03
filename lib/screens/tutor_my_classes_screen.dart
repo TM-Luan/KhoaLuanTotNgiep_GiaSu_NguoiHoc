@@ -9,6 +9,8 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor_classes/tutor_cl
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/yeu_cau_nhan_lop.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_class_detail_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notification_service.dart';
 
@@ -83,40 +85,44 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
             title: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(AppSpacing.sm),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.school,
-                    color: Colors.white,
-                    size: 24,
+                    color: AppColors.primary,
+                    size: AppSpacing.iconSize,
                   ),
                 ),
-                const SizedBox(width: 12),
-                const Text(
+                const SizedBox(width: AppSpacing.md),
+                Text(
                   'Lớp của tôi',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textLight,
                     fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                    fontSize: AppTypography.appBarTitle,
                   ),
                 ),
               ],
             ),
-            backgroundColor: Colors.blue.shade600,
+            backgroundColor: AppColors.primary,
             elevation: 0,
-            bottom: TabBar(
-              indicatorColor: Colors.white,
-              indicatorWeight: 3,
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.white70,
-              labelStyle: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-              tabs: [
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(48.0),
+              child: Container(
+                color: AppColors.grey100,
+                child: TabBar(
+                  indicatorColor: AppColors.primary,
+                  indicatorWeight: 3,
+                  labelColor: AppColors.primary,
+                  unselectedLabelColor: AppColors.textSecondary,
+                  labelStyle: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: AppTypography.body2,
+                  ),
+                  tabs: [
                 Tab(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -138,6 +144,8 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                   ),
                 ),
               ],
+                ),
+              ),
             ),
           ),
           body: BlocConsumer<TutorClassesBloc, TutorClassesState>(

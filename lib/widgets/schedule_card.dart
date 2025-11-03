@@ -1,6 +1,8 @@
 // widgets/schedule_card.dart
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 
 class ScheduleCard extends StatelessWidget {
   final LichHoc schedule;
@@ -26,26 +28,33 @@ class ScheduleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 3,
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm, horizontal: 0),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.green.shade50,
-              Colors.white,
+              AppColors.successSurface,
+              AppColors.background,
             ],
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -53,31 +62,31 @@ class ScheduleCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(AppSpacing.iconContainerPadding),
                     decoration: BoxDecoration(
-                      color: Colors.green.shade100,
-                      borderRadius: BorderRadius.circular(6),
+                      color: AppColors.successContainer,
+                      borderRadius: BorderRadius.circular(AppSpacing.iconContainerRadius),
                     ),
                     child: Icon(
                       Icons.schedule,
-                      color: Colors.green.shade700,
-                      size: 18,
+                      color: AppColors.success,
+                      size: AppSpacing.smallIconSize,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Text(
                       schedule.tenLop,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: Colors.black87,
+                        fontSize: AppTypography.body1,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               
               // Thông tin thu gọn
               Row(
@@ -98,7 +107,7 @@ class ScheduleCard extends StatelessWidget {
                 role == 'tutor' ? schedule.diaDiem : 'GV: ${schedule.tenGiaSu}',
               ),
               
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.sm),
 
               // Action buttons
               Row(
@@ -107,24 +116,31 @@ class ScheduleCard extends StatelessWidget {
                   // Nút chi tiết
                   Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: Colors.green.shade300),
+                      borderRadius: BorderRadius.circular(AppSpacing.buttonBorderRadius),
+                      border: Border.all(color: AppColors.success),
                     ),
                     child: InkWell(
                       onTap: onDetails,
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(AppSpacing.buttonBorderRadius),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.buttonPaddingHorizontal,
+                          vertical: AppSpacing.buttonPaddingVertical,
+                        ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.visibility, size: 14, color: Colors.green.shade700),
-                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.visibility,
+                              size: AppSpacing.buttonIconSize,
+                              color: AppColors.success,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
                             Text(
                               'Chi tiết',
                               style: TextStyle(
-                                color: Colors.green.shade700,
-                                fontSize: 12,
+                                color: AppColors.success,
+                                fontSize: AppTypography.buttonText,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -138,7 +154,7 @@ class ScheduleCard extends StatelessWidget {
                   if (onPrimaryAction != null)
                     Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(AppSpacing.buttonBorderRadius),
                         gradient: LinearGradient(
                           colors: role == 'tutor' 
                               ? [Colors.blue.shade400, Colors.blue.shade600]
@@ -184,27 +200,30 @@ class ScheduleCard extends StatelessWidget {
   // Widget thông tin thu gọn
   Widget _buildCompactInfo(IconData icon, String value) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.grey.shade200),
+        color: AppColors.grey50,
+        borderRadius: BorderRadius.circular(AppSpacing.buttonBorderRadius),
+        border: Border.all(color: AppColors.borderLight),
       ),
       child: Row(
         children: [
           Icon(
             icon,
-            size: 14,
-            color: Colors.grey[600],
+            size: AppSpacing.buttonIconSize,
+            color: AppColors.textMuted,
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(
               value,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: AppTypography.buttonText,
                 fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
+                color: AppColors.textSecondary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

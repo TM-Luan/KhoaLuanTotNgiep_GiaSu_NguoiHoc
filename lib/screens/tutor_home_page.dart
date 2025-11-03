@@ -5,10 +5,12 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/class_filter.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/class_search_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/custom_searchBar.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/student_card.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_filter_widget.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_class_detail_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/flutter_secure_storage.dart';
@@ -27,23 +29,110 @@ class TutorHomePage extends StatefulWidget {
 
 class _TutorHomePageState extends State<TutorHomePage> {
   final LopHocRepository _lopHocRepo = LopHocRepository();
+  final ClassSearchRepository _searchRepo = ClassSearchRepository();
   YeuCauNhanLopRepository? _yeuCauRepo;
   bool _isLoading = true;
   List<LopHoc> _lopHocList = [];
   String? _errorMessage;
   UserProfile? currentProfile;
 
+  // Search related variables
+  final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
+  bool _showFilters = false;
+  List<LopHoc> _searchResults = [];
+  ClassFilter _currentFilter = ClassFilter();
+  Map<String, dynamic>? _filterOptions;
+  String? _searchQuery;
+
   @override
   void initState() {
     super.initState();
     currentProfile = widget.userProfile;
     _fetchLopHocChuaGiao();
+    _loadFilterOptions();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _yeuCauRepo ??= context.read<YeuCauNhanLopRepository>();
+  }
+
+  Future<void> _loadFilterOptions() async {
+    try {
+      final response = await _searchRepo.getFilterOptions();
+      if (response.isSuccess && mounted) {
+        setState(() {
+          _filterOptions = response.data;
+        });
+      }
+    } catch (e) {
+      print('Error loading filter options: $e');
+    }
+  }
+
+  Future<void> _performSearch({String? query}) async {
+    print('🔍 TutorHome: Starting search with query: $query');
+    setState(() {
+      _isSearching = true;
+      _searchQuery = query;
+    });
+
+    try {
+      final response = await _searchRepo.searchClasses(
+        query: query,
+        filter: _currentFilter.hasActiveFilters ? _currentFilter : null,
+      );
+
+      print('🔍 TutorHome: Search response - success: ${response.isSuccess}');
+      if (!response.isSuccess) {
+        print('🔍 TutorHome: Search error: ${response.message}');
+      }
+
+      if (response.isSuccess && mounted) {
+        setState(() {
+          _searchResults = response.data ?? [];
+          _isSearching = false;
+        });
+        print('🔍 TutorHome: Found ${_searchResults.length} results');
+      } else {
+        setState(() {
+          _isSearching = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(response.message)),
+          );
+        }
+      }
+    } catch (e) {
+      print('💥 TutorHome: Exception during search: $e');
+      setState(() {
+        _isSearching = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi tìm kiếm: $e')),
+        );
+      }
+    }
+  }
+
+  void _clearSearch() {
+    setState(() {
+      _searchController.clear();
+      _searchQuery = null;
+      _searchResults.clear();
+      _currentFilter = ClassFilter();
+      _showFilters = false;
+    });
   }
 
   // GETTERS ĐỂ HIỂN THỊ THÔNG TIN NGƯỜI DÙNG
@@ -256,8 +345,82 @@ class _TutorHomePageState extends State<TutorHomePage> {
             // Search bar
             Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
-              child: SearchBarCustom(
-                onFilter: () {},
+              child: Column(
+                children: [
+                  // Search field with filter button
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Tìm kiếm lớp học...',
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: _searchQuery != null
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: _clearSearch,
+                                  )
+                                : null,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(25),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[100],
+                          ),
+                          onSubmitted: (query) {
+                            if (query.trim().isNotEmpty) {
+                              _performSearch(query: query.trim());
+                            } else {
+                              _clearSearch();
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: _showFilters || _currentFilter.hasActiveFilters 
+                              ? AppColors.primary 
+                              : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.filter_list,
+                            color: _showFilters || _currentFilter.hasActiveFilters 
+                                ? Colors.white 
+                                : Colors.grey[600],
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _showFilters = !_showFilters;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  // Filter widget
+                  if (_showFilters) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    ClassFilterWidget(
+                      initialFilter: _currentFilter,
+                      filterOptions: _filterOptions,
+                      onFilterChanged: (filter) {
+                        setState(() {
+                          _currentFilter = filter;
+                        });
+                        // Auto search when filter changes
+                        if (filter.hasActiveFilters || _searchQuery != null) {
+                          _performSearch(query: _searchQuery);
+                        }
+                      },
+                    ),
+                  ],
+                ],
               ),
             ),
             
@@ -272,9 +435,11 @@ class _TutorHomePageState extends State<TutorHomePage> {
                     iconColor: AppColors.primary,
                   ),
                   const SizedBox(width: AppSpacing.md),
-                  const Text(
-                    'DANH SÁCH LỚP CHƯA GIAO',
-                    style: TextStyle(
+                  Text(
+                    _searchQuery != null || _currentFilter.hasActiveFilters
+                        ? 'KẾT QUẢ TÌM KIẾM (${_searchResults.length})'
+                        : 'DANH SÁCH LỚP CHƯA GIAO',
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: AppTypography.body2,
                       letterSpacing: 0.5,
@@ -284,14 +449,78 @@ class _TutorHomePageState extends State<TutorHomePage> {
               ),
             ),
             
-            Expanded(child: _buildLopHocList()),
+            Expanded(child: _buildClassList()),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLopHocList() {
+  Widget _buildClassList() {
+    // Show search results if searching or has search query/filter
+    if (_searchQuery != null || _currentFilter.hasActiveFilters) {
+      return _buildSearchResults();
+    }
+    
+    // Show default class list
+    return _buildDefaultClassList();
+  }
+
+  Widget _buildSearchResults() {
+    if (_isSearching) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_searchResults.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Không tìm thấy lớp học nào',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Thử thay đổi từ khóa hoặc bộ lọc',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Sử dụng ListView để card có kích thước cố định, tránh bị kéo dài
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 100),
+      itemCount: _searchResults.length,
+      itemBuilder: (context, index) {
+        final lop = _searchResults[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: LopHocCard(
+            lopHoc: lop,
+            onDeNghiDay: () => _handleDeNghiDay(lop),
+            onCardTap: () => _navigateToDetail(lop),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDefaultClassList() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }

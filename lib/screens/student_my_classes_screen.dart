@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/add_class_screen.dart';
@@ -100,37 +102,37 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(AppSpacing.sm),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.school,
-                color: Colors.white,
-                size: 24,
+                color: AppColors.primary,
+                size: AppSpacing.iconSize,
               ),
             ),
-            const SizedBox(width: 12),
-            const Text(
+            const SizedBox(width: AppSpacing.md),
+            Text(
               'Lớp của tôi',
               style: TextStyle(
-                color: Colors.white,
+                color: AppColors.textLight,
                 fontWeight: FontWeight.bold,
-                fontSize: 18,
+                fontSize: AppTypography.appBarTitle,
               ),
             ),
           ],
         ),
-        backgroundColor: Colors.blue.shade600,
+        backgroundColor: AppColors.primary,
         elevation: 0,
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 12.0),
+            padding: const EdgeInsets.only(right: AppSpacing.md),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(AppSpacing.sm),
               ),
               child: IconButton(
                 onPressed: () {
@@ -139,30 +141,36 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                     MaterialPageRoute(builder: (context) => const AddClassPage()),
                   );
                 },
-                icon: const Icon(
+                icon: Icon(
                   Icons.add,
-                  color: Colors.white,
-                  size: 20,
+                  color: AppColors.primary,
+                  size: AppSpacing.smallIconSize,
                 ),
                 tooltip: 'Thêm Lớp',
               ),
             ),
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          indicatorWeight: 3,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          labelStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48.0),
+          child: Container(
+            color: AppColors.grey100,
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: AppColors.primary,
+              indicatorWeight: 3,
+              labelColor: AppColors.primary,
+              unselectedLabelColor: AppColors.textSecondary,
+              labelStyle: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: AppTypography.body2,
+              ),
+              tabs: const [
+                Tab(text: 'Đang Tìm Gia Sư'),
+                Tab(text: 'Đang Học'),
+              ],
+            ),
           ),
-          tabs: const [
-            Tab(text: 'Đang Tìm Gia Sư'),
-            Tab(text: 'Đang Học'),
-          ],
         ),
       ),
       body: _buildBody(),

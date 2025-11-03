@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 
 class TutorSchedulePage extends StatefulWidget {
   const TutorSchedulePage({super.key});
@@ -320,11 +321,21 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
     final daysInMonth = _getDaysInMonth(_currentMonth);
     final today = DateTime.now();
 
-    return Card(
-      margin: const EdgeInsets.all(16),
-      elevation: 2,
+    return Container(
+      margin: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
             // Header tháng năm
@@ -332,7 +343,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.chevron_left),
+                  icon: Icon(Icons.chevron_left, color: AppColors.primary),
                   onPressed: () {
                     setState(() {
                       _currentMonth = DateTime(
@@ -344,13 +355,14 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                 ),
                 Text(
                   DateFormat('MMMM, yyyy').format(_currentMonth).toUpperCase(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: AppTypography.heading3,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.chevron_right),
+                  icon: Icon(Icons.chevron_right, color: AppColors.primary),
                   onPressed: () {
                     setState(() {
                       _currentMonth = DateTime(
@@ -362,7 +374,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
 
             // Header các ngày trong tuần
             Row(
@@ -469,14 +481,18 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'LỊCH DẠY',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: AppTypography.appBarTitle,
+          ),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 1,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textLight,
+        elevation: 0,
       ),
+      backgroundColor: AppColors.backgroundGrey,
       body: Column(
         children: [
           // Lịch tháng

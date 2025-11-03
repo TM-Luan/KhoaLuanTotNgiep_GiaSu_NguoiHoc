@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
 
@@ -88,14 +89,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF00BF6D),
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
+            colorScheme: ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: AppColors.textLight,
+              onSurface: AppColors.textPrimary,
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF00BF6D),
+                foregroundColor: AppColors.primary,
               ),
             ),
           ),
@@ -141,7 +142,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(res.message),
-            backgroundColor: res.success ? AppColors.primaryBlue : Colors.red,
+            backgroundColor: res.success ? AppColors.success : AppColors.error,
           ),
         );
         if (res.success) Navigator.pop(context, res.data);
@@ -150,7 +151,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Lỗi: $e'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -160,13 +161,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Chỉnh sửa hồ sơ"),
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: Colors.white,
+        title: Text(
+          "Chỉnh sửa hồ sơ",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: AppTypography.appBarTitle,
+          ),
+        ),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textLight,
         elevation: 0,
       ),
+      backgroundColor: AppColors.backgroundGrey,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Form(
           key: _formKey,
           child: Column(
@@ -203,19 +211,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               // Chỉ hiển thị bằng cấp và kinh nghiệm cho gia sư
               if (_isGiaSu) ...[
-                const SizedBox(height: 16),
-                const Align(
+                const SizedBox(height: AppSpacing.lg),
+                Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     "Thông tin gia sư",
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: AppTypography.heading3,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primaryBlue,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 _buildField(
                   "Bằng cấp",
                   _degreeController,
@@ -230,38 +238,48 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
               ],
 
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.xl),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
                     onPressed: _isLoading ? null : () => Navigator.pop(context),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primaryBlue,
+                      foregroundColor: AppColors.primary,
                     ),
-                    child: const Text("Hủy"),
+                    child: Text(
+                      "Hủy",
+                      style: TextStyle(fontSize: AppTypography.body1),
+                    ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppSpacing.lg),
                   ElevatedButton(
                     onPressed: _isLoading ? null : _saveProfile,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      shape: const StadiumBorder(),
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.textLight,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.buttonBorderRadius),
+                      ),
                       minimumSize: const Size(140, 48),
                     ),
                     child:
-                        _isLoading
-                            ? const SizedBox(
+                      _isLoading
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
-                                color: Colors.white,
+                                color: AppColors.textLight,
                                 strokeWidth: 2,
                               ),
                             )
-                            : const Text(
+                          : Text(
                               "Lưu thay đổi",
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(
+                                color: AppColors.textLight,
+                                fontSize: AppTypography.body1,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                   ),
                 ],
@@ -281,11 +299,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     bool isRequired = true,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboard,
         maxLines: maxLines,
+        style: TextStyle(
+          fontSize: AppTypography.body1,
+          color: AppColors.textPrimary,
+        ),
         validator: (v) {
           if (isRequired && (v == null || v.isEmpty)) {
             return 'Trường này là bắt buộc';
@@ -294,15 +316,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         },
         decoration: InputDecoration(
           labelText: label,
+          labelStyle: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: AppTypography.body2,
+          ),
           filled: true,
-          fillColor: const Color(0xFF00BF6D).withOpacity(0.05),
+          fillColor: AppColors.primarySurface,
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 16,
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.lg,
           ),
           border: OutlineInputBorder(
             borderSide: BorderSide.none,
-            borderRadius: BorderRadius.circular(50),
+            borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius * 4),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: AppColors.primary, width: 2),
+            borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius * 4),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: AppColors.error, width: 2),
+            borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius * 4),
           ),
         ),
       ),
@@ -311,30 +345,47 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Widget _buildGenderDropdown() {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: DropdownButtonFormField<String>(
         value: _selectedGender,
+        style: TextStyle(
+          fontSize: AppTypography.body1,
+          color: AppColors.textPrimary,
+        ),
         decoration: InputDecoration(
           labelText: "Giới tính",
+          labelStyle: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: AppTypography.body2,
+          ),
           filled: true,
-          fillColor: const Color(0xFF00BF6D).withOpacity(0.05),
+          fillColor: AppColors.primarySurface,
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 16,
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.lg,
           ),
           border: OutlineInputBorder(
             borderSide: BorderSide.none,
-            borderRadius: BorderRadius.circular(50),
+            borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius * 4),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: AppColors.primary, width: 2),
+            borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius * 4),
           ),
         ),
         // SỬA LẠI: Sử dụng List<String> đơn giản
-        items:
-            _genderOptions.map((String gender) {
-              return DropdownMenuItem<String>(
-                value: gender,
-                child: Text(gender),
-              );
-            }).toList(),
+        items: _genderOptions.map((String gender) {
+          return DropdownMenuItem<String>(
+            value: gender,
+            child: Text(
+              gender,
+              style: TextStyle(
+                fontSize: AppTypography.body1,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          );
+        }).toList(),
         onChanged: (String? newValue) {
           setState(() {
             _selectedGender = newValue;
@@ -350,27 +401,40 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Widget _buildDateField() {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: TextFormField(
         controller: _birthController,
         readOnly: true,
         onTap: () => _selectDate(context),
+        style: TextStyle(
+          fontSize: AppTypography.body1,
+          color: AppColors.textPrimary,
+        ),
         decoration: InputDecoration(
           labelText: "Ngày sinh",
+          labelStyle: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: AppTypography.body2,
+          ),
           filled: true,
-          fillColor: const Color(0xFF00BF6D).withOpacity(0.05),
+          fillColor: AppColors.primarySurface,
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 16,
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.lg,
           ),
           border: OutlineInputBorder(
             borderSide: BorderSide.none,
-            borderRadius: BorderRadius.circular(50),
+            borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius * 4),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: AppColors.primary, width: 2),
+            borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius * 4),
           ),
           suffixIcon: IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.calendar_today,
-              color: AppColors.primaryBlue,
+              color: AppColors.primary,
+              size: AppSpacing.iconSize,
             ),
             onPressed: () => _selectDate(context),
           ),
