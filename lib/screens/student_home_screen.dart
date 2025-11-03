@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor/tutor_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/giasu.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_detail_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/tutor_card.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/custom_searchBar.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/app_components.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 
 class LearnerHomeScreen extends StatefulWidget {
   final UserProfile? userProfile;
@@ -18,6 +27,8 @@ class LearnerHomeScreen extends StatefulWidget {
 
 class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
   UserProfile? currentProfile;
+  final LopHocRepository _lopHocRepository = LopHocRepository();
+  bool _isProcessingInvite = false;
 
   @override
   void initState() {
@@ -72,7 +83,7 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
       }
 
       return SliverPadding(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 100),
         sliver: SliverLayoutBuilder(
           builder: (context, constraints) {
             final crossAxisCount = constraints.crossAxisExtent >= 420 ? 3 : 2;
@@ -95,6 +106,7 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
                       arguments: tutor,
                     );
                   },
+                  onOfferTap: _isProcessingInvite ? null : () => _handleOfferTap(tutor),
                 );
               }, childCount: tutorList.length),
             );
@@ -111,68 +123,66 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.backgroundGrey,
+      appBar: StandardAppBar(
+        leadingIcon: Icons.person_search,
+        title: 'Xin chào, $displayName',
+        subtitle: 'Tìm kiếm gia sư phù hợp',
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            // HIỂN THỊ TÊN NGƯỜI DÙNG
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-              color: AppColors.primaryBlue,
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: Text(
-                      avatarText,
-                      style: const TextStyle(
-                        color: AppColors.primaryBlue,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    'Xin chào, $displayName',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // PHẦN CÒN LẠI CỦA GIAO DIỆN
+            // Search bar
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: SearchBarCustom(onFilter: () {}),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+            
+            // Title section
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'DANH SÁCH GIA SƯ',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  Row(
+                    children: [
+                      AppIconContainer(
+                        icon: Icons.people,
+                        backgroundColor: AppColors.primaryContainer,
+                        iconColor: AppColors.primary,
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      const Text(
+                        'DANH SÁCH GIA SƯ',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: AppTypography.body2,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    onPressed: () {
-                      context.read<TutorBloc>().add(RefreshTutorsEvent());
-                    },
-                    icon: const Icon(Icons.refresh),
-                    iconSize: 24,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 40,
-                      minHeight: 40,
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6),
+                      color: Colors.blue.shade50,
                     ),
-                    tooltip: 'Làm mới danh sách',
+                    child: IconButton(
+                      onPressed: () {
+                        context.read<TutorBloc>().add(RefreshTutorsEvent());
+                      },
+                      icon: Icon(
+                        Icons.refresh,
+                        color: Colors.blue.shade700,
+                        size: 20,
+                      ),
+                      tooltip: 'Làm mới danh sách',
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 10),
+            
             Expanded(
               child: CustomScrollView(
                 slivers: [
@@ -188,5 +198,217 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
         ),
       ),
     );
+  }
+
+  // Method để xử lý khi user ấn nút "Đề nghị dạy"
+  void _handleOfferTap(Tutor tutor) {
+    final authState = context.read<AuthBloc>().state;
+    
+    if (authState is! AuthAuthenticated ||
+        authState.user.nguoiHocID == null ||
+        authState.user.taiKhoanID == null) {
+      _showSnack(
+        'Vui lòng đăng nhập bằng tài khoản người học để gửi đề nghị.',
+        true,
+      );
+      return;
+    }
+
+    _loadClassesAndPrompt(authState, tutor);
+  }
+
+  Future<void> _loadClassesAndPrompt(AuthAuthenticated auth, Tutor tutor) async {
+    setState(() {
+      _isProcessingInvite = true;
+    });
+
+    final ApiResponse<List<LopHoc>> response =
+        await _lopHocRepository.getLopHocCuaNguoiHoc();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isProcessingInvite = false;
+    });
+
+    if (!response.isSuccess || response.data == null) {
+      _showSnack(
+        response.message.isNotEmpty
+            ? response.message
+            : 'Không thể lấy danh sách lớp của bạn.',
+        true,
+      );
+      return;
+    }
+
+    final availableClasses = response.data!
+        .where((lop) {
+          final status = (lop.trangThai ?? '').toUpperCase();
+          return status == 'TIMGIASU' || status == 'CHODUYET';
+        })
+        .toList();
+
+    if (availableClasses.isEmpty) {
+      _showSnack('Bạn chưa có lớp nào đang tìm gia sư để gửi đề nghị.', true);
+      return;
+    }
+
+    int selectedClassId = availableClasses.first.maLop;
+    final noteController = TextEditingController();
+
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Gửi đề nghị tới gia sư ${tutor.hoTen}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Chọn lớp học:'),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<int>(
+                    value: selectedClassId,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                    ),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setModalState(() {
+                          selectedClassId = value;
+                        });
+                      }
+                    },
+                    items: availableClasses.map((lop) {
+                      return DropdownMenuItem<int>(
+                        value: lop.maLop,
+                        child: Text(
+                          lop.tieuDeLop,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Ghi chú (tùy chọn):'),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: noteController,
+                    maxLines: 3,
+                    maxLength: 500,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: 'Thêm ghi chú cho đề nghị...',
+                      contentPadding: EdgeInsets.all(12),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Hủy'),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context, {
+                            'classId': selectedClassId,
+                            'note': noteController.text.trim(),
+                          });
+                        },
+                        child: const Text('Gửi đề nghị'),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+
+    if (result != null) {
+      await _sendInvite(
+        tutor: tutor,
+        lopId: result['classId'],
+        ghiChu: result['note'],
+        auth: auth,
+      );
+    }
+  }
+
+  Future<void> _sendInvite({
+    required Tutor tutor,
+    required int lopId,
+    required String ghiChu,
+    required AuthAuthenticated auth,
+  }) async {
+    setState(() {
+      _isProcessingInvite = true;
+    });
+
+    final repo = context.read<YeuCauNhanLopRepository>();
+    final response = await repo.nguoiHocMoiGiaSu(
+      lopId: lopId,
+      giaSuId: tutor.giaSuID,
+      nguoiGuiTaiKhoanId: auth.user.taiKhoanID!,
+      ghiChu: ghiChu.isEmpty ? null : ghiChu,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isProcessingInvite = false;
+    });
+
+    if (response.isSuccess) {
+      _showSnack('Đã gửi đề nghị tới gia sư.', false);
+    } else {
+      _showSnack(
+        response.message.isNotEmpty
+            ? response.message
+            : 'Không thể gửi đề nghị, vui lòng thử lại.',
+        true,
+      );
+    }
+  }
+
+  void _showSnack(String message, bool isError) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: isError ? Colors.red : Colors.green,
+        ),
+      );
   }
 }

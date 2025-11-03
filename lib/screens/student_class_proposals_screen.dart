@@ -5,6 +5,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/yeu_cau_nhan_lop.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notification_service.dart';
 
 class StudentClassProposalsScreen extends StatefulWidget {
   final int lopHocId;
@@ -38,6 +39,8 @@ class _StudentClassProposalsScreenState
   }
 
   Future<void> _loadProposals({bool showLoader = true}) async {
+    if (!mounted) return;
+    
     if (showLoader) {
       setState(() {
         _isLoading = true;
@@ -45,19 +48,27 @@ class _StudentClassProposalsScreenState
       });
     }
 
-    final response = await _yeuCauRepo.getDeNghiTheoLop(widget.lopHocId);
+    try {
+      final response = await _yeuCauRepo.getDeNghiTheoLop(widget.lopHocId);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (response.isSuccess && response.data != null) {
+      if (response.isSuccess && response.data != null) {
+        setState(() {
+          _proposals = response.data!;
+          _errorMessage = null;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = response.message;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _proposals = response.data!;
-        _errorMessage = null;
-        _isLoading = false;
-      });
-    } else {
-      setState(() {
-        _errorMessage = response.message;
+        _errorMessage = 'Có lỗi xảy ra: $e';
         _isLoading = false;
       });
     }
@@ -77,25 +88,55 @@ class _StudentClassProposalsScreenState
     required int yeuCauId,
     required Future<ApiResponse<dynamic>> Function() action,
     required String successMessage,
+    String? actionType, // Thêm tham số để xác định loại action
   }) async {
+    if (!mounted) return;
+    
     _setActionProgress(yeuCauId, true);
 
-    final response = await action();
+    try {
+      final response = await action();
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    _setActionProgress(yeuCauId, false);
+      _setActionProgress(yeuCauId, false);
 
-    if (response.isSuccess) {
-      _showSnack(successMessage, false);
-      await _loadProposals(showLoader: false);
-    } else {
-      _showSnack(
-        response.message.isNotEmpty
-            ? response.message
-            : 'Thao tác không thành công, vui lòng thử lại.',
-        true,
-      );
+      if (response.isSuccess) {
+        _showSnack(successMessage, false);
+        await _loadProposals(showLoader: false);
+        
+        // Gửi notification khi chấp nhận proposal để tutor screen refresh
+        if (actionType == 'accept') {
+          final proposal = _proposals.firstWhere((p) => p.yeuCauID == yeuCauId);
+          if (proposal.giaSuID != null) {
+            GlobalNotificationService().notifyProposalAccepted(
+              proposalId: yeuCauId,
+              classId: widget.lopHocId,
+              tutorId: proposal.giaSuID!,
+            );
+          }
+        } else if (actionType == 'reject') {
+          final proposal = _proposals.firstWhere((p) => p.yeuCauID == yeuCauId);
+          if (proposal.giaSuID != null) {
+            GlobalNotificationService().notifyProposalRejected(
+              proposalId: yeuCauId,
+              classId: widget.lopHocId,
+              tutorId: proposal.giaSuID!,
+            );
+          }
+        }
+      } else {
+        _showSnack(
+          response.message.isNotEmpty
+              ? response.message
+              : 'Thao tác không thành công, vui lòng thử lại.',
+          true,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _setActionProgress(yeuCauId, false);
+      _showSnack('Có lỗi xảy ra: $e', true);
     }
   }
 
@@ -234,6 +275,7 @@ class _StudentClassProposalsScreenState
               yeuCauId: yeuCau.yeuCauID,
               action: () => _yeuCauRepo.tuChoiYeuCau(yeuCau.yeuCauID),
               successMessage: 'Đã từ chối đề nghị của gia sư.',
+              actionType: 'reject',
             ),
             child: const Text('Từ chối', style: TextStyle(color: Colors.red)),
           ),
@@ -243,6 +285,7 @@ class _StudentClassProposalsScreenState
               yeuCauId: yeuCau.yeuCauID,
               action: () => _yeuCauRepo.xacNhanYeuCau(yeuCau.yeuCauID),
               successMessage: 'Đã chấp nhận đề nghị của gia sư.',
+              actionType: 'accept',
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
@@ -271,6 +314,7 @@ class _StudentClassProposalsScreenState
                 nguoiGuiTaiKhoanId: _taiKhoanId!,
               ),
               successMessage: 'Đã hủy lời mời gia sư.',
+              actionType: 'cancel',
             );
           },
           child: const Text('Hủy', style: TextStyle(color: Colors.red)),
@@ -296,6 +340,7 @@ class _StudentClassProposalsScreenState
                 ghiChu: note.isEmpty ? null : note,
               ),
               successMessage: 'Đã cập nhật ghi chú đề nghị.',
+              actionType: 'update',
             );
           },
           style: ElevatedButton.styleFrom(

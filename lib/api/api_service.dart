@@ -15,10 +15,16 @@ class ApiService {
     final String? token = await SecureStorage.getToken();
     Map<String, String> headers = Map.from(ApiConfig.headers);
 
+    print('🔑 Token in headers: ${token != null ? "EXISTS" : "NULL"}');
+    
     if (token != null && token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
+      print('🔑 Authorization header added');
+    } else {
+      print('⚠️ No token found - API call may fail');
     }
 
+    print('🔑 Final headers: $headers');
     return headers;
   }
 
@@ -52,6 +58,9 @@ class ApiService {
     T Function(Map<String, dynamic>)? fromJsonT,
   }) async {
     try {
+      print('🌐 POST Request: ${ApiConfig.baseUrl}$endpoint');
+      print('🌐 POST Data: $data');
+      
       final response = await http
           .post(
             Uri.parse('${ApiConfig.baseUrl}$endpoint'),
@@ -60,14 +69,21 @@ class ApiService {
           )
           .timeout(ApiConfig.receiveTimeout);
 
+      print('🌐 POST Response status: ${response.statusCode}');
+      print('🌐 POST Response body: ${response.body}');
+
       return _handleResponse<T>(response, fromJsonT);
-    } on SocketException {
+    } on SocketException catch (e) {
+      print('❌ SocketException: $e');
       return _errorResponse('Không có kết nối internet');
-    } on TimeoutException {
+    } on TimeoutException catch (e) {
+      print('❌ TimeoutException: $e');
       return _errorResponse('Kết nối quá thời gian');
-    } on FormatException {
+    } on FormatException catch (e) {
+      print('❌ FormatException: $e');
       return _errorResponse('Dữ liệu không hợp lệ');
     } catch (e) {
+      print('❌ General Exception: $e');
       return _errorResponse('Lỗi kết nối: $e');
     }
   }
@@ -143,7 +159,7 @@ class ApiService {
       } else if (response.statusCode == 401) {
         return ApiResponse<T>(
           success: false,
-          message: 'Phiên đăng nhập hết hạn',
+          message: 'Tài khoản hoặc mật khẩu không hợp lệ!',
           error: responseData['error'],
           statusCode: response.statusCode,
         );
@@ -158,6 +174,21 @@ class ApiService {
         return ApiResponse<T>(
           success: false,
           message: 'Không tìm thấy dữ liệu',
+          error: responseData['error'],
+          statusCode: response.statusCode,
+        );
+      } else if (response.statusCode == 409) {
+        print('⚠️ 409 Conflict - ${responseData['message']}');
+        return ApiResponse<T>(
+          success: false,
+          message: responseData['message'] ?? 'Xung đột dữ liệu',
+          error: responseData['error'],
+          statusCode: response.statusCode,
+        );
+      } else if (response.statusCode == 422) {
+        return ApiResponse<T>(
+          success: false,
+          message: responseData['message'] ?? 'Dữ liệu không hợp lệ',
           error: responseData['error'],
           statusCode: response.statusCode,
         );

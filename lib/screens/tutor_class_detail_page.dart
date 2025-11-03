@@ -1,11 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
 
 class TutorClassDetailPage extends StatefulWidget {
   final int lopHocId;
@@ -20,7 +17,6 @@ class _TutorClassDetailPageState extends State<TutorClassDetailPage> {
   final LopHocRepository _lopHocRepo = LopHocRepository();
 
   bool _isLoading = true;
-  bool _isSubmitting = false;
   LopHoc? _lopHoc;
   String? _errorMessage;
 
@@ -65,7 +61,7 @@ class _TutorClassDetailPageState extends State<TutorClassDetailPage> {
         elevation: 1,
       ),
       body: _buildBody(), // Gọi hàm xây dựng body
-      bottomNavigationBar: _buildBottomButton(), // Nút "Đề nghị dạy"
+      // bottomNavigationBar: _buildBottomButton(), // Nút "Đề nghị dạy" - đã bỏ để chỉ xem thông tin
     );
   }
 
@@ -257,145 +253,5 @@ class _TutorClassDetailPageState extends State<TutorClassDetailPage> {
         ],
       ),
     );
-  }
-
-  // Nút "Đề nghị dạy" ở cuối trang
-  Widget? _buildBottomButton() {
-    if (_isLoading || _lopHoc == null) return null; // Ẩn khi đang tải
-
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: ElevatedButton(
-        onPressed: _isSubmitting ? null : _handleSendProposal,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blueAccent,
-          minimumSize: const Size(double.infinity, 50), // Full-width
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        child:
-            _isSubmitting
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : const Text(
-                    "Đề nghị dạy",
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-      ),
-    );
-  }
-
-  Future<void> _handleSendProposal() async {
-    if (_lopHoc == null) return;
-
-    final authState = context.read<AuthBloc>().state;
-    if (authState is! AuthAuthenticated ||
-        authState.user.giaSuID == null ||
-        authState.user.taiKhoanID == null) {
-      _showSnack('Vui lòng đăng nhập bằng tài khoản gia sư để gửi đề nghị.', true);
-      return;
-    }
-
-    final String? note = await _promptProposalNote();
-    if (note == null) {
-      return; // Người dùng hủy
-    }
-
-    setState(() {
-      _isSubmitting = true;
-    });
-
-    final repo = context.read<YeuCauNhanLopRepository>();
-    final response = await repo.giaSuGuiYeuCau(
-      lopId: _lopHoc!.maLop,
-      giaSuId: authState.user.giaSuID!,
-      nguoiGuiTaiKhoanId: authState.user.taiKhoanID!,
-      ghiChu: note.isEmpty ? null : note,
-    );
-
-    if (!mounted) return;
-
-    setState(() {
-      _isSubmitting = false;
-    });
-
-    if (response.isSuccess) {
-      _showSnack('Đã gửi đề nghị dạy thành công.', false);
-    } else {
-      _showSnack(
-        response.message.isNotEmpty
-            ? response.message
-            : 'Gửi đề nghị thất bại. Vui lòng thử lại.',
-        true,
-      );
-    }
-  }
-
-  Future<String?> _promptProposalNote() async {
-    final controller = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Gửi đề nghị dạy'),
-          content: Form(
-            key: formKey,
-            child: TextFormField(
-              controller: controller,
-              maxLines: 4,
-              maxLength: 500,
-              decoration: const InputDecoration(
-                hintText: 'Thêm ghi chú cho đề nghị (không bắt buộc)',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if ((value ?? '').length > 500) {
-                  return 'Ghi chú tối đa 500 ký tự';
-                }
-                return null;
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Hủy'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (formKey.currentState?.validate() ?? false) {
-                  Navigator.pop(context, controller.text.trim());
-                }
-              },
-              child: const Text('Gửi đề nghị'),
-            ),
-          ],
-        );
-      },
-    );
-
-    controller.dispose();
-    return result;
-  }
-
-  void _showSnack(String message, bool isError) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: isError ? Colors.red : Colors.green,
-        ),
-      );
   }
 }

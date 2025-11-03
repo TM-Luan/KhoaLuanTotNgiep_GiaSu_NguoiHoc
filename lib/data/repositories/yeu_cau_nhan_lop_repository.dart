@@ -77,14 +77,24 @@ class YeuCauNhanLopRepository {
     required int nguoiGuiTaiKhoanId,
     String? ghiChu,
   }) async {
+    print('📤 YeuCauNhanLopRepository.giaSuGuiYeuCau:');
+    print('   lopId: $lopId');
+    print('   giaSuId: $giaSuId');
+    print('   nguoiGuiTaiKhoanId: $nguoiGuiTaiKhoanId');
+    print('   ghiChu: "$ghiChu"');
+    
+    final data = {
+      'LopYeuCauID': lopId,
+      'GiaSuID': giaSuId,
+      'NguoiGuiTaiKhoanID': nguoiGuiTaiKhoanId,
+      'GhiChu': ghiChu,
+    };
+    
+    print('📤 Final data to send: $data');
+    
     return _apiService.post(
       '/giasu/guiyeucau',
-      data: {
-        'LopYeuCauID': lopId,
-        'GiaSuID': giaSuId,
-        'NguoiGuiTaiKhoanID': nguoiGuiTaiKhoanId,
-        'GhiChu': ghiChu,
-      },
+      data: data,
     );
   }
 

@@ -20,19 +20,17 @@ class TutorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap:
-          onTap ??
+      onTap: onTap ??
           () {
             // Navigate to tutor detail using BLoC
             context.read<TutorBloc>().add(LoadTutorByIdEvent(tutor.giaSuID));
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder:
-                    (context) => BlocProvider.value(
-                      value: context.read<TutorBloc>(),
-                      child: TutorDetailPage(tutorId: tutor.giaSuID),
-                    ),
+                builder: (context) => BlocProvider.value(
+                  value: context.read<TutorBloc>(),
+                  child: TutorDetailPage(tutorId: tutor.giaSuID),
+                ),
               ),
             );
           },
@@ -56,79 +54,85 @@ class TutorCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AspectRatio(aspectRatio: 1, child: _buildTutorImage()),
-              Flexible(
+              Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                  padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            tutor.hoTen,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                              height: 1.2,
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              tutor.hoTen,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                height: 1.1,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            tutor.bangCap ?? 'Chưa cập nhật',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey[700],
-                              height: 1.2,
+                            const SizedBox(height: 2),
+                            Text(
+                              tutor.bangCap ?? 'Chưa cập nhật',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[700],
+                                height: 1.1,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      const SizedBox(height: 4),
                       Row(
                         children: [
                           const Icon(
                             Icons.star_rate_rounded,
-                            size: 16,
+                            size: 14,
                             color: Colors.amber,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 2),
                           Text(
                             tutor.diemSo.toStringAsFixed(1),
                             style: const TextStyle(
-                              fontSize: 14,
+                              fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: AppColors.black,
                             ),
                           ),
                           const Spacer(),
-                          InkWell(
-                            onTap: onOfferTap,
-                            borderRadius: BorderRadius.circular(6),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.lightBlue,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Text(
-                                'Đề nghị dạy',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.white,
+                          if (onOfferTap != null)
+                            Flexible(
+                              child: InkWell(
+                                onTap: onOfferTap,
+                                borderRadius: BorderRadius.circular(4),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.lightBlue,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'Đề nghị dạy',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.white,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
                         ],
                       ),
                     ],

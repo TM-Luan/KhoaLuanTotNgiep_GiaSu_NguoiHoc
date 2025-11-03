@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/add_class_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_class_detail_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_class_proposals_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notification_service.dart';
 
 class StudentMyClassesPage extends StatefulWidget {
   const StudentMyClassesPage({super.key});
@@ -16,6 +18,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final LopHocRepository _lopHocRepo = LopHocRepository();
+  late StreamSubscription<ProposalUpdateEvent> _proposalUpdateSubscription;
 
   bool _isLoading = true;
   String? _errorMessage;
@@ -29,12 +32,23 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
     super.initState();
     // Khởi tạo TabController với 2 tab
     _tabController = TabController(length: 2, vsync: this);
+    
+    // Lắng nghe notification về proposal updates
+    _proposalUpdateSubscription = GlobalNotificationService()
+        .proposalUpdateStream
+        .listen((event) {
+      // Refresh data khi có proposal được chấp nhận/từ chối  
+      print('🔔 Student screen nhận notification proposal update: ${event.type}, classId: ${event.classId}');
+      _fetchClasses();
+    });
+    
     _fetchClasses();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _proposalUpdateSubscription.cancel();
     super.dispose();
   }
 
@@ -83,49 +97,71 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'LỚP CỦA TÔI',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.school,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Lớp của tôi',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ],
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 1,
+        backgroundColor: Colors.blue.shade600,
+        elevation: 0,
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: ElevatedButton(
-              onPressed: () {
-                // Điều hướng đến trang AddClassPage
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AddClassPage()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
+            padding: const EdgeInsets.only(right: 12.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text('Thêm Lớp'),
+              child: IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AddClassPage()),
+                  );
+                },
+                icon: const Icon(
+                  Icons.add,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                tooltip: 'Thêm Lớp',
+              ),
             ),
           ),
         ],
-        // Thêm TabBar vào AppBar
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.blue,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: Colors.blue,
+          indicatorColor: Colors.white,
+          indicatorWeight: 3,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
           tabs: const [
             Tab(text: 'Đang Tìm Gia Sư'),
             Tab(text: 'Đang Học'),
-            // Bạn có thể thêm các tab khác ở đây
           ],
         ),
       ),

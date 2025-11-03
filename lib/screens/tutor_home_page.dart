@@ -1,8 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
@@ -11,6 +11,10 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/custom_searchBar.da
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/student_card.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_class_detail_page.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/flutter_secure_storage.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/app_components.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 
 class TutorHomePage extends StatefulWidget {
   final UserProfile? userProfile; // THÊM PROPERTY
@@ -112,6 +116,15 @@ class _TutorHomePageState extends State<TutorHomePage> {
       return;
     }
 
+    // Hiển thị dialog nhập ghi chú tùy chọn
+    final String? note = await _showNoteDialog();
+    if (note == null) {
+      return; // Người dùng hủy
+    }
+
+    // Debug: Kiểm tra token trước khi gửi
+    await _debugCheckToken();
+
     // Show loading indicator
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -131,11 +144,17 @@ class _TutorHomePageState extends State<TutorHomePage> {
     );
 
     try {
+      print('🔄 Bắt đầu gửi đề nghị với lopId: ${lop.maLop}, giaSuId: $giaSuId, note: "$note"');
+      
+      // Thêm timeout wrapper để tránh hang
       final response = await _yeuCauRepo!.giaSuGuiYeuCau(
         lopId: lop.maLop,
         giaSuId: giaSuId,
         nguoiGuiTaiKhoanId: taiKhoanId,
-      );
+        ghiChu: note.isEmpty ? null : note, // Cho phép ghi chú trống
+      ).timeout(Duration(seconds: 10));
+
+      print('📡 Response: success=${response.success}, message=${response.message}');
 
       // Hide loading snackbar first
       if (mounted) {
@@ -146,7 +165,7 @@ class _TutorHomePageState extends State<TutorHomePage> {
 
       if (!mounted) return;
 
-      if (response.isSuccess) {
+      if (response.success == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('✅ Đã gửi đề nghị dạy lớp "${lop.tieuDeLop}" thành công!'),
@@ -156,7 +175,7 @@ class _TutorHomePageState extends State<TutorHomePage> {
         );
       } else {
         // Hiển thị thông báo lỗi từ server với màu cam để phân biệt
-        final errorMessage = response.message.isNotEmpty 
+        final errorMessage = (response.message.isNotEmpty) 
             ? response.message 
             : 'Không thể gửi đề nghị. Vui lòng thử lại.';
             
@@ -174,7 +193,21 @@ class _TutorHomePageState extends State<TutorHomePage> {
           ),
         );
       }
+    } on TimeoutException catch (e) {
+      print('⏰ Request timeout: $e');
+      // Hide loading snackbar
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('⏰ Yêu cầu quá thời gian. Vui lòng thử lại.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     } catch (e) {
+      print('💥 Exception trong _handleDeNghiDay: $e');
       // Hide loading snackbar
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -211,55 +244,46 @@ class _TutorHomePageState extends State<TutorHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.lightGrey,
+      backgroundColor: AppColors.backgroundGrey,
+      appBar: StandardAppBar(
+        leadingIcon: Icons.class_,
+        title: 'Xin chào, $displayName',
+        subtitle: 'Tìm kiếm lớp học phù hợp',
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            // HIỂN THỊ TÊN NGƯỜI DÙNG - GIỐNG NHƯ LEARNER HOME SCREEN
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: SearchBarCustom(
+                onFilter: () {},
+              ),
+            ),
+            
+            // Title section
             Container(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-              color: AppColors.primaryBlue,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: Text(
-                      avatarText,
-                      style: const TextStyle(
-                        color: AppColors.primaryBlue,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                  AppIconContainer(
+                    icon: Icons.class_,
+                    backgroundColor: AppColors.primaryContainer,
+                    iconColor: AppColors.primary,
                   ),
-                  const SizedBox(width: 10),
-                  Text(
-                    'Xin chào, $displayName',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
+                  const SizedBox(width: AppSpacing.md),
+                  const Text(
+                    'DANH SÁCH LỚP CHƯA GIAO',
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
+                      fontSize: AppTypography.body2,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-              child: SearchBarCustom(onFilter: () {}),
-            ),
-            const SizedBox(height: 8),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.0),
-              child: Text(
-                'DANH SÁCH LỚP CHƯA GIAO',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                  letterSpacing: .3,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
+            
             Expanded(child: _buildLopHocList()),
           ],
         ),
@@ -296,7 +320,7 @@ class _TutorHomePageState extends State<TutorHomePage> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(4, 4, 4, 100),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.sm, AppSpacing.sm, AppSpacing.sm, 100),
       itemCount: _lopHocList.length,
       itemBuilder: (context, index) {
         final lop = _lopHocList[index];
@@ -306,6 +330,99 @@ class _TutorHomePageState extends State<TutorHomePage> {
           onCardTap: () => _navigateToDetail(lop),
         );
       },
+    );
+  }
+
+  // Dialog nhập ghi chú tùy chọn
+  Future<String?> _showNoteDialog() async {
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return _NoteDialogWidget();
+      },
+    );
+  }
+
+  // Debug method để kiểm tra token
+  Future<void> _debugCheckToken() async {
+    try {
+      final token = await SecureStorage.getToken();
+      print('🔑 Current token: ${token ?? "NULL"}');
+      
+      if (token == null || token.isEmpty) {
+        print('⚠️ WARNING: No token found! API call will likely fail.');
+      } else {
+        print('✅ Token exists, length: ${token.length}');
+      }
+    } catch (e) {
+      print('❌ Error checking token: $e');
+    }
+  }
+}
+
+// Separate StatefulWidget for the note dialog
+class _NoteDialogWidget extends StatefulWidget {
+  @override
+  _NoteDialogWidgetState createState() => _NoteDialogWidgetState();
+}
+
+class _NoteDialogWidgetState extends State<_NoteDialogWidget> {
+  late TextEditingController _noteController;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _noteController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Gửi đề nghị dạy'),
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          controller: _noteController,
+          maxLines: 4,
+          maxLength: 500,
+          decoration: const InputDecoration(
+            labelText: 'Ghi chú',
+            hintText: 'Thêm ghi chú cho đề nghị (tùy chọn)',
+            border: OutlineInputBorder(),
+          ),
+          validator: (value) {
+            final text = value?.trim() ?? '';
+            if (text.length > 500) {
+              return 'Ghi chú tối đa 500 ký tự';
+            }
+            return null;
+          },
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(); // Trả về null
+          },
+          child: const Text('Hủy'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              Navigator.of(context).pop(_noteController.text.trim());
+            }
+          },
+          child: const Text('Gửi đề nghị'),
+        ),
+      ],
     );
   }
 }
