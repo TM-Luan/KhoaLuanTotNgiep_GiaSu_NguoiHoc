@@ -28,6 +28,45 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
     _fetchLopHocDetail();
   }
 
+  String _getStatusText(String? code) {
+    switch (code) {
+      case 'DangHoc':
+        return 'Đang học';
+      case 'TimGiaSu':
+        return 'Tìm gia sư';
+      case 'ChoDuyet':
+        return 'Chờ duyệt';
+      default:
+        return 'Không xác định';
+    }
+  }
+
+  Color _getStatusColor(String? code) {
+    switch (code) {
+      case 'DangHoc':
+        return Colors.green;
+      case 'TimGiaSu':
+        return Colors.orange;
+      case 'ChoDuyet':
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getStatusIcon(String? code) {
+    switch (code) {
+      case 'DangHoc':
+        return Icons.check_circle_outline;
+      case 'TimGiaSu':
+        return Icons.search;
+      case 'ChoDuyet':
+        return Icons.pending_outlined;
+      default:
+        return Icons.info_outline;
+    }
+  }
+
   Future<void> _fetchLopHocDetail() async {
     setState(() {
       _isLoading = true;
@@ -118,7 +157,7 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Icon(
                   Icons.flag_outlined,
@@ -126,33 +165,58 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
                   size: 20,
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Trạng thái',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    const SizedBox(height: 4),
-                    Chip(
-                      label: Text(
-                        _lopHoc!.trangThai ?? 'N/A',
-                        style: const TextStyle(
-                          color: Colors.blueAccent,
-                          fontWeight: FontWeight.bold,
+                const Text(
+                  'Trạng thái',
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Chip đẹp, rõ chữ, đúng màu
+                      IntrinsicWidth(
+                        // Đảm bảo chip vừa đủ rộng
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(
+                              _lopHoc!.trangThai,
+                            ).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: _getStatusColor(
+                                _lopHoc!.trangThai,
+                              ).withValues(alpha: 0.5),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _getStatusIcon(_lopHoc!.trangThai),
+                                size: 16,
+                                color: _getStatusColor(_lopHoc!.trangThai),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                _getStatusText(_lopHoc!.trangThai),
+                                style: TextStyle(
+                                  color: _getStatusColor(_lopHoc!.trangThai),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      backgroundColor: Colors.blue.shade50,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 2,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: const BorderSide(color: Colors.transparent),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),

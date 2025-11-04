@@ -11,11 +11,13 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/yeu_cau_nhan_lo
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_class_detail_page.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_class_detail_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notification_service.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/untils/format_vnd.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_info_row.dart';
 
 class TutorMyClassesScreen extends StatefulWidget {
-  const TutorMyClassesScreen({Key? key}) : super(key: key);
+  const TutorMyClassesScreen({super.key});
 
   static const String routeName = '/tutor-my-classes';
 
@@ -31,17 +33,19 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
   @override
   void initState() {
     super.initState();
-    
+
     // Lắng nghe notification về proposal updates
     _proposalUpdateSubscription = GlobalNotificationService()
         .proposalUpdateStream
         .listen((event) {
-      // Refresh data khi có proposal được chấp nhận/từ chối
-      if (_currentBloc != null) {
-        print('🔔 Nhận notification proposal update: ${event.type}, classId: ${event.classId}');
-        _currentBloc!.add(TutorClassesRefreshRequested());
-      }
-    });
+          // Refresh data khi có proposal được chấp nhận/từ chối
+          if (_currentBloc != null) {
+            print(
+              '🔔 Nhận notification proposal update: ${event.type}, classId: ${event.classId}',
+            );
+            _currentBloc!.add(TutorClassesRefreshRequested());
+          }
+        });
   }
 
   @override
@@ -64,7 +68,9 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
     if (giaSuId == 0 || taiKhoanId == 0) {
       return const Scaffold(
         body: Center(
-          child: Text('Vui lòng đăng nhập bằng tài khoản gia sư để xem dữ liệu.'),
+          child: Text(
+            'Vui lòng đăng nhập bằng tài khoản gia sư để xem dữ liệu.',
+          ),
         ),
       );
     }
@@ -123,27 +129,27 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                     fontSize: AppTypography.body2,
                   ),
                   tabs: [
-                Tab(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.check_circle_outline, size: 18),
-                      const SizedBox(width: 8),
-                      const Text('ĐANG DẠY'),
-                    ],
-                  ),
-                ),
-                Tab(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.pending_actions, size: 18),
-                      const SizedBox(width: 8),
-                      const Text('ĐỀ NGHỊ'),
-                    ],
-                  ),
-                ),
-              ],
+                    Tab(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.check_circle_outline, size: 18),
+                          const SizedBox(width: 8),
+                          const Text('ĐANG DẠY'),
+                        ],
+                      ),
+                    ),
+                    Tab(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.pending_actions, size: 18),
+                          const SizedBox(width: 8),
+                          const Text('ĐỀ NGHỊ'),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -190,7 +196,9 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              return const Center(child: Text('Hiện chưa có dữ liệu hiển thị.'));
+              return const Center(
+                child: Text('Hiện chưa có dữ liệu hiển thị.'),
+              );
             },
           ),
         ),
@@ -234,18 +242,11 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.school_outlined,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.school_outlined, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'Bạn chưa có lớp học nào đang dạy',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -261,6 +262,13 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
         itemCount: lopHocList.length,
         itemBuilder: (context, index) {
           final lop = lopHocList[index];
+
+          // === GIỐNG HỆT CARD GIA SƯ GỬI YÊU CẦU ===
+          final Color cardColor = Colors.blue.shade50;
+          final Color statusColor = Colors.blue.shade100;
+          final Color textColor = Colors.blue.shade700;
+          final IconData statusIcon = Icons.send_outlined;
+
           return Card(
             elevation: 3,
             margin: const EdgeInsets.only(bottom: 12),
@@ -273,10 +281,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Colors.blue.shade50,
-                    Colors.white,
-                  ],
+                  colors: [cardColor, Colors.white],
                 ),
               ),
               child: Padding(
@@ -284,19 +289,16 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // --- HEADER (GIỐNG HỆT) ---
                     Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.green.shade100,
-                            borderRadius: BorderRadius.circular(8),
+                            color: statusColor,
+                            borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Icon(
-                            Icons.check_circle,
-                            color: Colors.green.shade700,
-                            size: 20,
-                          ),
+                          child: Icon(statusIcon, color: textColor, size: 18),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -304,45 +306,81 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                             lop.tieuDeLop,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'Đang dạy',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade700,
                             ),
                           ),
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 12),
-                    _buildInfoRow(Icons.person, 'Học viên', lop.tenNguoiHoc),
-                    const SizedBox(height: 8),
-                    _buildInfoRow(Icons.attach_money, 'Học phí', lop.hocPhi),
+
+                    // --- THÔNG TIN ---
+                    InfoRow(
+                      icon: Icons.person,
+                      label: 'Học viên',
+                      value: lop.tenNguoiHoc,
+                    ),
+                    const SizedBox(height: 6),
+                    InfoRow(
+                      icon: Icons.attach_money,
+                      label: 'Học phí',
+                      value: formatCurrency(lop.hocPhi),
+                    ),
                     if (lop.diaChi?.isNotEmpty ?? false) ...[
-                      const SizedBox(height: 8),
-                      _buildInfoRow(Icons.location_on, 'Địa chỉ', lop.diaChi!),
+                      const SizedBox(height: 6),
+                      InfoRow(
+                        icon: Icons.location_on_rounded,
+                        label: 'Địa chỉ',
+                        value: lop.diaChi!,
+                      ),
                     ],
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Nút xem chi tiết cho lớp đang dạy
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          gradient: LinearGradient(
-                            colors: [Colors.green.shade400, Colors.green.shade600],
-                          ),
-                        ),
-                        child: ElevatedButton.icon(
-                          onPressed: () => _navigateToClassDetail(context, lop.maLop),
+
+                    const SizedBox(height: 12),
+
+                    // --- FOOTER (GIỐNG HỆT CARD GIA SƯ GỬI) ---
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const SizedBox(width: 12),
+                        // Nút "Xem chi tiết" – giữ nguyên chức năng
+                        ElevatedButton.icon(
+                          onPressed:
+                              () => _navigateToClassDetail(context, lop.maLop),
                           icon: const Icon(Icons.visibility, size: 16),
                           label: const Text('Xem chi tiết'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
+                            backgroundColor: Colors.blue.shade600,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                             elevation: 0,
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
@@ -373,10 +411,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
             const SizedBox(height: 16),
             Text(
               'Không có đề nghị nào đang chờ',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -406,28 +441,29 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
     bool isActionLoading,
   ) {
     final bool isSentByTutor = yeuCau.vaiTroNguoiGui == 'GiaSu';
-    
-    // Xác định màu sắc và icon dựa trên loại đề nghị
-    Color cardColor = isSentByTutor ? Colors.blue.shade50 : Colors.orange.shade50;
-    Color statusColor = isSentByTutor ? Colors.blue.shade100 : Colors.orange.shade100;
-    IconData statusIcon = isSentByTutor ? Icons.send_outlined : Icons.mail_outline;
+
+    // === THỐNG NHẤT MÀU SẮC: XANH DƯƠNG CHO GIA SƯ GỬI, CAM CHO HỌC VIÊN MỜI ===
+    final Color cardColor =
+        isSentByTutor ? Colors.blue.shade50 : Colors.orange.shade50;
+    final Color statusColor =
+        isSentByTutor ? Colors.blue.shade100 : Colors.orange.shade100;
+    final Color textColor =
+        isSentByTutor ? Colors.blue.shade700 : Colors.orange.shade700;
+    final IconData statusIcon =
+        isSentByTutor ? Icons.send_outlined : Icons.mail_outline;
+    final String footerText = isSentByTutor ? 'Bạn đã gửi' : 'Mời bạn';
 
     return Card(
       elevation: 3,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              cardColor,
-              Colors.white,
-            ],
+            colors: [cardColor, Colors.white],
           ),
         ),
         child: Padding(
@@ -435,7 +471,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header với icon và tiêu đề
+              // --- HEADER (GIỐNG HỆT CÁC CARD KHÁC) ---
               Row(
                 children: [
                   Container(
@@ -444,11 +480,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                       color: statusColor,
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Icon(
-                      statusIcon,
-                      color: isSentByTutor ? Colors.blue.shade700 : Colors.orange.shade700,
-                      size: 18,
-                    ),
+                    child: Icon(statusIcon, color: textColor, size: 18),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -461,7 +493,10 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(10),
@@ -477,86 +512,87 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                   ),
                 ],
               ),
+
               const SizedBox(height: 12),
-              
-              // Thông tin chi tiết tóm gọn
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildCompactInfo(Icons.person, yeuCau.lopHoc.tenNguoiHoc),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildCompactInfo(Icons.attach_money, yeuCau.lopHoc.hocPhi),
-                  ),
-                ],
+
+              // --- THÔNG TIN ---
+              InfoRow(
+                icon: Icons.person,
+                label: 'Học viên',
+                value: yeuCau.lopHoc.tenNguoiHoc,
               ),
-              
+              const SizedBox(height: 6),
+              InfoRow(
+                icon: Icons.attach_money,
+                label: 'Học phí',
+                value: formatCurrency(yeuCau.lopHoc.hocPhi),
+              ),
+              if (yeuCau.lopHoc.diaChi?.isNotEmpty ?? false) ...[
+                const SizedBox(height: 6),
+                InfoRow(
+                  icon: Icons.location_on_rounded,
+                  label: 'Địa chỉ',
+                  value: yeuCau.lopHoc.diaChi!,
+                ),
+              ],
+
+              // Ghi chú (nếu có)
               if (yeuCau.ghiChu?.isNotEmpty ?? false) ...[
                 const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(6),
+                InfoRow(
+                  icon: Icons.note,
+                  label: 'Ghi chú',
+                  value:
+                      yeuCau.ghiChu!.length > 80
+                          ? '${yeuCau.ghiChu!.substring(0, 80)}...'
+                          : yeuCau.ghiChu!,
+                  iconColor: Colors.grey.shade600,
+                  iconSize: 16,
+                  labelStyle: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade700,
                   ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.note, size: 14, color: Colors.grey.shade600),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          yeuCau.ghiChu!.length > 50 
-                              ? '${yeuCau.ghiChu!.substring(0, 50)}...'
-                              : yeuCau.ghiChu!,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontStyle: FontStyle.italic,
-                            color: Colors.grey.shade700,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+                  valueStyle: TextStyle(
+                    fontSize: 13,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.grey.shade700,
                   ),
                 ),
               ],
-              
+
               const SizedBox(height: 12),
-              
-              // Phần trạng thái và nút action
+
+              // --- FOOTER: TRẠNG THÁI + NÚT HÀNH ĐỘNG ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: statusColor,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        isSentByTutor ? '📤 Bạn đã gửi' : '📨 Mời bạn',
+                        footerText,
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
                           fontSize: 13,
-                          color: isSentByTutor ? Colors.blue.shade700 : Colors.orange.shade700,
+                          color: textColor,
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   if (isActionLoading)
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      child: const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
+                    const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   else
                     _buildActionButtons(context, yeuCau),
@@ -572,14 +608,14 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
   Widget _buildActionButtons(BuildContext context, YeuCauNhanLop yeuCau) {
     final bloc = context.read<TutorClassesBloc>();
     final bool isSentByTutor = yeuCau.vaiTroNguoiGui == 'GiaSu';
-    
+
     // Lấy taiKhoanId của user hiện tại để kiểm tra quyền
     final authState = context.read<AuthBloc>().state;
     int currentTaiKhoanId = 0;
     if (authState is AuthAuthenticated) {
       currentTaiKhoanId = authState.user.taiKhoanID ?? 0;
     }
-    
+
     // Kiểm tra xem đề nghị có phải do user hiện tại tạo không
     final bool isOwnRequest = yeuCau.nguoiGuiTaiKhoanID == currentTaiKhoanId;
 
@@ -597,11 +633,18 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
               onTap: () => _navigateToClassDetail(context, yeuCau.lopYeuCauID),
               borderRadius: BorderRadius.circular(6),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.visibility, size: 14, color: Colors.green.shade700),
+                    Icon(
+                      Icons.visibility,
+                      size: 14,
+                      color: Colors.green.shade700,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Chi tiết',
@@ -628,7 +671,10 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                 onTap: () => _showUpdateNoteDialog(context, yeuCau),
                 borderRadius: BorderRadius.circular(6),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -655,10 +701,14 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                 border: Border.all(color: Colors.red.shade300),
               ),
               child: InkWell(
-                onTap: () => bloc.add(TutorClassRequestCancelled(yeuCau.yeuCauID)),
+                onTap:
+                    () => bloc.add(TutorClassRequestCancelled(yeuCau.yeuCauID)),
                 borderRadius: BorderRadius.circular(6),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -688,10 +738,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
               ),
               child: const Text(
                 'Đề nghị từ session khác',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ),
           ],
@@ -716,7 +763,11 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.visibility, size: 14, color: Colors.green.shade700),
+                  Icon(
+                    Icons.visibility,
+                    size: 14,
+                    color: Colors.green.shade700,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     'Chi tiết',
@@ -847,11 +898,11 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
 
     if (result != null) {
       context.read<TutorClassesBloc>().add(
-            TutorClassRequestUpdated(
-              yeuCauId: yeuCau.yeuCauID,
-              ghiChu: result.isEmpty ? null : result,
-            ),
-          );
+        TutorClassRequestUpdated(
+          yeuCauId: yeuCau.yeuCauID,
+          ghiChu: result.isEmpty ? null : result,
+        ),
+      );
     }
   }
 
@@ -859,77 +910,9 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: color,
-        ),
-      );
+      ..showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: 18,
-          color: Colors.grey[600],
-        ),
-        const SizedBox(width: 8),
-        Text(
-          '$label: ',
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Widget thông tin thu gọn để tiết kiệm không gian
-  Widget _buildCompactInfo(IconData icon, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 14,
-            color: Colors.grey[600],
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Navigate to class detail page
   void _navigateToClassDetail(BuildContext context, int lopHocId) {
     Navigator.push(
       context,

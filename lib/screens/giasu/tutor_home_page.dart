@@ -12,8 +12,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_n
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/student_card.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_filter_widget.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/tutor_class_detail_page.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/flutter_secure_storage.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_class_detail_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/app_components.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
@@ -107,9 +106,9 @@ class _TutorHomePageState extends State<TutorHomePage> {
           _isSearching = false;
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response.message)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(response.message)));
         }
       }
     } catch (e) {
@@ -118,9 +117,9 @@ class _TutorHomePageState extends State<TutorHomePage> {
         _isSearching = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi tìm kiếm: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi tìm kiếm: $e')));
       }
     }
   }
@@ -171,7 +170,7 @@ class _TutorHomePageState extends State<TutorHomePage> {
 
   Future<void> _handleDeNghiDay(LopHoc lop) async {
     final authState = context.read<AuthBloc>().state;
-    
+
     if (authState is! AuthAuthenticated) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -211,9 +210,6 @@ class _TutorHomePageState extends State<TutorHomePage> {
       return; // Người dùng hủy
     }
 
-    // Debug: Kiểm tra token trước khi gửi
-    await _debugCheckToken();
-
     // Show loading indicator
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -233,17 +229,18 @@ class _TutorHomePageState extends State<TutorHomePage> {
     );
 
     try {
-      print('🔄 Bắt đầu gửi đề nghị với lopId: ${lop.maLop}, giaSuId: $giaSuId, note: "$note"');
-      
-      // Thêm timeout wrapper để tránh hang
-      final response = await _yeuCauRepo!.giaSuGuiYeuCau(
-        lopId: lop.maLop,
-        giaSuId: giaSuId,
-        nguoiGuiTaiKhoanId: taiKhoanId,
-        ghiChu: note.isEmpty ? null : note, // Cho phép ghi chú trống
-      ).timeout(Duration(seconds: 10));
+      final response = await _yeuCauRepo!
+          .giaSuGuiYeuCau(
+            lopId: lop.maLop,
+            giaSuId: giaSuId,
+            nguoiGuiTaiKhoanId: taiKhoanId,
+            ghiChu: note.isEmpty ? null : note, // Cho phép ghi chú trống
+          )
+          .timeout(Duration(seconds: 10));
 
-      print('📡 Response: success=${response.success}, message=${response.message}');
+      print(
+        '📡 Response: success=${response.success}, message=${response.message}',
+      );
 
       // Hide loading snackbar first
       if (mounted) {
@@ -257,17 +254,20 @@ class _TutorHomePageState extends State<TutorHomePage> {
       if (response.success == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ Đã gửi đề nghị dạy lớp "${lop.tieuDeLop}" thành công!'),
+            content: Text(
+              '✅ Đã gửi đề nghị dạy lớp "${lop.tieuDeLop}" thành công!',
+            ),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 3),
           ),
         );
       } else {
         // Hiển thị thông báo lỗi từ server với màu cam để phân biệt
-        final errorMessage = (response.message.isNotEmpty) 
-            ? response.message 
-            : 'Không thể gửi đề nghị. Vui lòng thử lại.';
-            
+        final errorMessage =
+            (response.message.isNotEmpty)
+                ? response.message
+                : 'Không thể gửi đề nghị. Vui lòng thử lại.';
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -302,9 +302,9 @@ class _TutorHomePageState extends State<TutorHomePage> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         await Future.delayed(const Duration(milliseconds: 200));
       }
-      
+
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -356,12 +356,13 @@ class _TutorHomePageState extends State<TutorHomePage> {
                           decoration: InputDecoration(
                             hintText: 'Tìm kiếm lớp học...',
                             prefixIcon: const Icon(Icons.search),
-                            suffixIcon: _searchQuery != null
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear),
-                                    onPressed: _clearSearch,
-                                  )
-                                : null,
+                            suffixIcon:
+                                _searchQuery != null
+                                    ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: _clearSearch,
+                                    )
+                                    : null,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(25),
                               borderSide: BorderSide.none,
@@ -381,17 +382,19 @@ class _TutorHomePageState extends State<TutorHomePage> {
                       const SizedBox(width: AppSpacing.sm),
                       Container(
                         decoration: BoxDecoration(
-                          color: _showFilters || _currentFilter.hasActiveFilters 
-                              ? AppColors.primary 
-                              : Colors.grey[100],
+                          color:
+                              _showFilters || _currentFilter.hasActiveFilters
+                                  ? AppColors.primary
+                                  : Colors.grey[100],
                           borderRadius: BorderRadius.circular(25),
                         ),
                         child: IconButton(
                           icon: Icon(
                             Icons.filter_list,
-                            color: _showFilters || _currentFilter.hasActiveFilters 
-                                ? Colors.white 
-                                : Colors.grey[600],
+                            color:
+                                _showFilters || _currentFilter.hasActiveFilters
+                                    ? Colors.white
+                                    : Colors.grey[600],
                           ),
                           onPressed: () {
                             setState(() {
@@ -402,7 +405,7 @@ class _TutorHomePageState extends State<TutorHomePage> {
                       ),
                     ],
                   ),
-                  
+
                   // Filter widget
                   if (_showFilters) ...[
                     const SizedBox(height: AppSpacing.md),
@@ -423,10 +426,13 @@ class _TutorHomePageState extends State<TutorHomePage> {
                 ],
               ),
             ),
-            
+
             // Title section
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.sm,
+              ),
               child: Row(
                 children: [
                   AppIconContainer(
@@ -448,7 +454,7 @@ class _TutorHomePageState extends State<TutorHomePage> {
                 ],
               ),
             ),
-            
+
             Expanded(child: _buildClassList()),
           ],
         ),
@@ -461,7 +467,7 @@ class _TutorHomePageState extends State<TutorHomePage> {
     if (_searchQuery != null || _currentFilter.hasActiveFilters) {
       return _buildSearchResults();
     }
-    
+
     // Show default class list
     return _buildDefaultClassList();
   }
@@ -476,26 +482,16 @@ class _TutorHomePageState extends State<TutorHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search_off,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'Không tìm thấy lớp học nào',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
             Text(
               'Thử thay đổi từ khóa hoặc bộ lọc',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
             ),
           ],
         ),
@@ -504,7 +500,12 @@ class _TutorHomePageState extends State<TutorHomePage> {
 
     // Sử dụng ListView để card có kích thước cố định, tránh bị kéo dài
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 100),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        100,
+      ),
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
         final lop = _searchResults[index];
@@ -549,7 +550,12 @@ class _TutorHomePageState extends State<TutorHomePage> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.sm, AppSpacing.sm, AppSpacing.sm, 100),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.sm,
+        AppSpacing.sm,
+        AppSpacing.sm,
+        100,
+      ),
       itemCount: _lopHocList.length,
       itemBuilder: (context, index) {
         final lop = _lopHocList[index];
@@ -571,22 +577,6 @@ class _TutorHomePageState extends State<TutorHomePage> {
         return _NoteDialogWidget();
       },
     );
-  }
-
-  // Debug method để kiểm tra token
-  Future<void> _debugCheckToken() async {
-    try {
-      final token = await SecureStorage.getToken();
-      print('🔑 Current token: ${token ?? "NULL"}');
-      
-      if (token == null || token.isEmpty) {
-        print('⚠️ WARNING: No token found! API call will likely fail.');
-      } else {
-        print('✅ Token exists, length: ${token.length}');
-      }
-    } catch (e) {
-      print('❌ Error checking token: $e');
-    }
   }
 }
 

@@ -271,7 +271,7 @@ class StandardAppBar extends StatelessWidget implements PreferredSizeWidget {
           if (leadingIcon != null) ...[
             AppIconContainer(
               icon: leadingIcon!,
-              backgroundColor: AppColors.white.withOpacity(AppOpacity.iconBackground),
+              backgroundColor: AppColors.white.withValues(alpha:AppOpacity.iconBackground),
               iconColor: AppColors.textLight,
               iconSize: AppSpacing.iconSize,
             ),
@@ -294,7 +294,7 @@ class StandardAppBar extends StatelessWidget implements PreferredSizeWidget {
                   Text(
                     subtitle!,
                     style: TextStyle(
-                      color: AppColors.textLight.withOpacity(AppOpacity.subtle),
+                      color: AppColors.textLight.withValues(alpha:AppOpacity.subtle),
                       fontSize: AppTypography.caption,
                     ),
                   ),

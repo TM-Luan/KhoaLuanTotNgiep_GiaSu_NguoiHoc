@@ -5,6 +5,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/untils/format_vnd.dart';
 
 class TutorClassDetailPage extends StatefulWidget {
   final int lopHocId;
@@ -75,14 +76,12 @@ class _TutorClassDetailPageState extends State<TutorClassDetailPage> {
   }
 
   // Hàm xây dựng nội dung Body
-  // Hàm xây dựng nội dung Body
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (_errorMessage != null) {
-      // ... (code xử lý lỗi giữ nguyên) ...
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -105,21 +104,24 @@ class _TutorClassDetailPageState extends State<TutorClassDetailPage> {
       return const Center(child: Text('Không tìm thấy chi tiết lớp học.'));
     }
 
-    // === CODE ĐÃ SỬA LẠI ===
+    // === CHUYỂN ĐỔI TRẠNG THÁI ===
+    final statusStyle = getTrangThaiStyle(_lopHoc!.trangThai);
+    final String trangThaiHienThi = getTrangThaiVietNam(_lopHoc!.trangThai);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Phần Trạng thái
+          // === TRẠNG THÁI TIẾNG VIỆT ===
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.flag_outlined,
-                  color: Colors.blueAccent,
+                Icon(
+                  statusStyle['icon'],
+                  color: statusStyle['color'],
                   size: 20,
                 ),
                 const SizedBox(width: 12),
@@ -132,21 +134,29 @@ class _TutorClassDetailPageState extends State<TutorClassDetailPage> {
                     ),
                     const SizedBox(height: 4),
                     Chip(
+                      avatar: Icon(
+                        statusStyle['icon'],
+                        size: 16,
+                        color: statusStyle['color'],
+                      ),
                       label: Text(
-                        _lopHoc!.trangThai ?? 'N/A',
-                        style: const TextStyle(
-                          color: Colors.blueAccent,
+                        trangThaiHienThi,
+                        style: TextStyle(
+                          color: statusStyle['color'],
                           fontWeight: FontWeight.bold,
+                          fontSize: 13,
                         ),
                       ),
-                      backgroundColor: Colors.blue.shade50,
+                      backgroundColor: statusStyle['bgColor'],
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 2,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: const BorderSide(color: Colors.transparent),
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: statusStyle['color'].withOpacity(0.3),
+                        ),
                       ),
                     ),
                   ],
@@ -157,32 +167,30 @@ class _TutorClassDetailPageState extends State<TutorClassDetailPage> {
 
           const SizedBox(height: 8),
 
-          // Mã lớp
           Text(
             'Mã lớp: ${_lopHoc!.maLop}',
             style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
-
-          // --- NGÀY TẠO MỚI THÊM VÀO ---
           const SizedBox(height: 8),
           Text(
             'Ngày đăng: ${_lopHoc!.ngayTao ?? "N/A"}',
             style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
 
-          // --- KẾT THÚC PHẦN THÊM MỚI ---
           const Divider(height: 32),
 
-          // Thông tin chính
+          // Các thông tin khác giữ nguyên...
           _buildDetailRow(Icons.person, 'Người đăng', _lopHoc!.tenNguoiHoc),
           _buildDetailRow(
             Icons.location_on,
             'Địa chỉ',
             _lopHoc!.diaChi ?? 'Chưa cập nhật',
           ),
-          _buildDetailRow(Icons.attach_money, 'Học phí', _lopHoc!.hocPhi),
-
-          // Thông tin chi tiết lớp
+          _buildDetailRow(
+            Icons.attach_money,
+            'Học phí',
+            formatCurrency(_lopHoc!.hocPhi),
+          ),
           _buildDetailRow(
             Icons.computer,
             'Hình thức',
@@ -208,8 +216,6 @@ class _TutorClassDetailPageState extends State<TutorClassDetailPage> {
             'Số lượng',
             _lopHoc!.soLuong?.toString() ?? 'N/A',
           ),
-
-          // --- ID MỚI THÊM VÀO (NẾU BẠN MUỐN HIỂN THỊ) ---
           _buildDetailRow(
             Icons.book_outlined,
             'Môn học',
@@ -221,7 +227,6 @@ class _TutorClassDetailPageState extends State<TutorClassDetailPage> {
             _lopHoc!.tenKhoiLop ?? 'N/A',
           ),
 
-          // --- KẾT THÚC PHẦN THÊM MỚI ---
           const Divider(height: 32),
           const Text(
             'Mô tả chi tiết',

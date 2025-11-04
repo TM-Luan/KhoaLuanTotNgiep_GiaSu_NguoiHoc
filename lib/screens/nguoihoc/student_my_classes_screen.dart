@@ -5,9 +5,11 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart'
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/add_class_screen.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_class_detail_screen.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/student_class_proposals_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/student_class_detail_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/student_class_proposals_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notification_service.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/untils/format_vnd.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_info_row.dart';
 
 class StudentMyClassesPage extends StatefulWidget {
   const StudentMyClassesPage({super.key});
@@ -34,16 +36,18 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
     super.initState();
     // Khởi tạo TabController với 2 tab
     _tabController = TabController(length: 2, vsync: this);
-    
+
     // Lắng nghe notification về proposal updates
     _proposalUpdateSubscription = GlobalNotificationService()
         .proposalUpdateStream
         .listen((event) {
-      // Refresh data khi có proposal được chấp nhận/từ chối  
-      print('🔔 Student screen nhận notification proposal update: ${event.type}, classId: ${event.classId}');
-      _fetchClasses();
-    });
-    
+          // Refresh data khi có proposal được chấp nhận/từ chối
+          print(
+            '🔔 Student screen nhận notification proposal update: ${event.type}, classId: ${event.classId}',
+          );
+          _fetchClasses();
+        });
+
     _fetchClasses();
   }
 
@@ -74,13 +78,19 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
 
         // 2. TỰ LỌC RA 2 DANH SÁCH CHO 2 TAB
         setState(() {
-          _lopHocTimGiaSu = tatCaLopCuaToi
-              .where((lop) => lop.trangThai == 'TimGiaSu' || lop.trangThai == 'ChoDuyet')
-              .toList();
+          _lopHocTimGiaSu =
+              tatCaLopCuaToi
+                  .where(
+                    (lop) =>
+                        lop.trangThai == 'TimGiaSu' ||
+                        lop.trangThai == 'ChoDuyet',
+                  )
+                  .toList();
 
-          _lopHocDangDay = tatCaLopCuaToi
-              .where((lop) => lop.trangThai == 'DangHoc')
-              .toList();
+          _lopHocDangDay =
+              tatCaLopCuaToi
+                  .where((lop) => lop.trangThai == 'DangHoc')
+                  .toList();
         });
       } else {
         // Nếu API thất bại
@@ -138,7 +148,9 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const AddClassPage()),
+                    MaterialPageRoute(
+                      builder: (context) => const AddClassPage(),
+                    ),
                   );
                 },
                 icon: Icon(
@@ -165,10 +177,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                 fontWeight: FontWeight.bold,
                 fontSize: AppTypography.body2,
               ),
-              tabs: const [
-                Tab(text: 'Đang Tìm Gia Sư'),
-                Tab(text: 'Đang Học'),
-              ],
+              tabs: const [Tab(text: 'Đang Tìm Gia Sư'), Tab(text: 'Đang Học')],
             ),
           ),
         ),
@@ -244,42 +253,34 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
     );
   }
 
-  // Hàm tiện ích để xây dựng hàng thông tin với Icon
-  Widget _buildInfoRow(IconData icon, String text, [Color? iconColor]) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2.0),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: iconColor ?? Colors.black54),
-          const SizedBox(width: 8),
-          Expanded(child: Text(text)),
-        ],
-      ),
-    );
-  }
-
-  // Widget xây dựng thẻ lớp học (Dùng model LopHoc thật)
   Widget _buildClassCard(BuildContext context, LopHoc lopHoc) {
-    // Lấy trạng thái từ API
-    final String status = lopHoc.trangThai ?? 'N/A';
-    Color statusColor = Colors.grey;
-    IconData statusIcon = Icons.info_outline;
+    // Xác định trạng thái
+    final String statusCode = lopHoc.trangThai ?? 'N/A';
 
-    // Xác định màu sắc và icon dựa trên trạng thái
-    if (status == 'DangHoc') {
-      statusColor = Colors.green;
-      statusIcon = Icons.check_circle_outline;
-    } else if (status == 'TimGiaSu') {
-      statusColor = Colors.orange;
-      statusIcon = Icons.search;
-    } else if (status == 'ChoDuyet') {
-      statusColor = Colors.blue;
-      statusIcon = Icons.pending_outlined;
+    String getStatusText(String code) {
+      switch (code) {
+        case 'DangHoc':
+          return 'Đang học';
+        case 'TimGiaSu':
+          return 'Tìm gia sư';
+        case 'ChoDuyet':
+          return 'Chờ duyệt';
+        default:
+          return 'Không xác định';
+      }
     }
+
+    // DÙNG MÀU XANH DƯƠNG GIỐNG HỆT CARD "GIA SƯ GỬI YÊU CẦU"
+    final Color cardColor = Colors.blue.shade50;
+    final Color statusColor = Colors.blue.shade100;
+    final Color textColor = Colors.blue.shade700;
+    final IconData statusIcon =
+        Icons.send_outlined; // Giống icon khi Gia sư gửi
+
+    final statusText = getStatusText(statusCode);
 
     return GestureDetector(
       onTap: () {
-        // Điều hướng đến trang chi tiết
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -288,86 +289,105 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
           ),
         );
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: const Color.fromARGB(255, 175, 175, 175),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+      child: Card(
+        elevation: 3,
+        margin: const EdgeInsets.only(bottom: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [cardColor, Colors.white], // Xanh nhạt → trắng
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Flexible(
-                  child: Text(
-                    'Mã lớp: ${lopHoc.maLop} - ${lopHoc.tieuDeLop}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: Colors.blue.shade700,
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Tên gia sư (lấy từ API)
-            _buildInfoRow(
-              Icons.person,
-              lopHoc.tenGiaSu ?? 'Chưa có gia sư', // Dùng dữ liệu mới
-              Colors.grey,
-            ),
-
-            // Địa chỉ
-            _buildInfoRow(
-              Icons.location_on,
-              lopHoc.diaChi ?? 'Chưa cập nhật',
-              Colors.grey,
-            ),
-
-            // Phí/Buổi
-            _buildInfoRow(
-              Icons.attach_money,
-              lopHoc.hocPhi, // Đã có định dạng "vnd/Buoi" từ API
-              Colors.grey,
-            ),
-
-            const SizedBox(height: 8),
-
-            // Trạng thái + nút hành động
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Trạng thái
+                // --- HEADER (GIỐNG HỆT CARD GIA SƯ GỬI) ---
                 Row(
                   children: [
-                    Icon(statusIcon, size: 16, color: statusColor),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Trạng thái: $status',
-                      style: TextStyle(color: statusColor),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Icon(statusIcon, color: textColor, size: 18),
                     ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        lopHoc.tieuDeLop,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        statusText,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+
+                // --- Thông tin lớp ---
+                InfoRow(
+                  icon: Icons.person,
+                  label: 'Gia sư',
+                  value: lopHoc.tenGiaSu ?? 'Chưa có gia sư',
+                ),
+                const SizedBox(height: 6),
+                InfoRow(
+                  icon: Icons.attach_money,
+                  label: 'Học phí',
+                  value: formatCurrency(lopHoc.hocPhi),
+                ),
+                if (lopHoc.diaChi?.isNotEmpty ?? false) ...[
+                  const SizedBox(height: 6),
+                  InfoRow(
+                    icon: Icons.location_on_rounded,
+                    label: 'Địa chỉ',
+                    value: lopHoc.diaChi!,
+                  ),
+                ],
+
+                const SizedBox(height: 12),
+
+                // --- FOOTER (GIỐNG HỆT CARD GIA SƯ) ---
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const SizedBox(width: 12),
+                    _buildActionButtons(
+                      context,
+                      lopHoc,
+                    ), // Giữ nguyên chức năng
                   ],
                 ),
               ],
             ),
-
-            // Hiển thị các nút bấm dựa trên trạng thái
-            const Divider(height: 20),
-            _buildActionButtons(context, lopHoc),
-          ],
+          ),
         ),
       ),
     );

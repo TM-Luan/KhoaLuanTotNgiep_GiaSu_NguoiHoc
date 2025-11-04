@@ -1,30 +1,29 @@
+// app.dart - CẬP NHẬT
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-// Giữ nguyên import router của bạn
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_bloc.dart';
 import 'constants/router.dart';
-
-// === IMPORT CÁC REPOSITORY ===
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/giasu_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
-
-// === IMPORT CÁC BLOC ===
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lich_hoc_repository.dart'; // THÊM
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor/tutor_bloc.dart';
+
 
 class GiaSuApp extends StatelessWidget {
   const GiaSuApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // === BỌC APP BẰNG CÁC PROVIDER ===
     return MultiRepositoryProvider(
       providers: [
         RepositoryProvider(create: (context) => AuthRepository()),
         RepositoryProvider(create: (context) => TutorRepository()),
         RepositoryProvider(create: (context) => LopHocRepository()),
         RepositoryProvider(create: (context) => YeuCauNhanLopRepository()),
+        RepositoryProvider(create: (context) => LichHocRepository()), // THÊM
       ],
       child: MultiBlocProvider(
         providers: [
@@ -40,9 +39,12 @@ class GiaSuApp extends StatelessWidget {
               context.read<TutorRepository>(),
             ),
           ),
-          // === BLOC MỚI CHO MÀN HÌNH "LỚP CỦA TÔI" (GIA SƯ) ===
-            
-
+          // === BLOC MỚI CHO LỊCH HỌC ===
+          BlocProvider<LichHocBloc>(
+            create: (context) => LichHocBloc(
+              context.read<LichHocRepository>(),
+            ),
+          ),
         ],
         child: SafeArea(
           child: MaterialApp(
