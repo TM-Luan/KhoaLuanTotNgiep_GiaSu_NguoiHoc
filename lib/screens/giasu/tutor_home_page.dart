@@ -9,10 +9,10 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/class_filter.da
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/class_search_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/class_detail.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/student_card.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_filter_widget.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_class_detail_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/app_components.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
@@ -321,11 +321,13 @@ class _TutorHomePageState extends State<TutorHomePage> {
     }
   }
 
-  void _navigateToDetail(LopHoc lop) {
+  void _navigateToDetail(BuildContext context, LopHoc lop) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TutorClassDetailPage(lopHocId: lop.maLop),
+        builder:
+            (context) =>
+                ClassDetailScreen(classId: lop.maLop, userRole: UserRole.tutor),
       ),
     );
   }
@@ -514,7 +516,7 @@ class _TutorHomePageState extends State<TutorHomePage> {
           child: LopHocCard(
             lopHoc: lop,
             onDeNghiDay: () => _handleDeNghiDay(lop),
-            onCardTap: () => _navigateToDetail(lop),
+            onCardTap: () => _navigateToDetail(context, lop),
           ),
         );
       },
@@ -562,7 +564,7 @@ class _TutorHomePageState extends State<TutorHomePage> {
         return LopHocCard(
           lopHoc: lop,
           onDeNghiDay: () => _handleDeNghiDay(lop),
-          onCardTap: () => _navigateToDetail(lop),
+          onCardTap: () => _navigateToDetail(context, lop),
         );
       },
     );

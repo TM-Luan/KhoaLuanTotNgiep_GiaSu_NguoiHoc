@@ -1,21 +1,32 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/untils/format_vnd.dart';
 
-class StudentClassDetailScreen extends StatefulWidget {
-  final int classId;
-
-  const StudentClassDetailScreen({super.key, required this.classId});
-
-  @override
-  State<StudentClassDetailScreen> createState() =>
-      _StudentClassDetailScreenState();
+enum UserRole {
+  tutor,
+  student,
 }
 
-class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
+class ClassDetailScreen extends StatefulWidget {
+  final int classId;
+  final UserRole userRole;
+
+  const ClassDetailScreen({
+    super.key,
+    required this.classId,
+    required this.userRole,
+  });
+
+  @override
+  State<ClassDetailScreen> createState() => _ClassDetailScreenState();
+}
+
+class _ClassDetailScreenState extends State<ClassDetailScreen> {
   final LopHocRepository _lopHocRepo = LopHocRepository();
 
   bool _isLoading = true;
@@ -28,45 +39,6 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
     _fetchLopHocDetail();
   }
 
-  String _getStatusText(String? code) {
-    switch (code) {
-      case 'DangHoc':
-        return 'Đang học';
-      case 'TimGiaSu':
-        return 'Tìm gia sư';
-      case 'ChoDuyet':
-        return 'Chờ duyệt';
-      default:
-        return 'Không xác định';
-    }
-  }
-
-  Color _getStatusColor(String? code) {
-    switch (code) {
-      case 'DangHoc':
-        return Colors.green;
-      case 'TimGiaSu':
-        return Colors.orange;
-      case 'ChoDuyet':
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  IconData _getStatusIcon(String? code) {
-    switch (code) {
-      case 'DangHoc':
-        return Icons.check_circle_outline;
-      case 'TimGiaSu':
-        return Icons.search;
-      case 'ChoDuyet':
-        return Icons.pending_outlined;
-      default:
-        return Icons.info_outline;
-    }
-  }
-
   Future<void> _fetchLopHocDetail() async {
     setState(() {
       _isLoading = true;
@@ -75,7 +47,7 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
 
     final ApiResponse<LopHoc> response = await _lopHocRepo.getLopHocById(
       widget.classId,
-    ); // Dùng widget.classId
+    );
 
     if (mounted) {
       if (response.isSuccess && response.data != null) {
@@ -89,6 +61,40 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  // === HÀM XỬ LÝ TRẠNG THÁI CHUNG ===
+  Map<String, dynamic> getTrangThaiStyle(String? trangThaiCode) {
+    switch (trangThaiCode) {
+      case 'DangHoc':
+        return {
+          'text': 'Đang học',
+          'color': Colors.green,
+          'icon': Icons.check_circle_outline,
+          'bgColor': Colors.green.withValues(alpha:0.15),
+        };
+      case 'TimGiaSu':
+        return {
+          'text': 'Tìm gia sư',
+          'color': Colors.orange,
+          'icon': Icons.search,
+          'bgColor': Colors.orange.withValues(alpha:0.15),
+        };
+      case 'ChoDuyet':
+        return {
+          'text': 'Chờ duyệt',
+          'color': Colors.blue,
+          'icon': Icons.pending_outlined,
+          'bgColor': Colors.blue.withValues(alpha:0.15),
+        };
+      default:
+        return {
+          'text': 'Không xác định',
+          'color': Colors.grey,
+          'icon': Icons.info_outline,
+          'bgColor': Colors.grey.withValues(alpha:0.15),
+        };
     }
   }
 
@@ -140,83 +146,71 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
       return const Center(child: Text('Không tìm thấy chi tiết lớp học.'));
     }
 
-    // Hiển thị chi tiết khi có dữ liệu
+    // === XỬ LÝ HIỂN THỊ THEO ROLE ===
+    final statusStyle = getTrangThaiStyle(_lopHoc!.trangThai);
+    final bool isTutor = widget.userRole == UserRole.tutor;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Tiêu đề
-          Text(
-            _lopHoc!.tieuDeLop,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
+          // === TIÊU ĐỀ (chỉ hiển thị cho học sinh) ===
+          if (!isTutor) ...[
+            Text(
+              _lopHoc!.tieuDeLop,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+          ],
 
-          // Phần Trạng thái
+          // === TRẠNG THÁI ===
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.flag_outlined,
-                  color: Colors.blueAccent,
+                Icon(
+                  statusStyle['icon'],
+                  color: statusStyle['color'],
                   size: 20,
                 ),
                 const SizedBox(width: 12),
-                const Text(
-                  'Trạng thái',
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Chip đẹp, rõ chữ, đúng màu
-                      IntrinsicWidth(
-                        // Đảm bảo chip vừa đủ rộng
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(
-                              _lopHoc!.trangThai,
-                            ).withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: _getStatusColor(
-                                _lopHoc!.trangThai,
-                              ).withValues(alpha: 0.5),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                _getStatusIcon(_lopHoc!.trangThai),
-                                size: 16,
-                                color: _getStatusColor(_lopHoc!.trangThai),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                _getStatusText(_lopHoc!.trangThai),
-                                style: TextStyle(
-                                  color: _getStatusColor(_lopHoc!.trangThai),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Trạng thái',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 4),
+                    Chip(
+                      avatar: Icon(
+                        statusStyle['icon'],
+                        size: 16,
+                        color: statusStyle['color'],
+                      ),
+                      label: Text(
+                        statusStyle['text'],
+                        style: TextStyle(
+                          color: statusStyle['color'],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
                         ),
                       ),
-                    ],
-                  ),
+                      backgroundColor: statusStyle['bgColor'],
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 2,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: statusStyle['color'].withOpacity(0.3),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -235,20 +229,28 @@ class _StudentClassDetailScreenState extends State<StudentClassDetailScreen> {
 
           const Divider(height: 32),
 
-          // Thông tin chính
-          _buildDetailRow(
-            Icons.person,
-            'Gia sư',
-            _lopHoc!.tenGiaSu ?? 'Chưa có',
-          ),
+          // === THÔNG TIN CHÍNH - HIỂN THỊ THEO ROLE ===
+          if (isTutor) 
+            _buildDetailRow(Icons.person, 'Người đăng', _lopHoc!.tenNguoiHoc),
+          if (!isTutor)
+            _buildDetailRow(
+              Icons.person,
+              'Gia sư',
+              _lopHoc!.tenGiaSu ?? 'Chưa có',
+            ),
+
           _buildDetailRow(
             Icons.location_on,
             'Địa chỉ',
             _lopHoc!.diaChi ?? 'Chưa cập nhật',
           ),
-          _buildDetailRow(Icons.attach_money, 'Học phí', _lopHoc!.hocPhi),
+          _buildDetailRow(
+            Icons.attach_money,
+            'Học phí',
+            formatCurrency(_lopHoc!.hocPhi),
+          ),
 
-          // Thông tin chi tiết lớp
+          // === THÔNG TIN CHI TIẾT LỚP ===
           _buildDetailRow(
             Icons.computer,
             'Hình thức',

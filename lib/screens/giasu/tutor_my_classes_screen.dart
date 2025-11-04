@@ -11,7 +11,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/yeu_cau_nhan_lo
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_class_detail_page.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/class_detail.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notification_service.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/untils/format_vnd.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_info_row.dart';
@@ -917,7 +917,9 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TutorClassDetailPage(lopHocId: lopHocId),
+        builder:
+            (context) =>
+                ClassDetailScreen(classId: lopHocId, userRole: UserRole.tutor),
       ),
     );
   }
