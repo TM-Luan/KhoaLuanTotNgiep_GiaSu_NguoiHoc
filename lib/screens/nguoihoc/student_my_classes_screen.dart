@@ -145,13 +145,17 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                 borderRadius: BorderRadius.circular(AppSpacing.sm),
               ),
               child: IconButton(
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  final isAdded = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const AddClassPage(),
                     ),
                   );
+                  // ✅ Khi AddClassPage pop về và trả về true → tự động reload
+                  if (isAdded == true) {
+                    _fetchClasses();
+                  }
                 },
                 icon: Icon(
                   Icons.add,
@@ -435,9 +439,128 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
             );
           }, Colors.green),
           const SizedBox(width: 8),
-          styledButton('Sửa', () {}),
+          styledButton('Sửa', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddClassPage(classId: lopHoc.maLop),
+              ),
+            ).then((isSuccess) {
+              // 2. Sau khi sửa xong, nếu isSuccess là true,
+              //    tải lại danh sách lớp
+              if (isSuccess == true) {
+                _fetchClasses();
+              }
+            });
+          }),
           const SizedBox(width: 8),
-          styledButton('Đóng', () {}, Colors.red),
+          styledButton('Đóng', () async {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) {
+                return Dialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  insetPadding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.white, Colors.red.shade50],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.warning_amber_rounded,
+                            color: Colors.red.shade400, size: 60),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Đóng lớp này?',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Lớp sẽ bị xóa vĩnh viễn khỏi danh sách của bạn. Hành động này không thể hoàn tác!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.black54, fontSize: 14),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: () => Navigator.pop(context),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.grey.shade300,
+                                foregroundColor: Colors.black87,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 12),
+                              ),
+                              icon: const Icon(Icons.close),
+                              label: const Text('Hủy'),
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                Navigator.pop(context); // Đóng dialog
+
+                                // Dùng context gốc của màn hình chính
+                                final rootContext = this.context;
+
+                                final response = await _lopHocRepo.deleteLopHoc(lopHoc.maLop);
+
+                                if (!mounted) return; // đảm bảo widget chưa bị dispose
+
+                                if (response.success) {
+                                  ScaffoldMessenger.of(rootContext).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Đã đóng lớp thành công!'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                  _fetchClasses();
+                                } else {
+                                  ScaffoldMessenger.of(rootContext).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Lỗi: ${response.message}'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red.shade400,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 12),
+                              ),
+                              icon: const Icon(Icons.delete_outline),
+                              label: const Text('Đóng lớp'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          }, Colors.red),
         ],
       );
     }

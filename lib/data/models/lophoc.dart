@@ -18,6 +18,10 @@
     final String? tenMon;
     final String? tenKhoiLop;
     final String? tenGiaSu;
+    final int? doiTuongID;
+    final int? thoiGianDayID;
+
+
 
     LopHoc({
       required this.maLop,
@@ -38,6 +42,8 @@
       this.tenMon,
       this.tenKhoiLop,
       this.tenGiaSu,
+      this.doiTuongID,
+      this.thoiGianDayID,
     });
 
    factory LopHoc.fromJson(Map<String, dynamic> json) {
@@ -56,10 +62,13 @@
         trangThai: json['TrangThai'] ?? json['TrangThaiLop'] ?? '',
         monId: json['MonID'],
         khoiLopId: json['KhoiLopID'],
+        doiTuongID: json['DoiTuongID'],          // ✅ thêm dòng này
+        thoiGianDayID: json['ThoiGianDayID'],    // ✅ thêm dòng này
         ngayTao: json['NgayTao']?.toString(),
         tenMon: json['TenMon']?.toString(),
         tenKhoiLop: json['TenKhoiLop']?.toString(),
         tenGiaSu: json['TenGiaSu']?.toString(),
       );
     }
+   
 }
