@@ -305,4 +305,98 @@ class LopHocRepository {
     );
   }
 }
+Future<ApiResponse<LopHoc>> updateLopHoc(
+    int classId,
+    Map<String, dynamic> lopHocData,
+  ) async {
+    final String endpoint = '${ApiConfig.lopHocYeuCau}/$classId'; // Endpoint: /lophocyeucau/123
+
+    try {
+      // Gọi API PUT
+      final response = await _apiService.put<Map<String, dynamic>>(
+        endpoint,
+        data: lopHocData,
+        fromJsonT: (json) => json,
+      );
+
+      // Server trả về 200 (OK) và có key 'data'
+      if (response.statusCode == 200 &&
+          response.data != null &&
+          response.data is Map<String, dynamic>) {
+        final Map<String, dynamic> responseData = response.data!;
+
+        if (responseData.containsKey('data') &&
+            responseData['data'] is Map<String, dynamic>) {
+          final Map<String, dynamic> lopHocJson = responseData['data'];
+          try {
+            final LopHoc updatedLopHoc = LopHoc.fromJson(lopHocJson);
+            return ApiResponse<LopHoc>(
+              success: true,
+              message: response.message,
+              data: updatedLopHoc,
+              statusCode: response.statusCode,
+            );
+          } catch (e) {
+            return ApiResponse<LopHoc>(
+              success: false,
+              message: 'Lỗi parse dữ liệu lớp học vừa cập nhật: $e',
+              statusCode: response.statusCode,
+            );
+          }
+        } else {
+          return ApiResponse<LopHoc>(
+            success: false,
+            message:
+                "API trả về dữ liệu không đúng định dạng (thiếu key 'data' hoặc không phải Object).",
+            statusCode: response.statusCode,
+          );
+        }
+      } else {
+        // Xử lý lỗi từ server (ví dụ: 403 Forbidden, 404 Not Found, 422 Validation)
+        return ApiResponse<LopHoc>(
+          success: false,
+          message:
+              response.message.isNotEmpty
+                  ? response.message
+                  : 'Cập nhật lớp thất bại.',
+          error: response.error,
+          statusCode: response.statusCode,
+        );
+      }
+    } catch (e) {
+      return ApiResponse<LopHoc>(
+        success: false,
+        message: 'Lỗi không xác định khi cập nhật lớp: $e',
+        statusCode: 0,
+      );
+    }
+  }
+  Future<ApiResponse<void>> deleteLopHoc(int classId) async {
+    final String endpoint = '${ApiConfig.lopHocYeuCau}/$classId';
+    try {
+      final response = await _apiService.delete(endpoint);
+
+      if (response.statusCode == 204) {
+        return ApiResponse<void>(
+          success: true,
+          message: 'Xóa lớp thành công!',
+          statusCode: response.statusCode,
+        );
+      } else {
+        return ApiResponse<void>(
+          success: false,
+          message: response.message.isNotEmpty
+              ? response.message
+              : 'Xóa lớp thất bại!',
+          statusCode: response.statusCode,
+        );
+      }
+    } catch (e) {
+      return ApiResponse<void>(
+        success: false,
+        message: 'Lỗi khi xóa lớp: $e',
+        statusCode: 0,
+      );
+    }
+  }
 }
