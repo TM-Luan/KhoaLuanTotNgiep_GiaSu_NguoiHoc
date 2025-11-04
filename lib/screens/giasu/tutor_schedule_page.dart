@@ -1,10 +1,10 @@
-// ignore_for_file: depend_on_referenced_packages, deprecated_member_use
+// tutor_schedule_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_bloc.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_state.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_event.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_state.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc.dart';
@@ -19,25 +19,74 @@ class TutorSchedulePage extends StatefulWidget {
 class _TutorSchedulePageState extends State<TutorSchedulePage> {
   DateTime _selectedDate = DateTime.now();
   DateTime _currentMonth = DateTime.now();
+  String? _selectedTrangThai;
 
   @override
   void initState() {
     super.initState();
-    // Load lịch học của gia sư khi vào màn hình
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<LichHocBloc>().add(const LoadLichHocCuaGiaSuEvent());
-    });
+    _loadLichHocCuaGiaSu();
   }
 
-  // Lấy lịch học theo ngày được chọn từ BLoC state
+  void _loadLichHocCuaGiaSu({
+    String? trangThai,
+    String? tuNgay,
+    String? denNgay,
+  }) {
+    print('🔄 Loading lịch học gia sư với filter: $trangThai');
+    context.read<LichHocBloc>().add(const LoadLichHocCuaGiaSuEvent());
+  }
+
+  // Lấy tất cả lịch học (cả gốc và con) để hiển thị
+  List<LichHoc> _getAllLichHoc(List<LichHoc> allLichHoc) {
+    final result = <LichHoc>[];
+
+    for (final lichHoc in allLichHoc) {
+      // Thêm lịch học gốc
+      result.add(lichHoc);
+
+      // Thêm lịch học con nếu có
+      if (lichHoc.lichHocCon != null && lichHoc.lichHocCon!.isNotEmpty) {
+        for (final con in lichHoc.lichHocCon!) {
+          result.add(con);
+
+          // Đệ quy nếu có lịch học con của con (nested)
+          if (con.lichHocCon != null && con.lichHocCon!.isNotEmpty) {
+            result.addAll(con.lichHocCon!);
+          }
+        }
+      }
+    }
+
+    print('🔍 _getAllLichHoc: ${allLichHoc.length} -> ${result.length}');
+    return result;
+  }
+
+  // Lấy lịch học theo ngày được chọn
   List<LichHoc> _getLichHocTheoNgay(List<LichHoc> allLichHoc, DateTime date) {
-    return allLichHoc.where((lichHoc) {
+    final allLichHocFlat = _getAllLichHoc(allLichHoc);
+    return allLichHocFlat.where((lichHoc) {
       try {
-        final lichDate = DateTime.parse(lichHoc.ngayHoc.split(' ')[0]);
+        if (lichHoc.ngayHoc.isEmpty) return false;
+
+        // Xử lý nhiều định dạng ngày
+        String ngayHoc = lichHoc.ngayHoc;
+
+        // Nếu có khoảng trắng, lấy phần đầu (ngày)
+        if (ngayHoc.contains(' ')) {
+          ngayHoc = ngayHoc.split(' ')[0];
+        }
+
+        // Nếu có chữ T (ISO format), thay thế
+        if (ngayHoc.contains('T')) {
+          ngayHoc = ngayHoc.split('T')[0];
+        }
+
+        final lichDate = DateTime.parse(ngayHoc);
         return lichDate.year == date.year &&
             lichDate.month == date.month &&
             lichDate.day == date.day;
       } catch (e) {
+        print('❌ Lỗi parse ngày học: ${lichHoc.ngayHoc} - $e');
         return false;
       }
     }).toList();
@@ -45,9 +94,20 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
 
   // Kiểm tra ngày có lịch học không
   bool _hasSchedule(List<LichHoc> allLichHoc, DateTime date) {
-    return allLichHoc.any((lichHoc) {
+    final allLichHocFlat = _getAllLichHoc(allLichHoc);
+    return allLichHocFlat.any((lichHoc) {
       try {
-        final lichDate = DateTime.parse(lichHoc.ngayHoc.split(' ')[0]);
+        if (lichHoc.ngayHoc.isEmpty) return false;
+
+        String ngayHoc = lichHoc.ngayHoc;
+        if (ngayHoc.contains(' ')) {
+          ngayHoc = ngayHoc.split(' ')[0];
+        }
+        if (ngayHoc.contains('T')) {
+          ngayHoc = ngayHoc.split('T')[0];
+        }
+
+        final lichDate = DateTime.parse(ngayHoc);
         return lichDate.year == date.year &&
             lichDate.month == date.month &&
             lichDate.day == date.day;
@@ -63,18 +123,15 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
     final last = DateTime(month.year, month.month + 1, 0);
     final days = <DateTime>[];
 
-    // Thêm các ngày từ tháng trước để lấp đầy tuần đầu tiên
     final firstWeekday = first.weekday;
     for (int i = firstWeekday - 1; i > 0; i--) {
       days.add(first.subtract(Duration(days: i)));
     }
 
-    // Thêm các ngày trong tháng
     for (int i = 0; i < last.day; i++) {
       days.add(DateTime(month.year, month.month, i + 1));
     }
 
-    // Thêm các ngày từ tháng sau để lấp đầy tuần cuối cùng
     final lastWeekday = last.weekday;
     for (int i = 1; i <= 7 - lastWeekday; i++) {
       days.add(last.add(Duration(days: i)));
@@ -107,7 +164,12 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
 
   // Widget hiển thị card lịch học
   Widget _buildLichHocCard(LichHoc lichHoc) {
-    final isOnline = lichHoc.isOnline;
+    // Xử lý các giá trị có thể null
+    final isOnline = (lichHoc.duongDan ?? '').isNotEmpty;
+    final isLichHocCon =
+        lichHoc.lichHocGocID != null &&
+        lichHoc.lichHocGocID != lichHoc.lichHocID;
+    final hasChildren = (lichHoc.lichHocCon ?? []).isNotEmpty;
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -121,12 +183,29 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Mã LH: ${lichHoc.lichHocID}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Mã LH: ${lichHoc.lichHocID ?? 'N/A'}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    if (isLichHocCon)
+                      Text(
+                        'Lịch con của mã ${lichHoc.lichHocGocID}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    Text(
+                      'Lớp: ${lichHoc.lopYeuCauID}',
+                      style: const TextStyle(fontSize: 12, color: Colors.green),
+                    ),
+                  ],
                 ),
                 Row(
                   children: [
@@ -176,40 +255,31 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
 
-            // Tên lớp
-            Text(
-              lichHoc.tenLop ?? 'Lớp học',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-
-            // Thông tin chi tiết
-            _buildInfoRow(
-              Icons.person,
-              'Học viên: ${lichHoc.tenNguoiHoc ?? 'N/A'}',
-            ),
-            _buildInfoRow(Icons.book, 'Môn: ${lichHoc.tenMon ?? 'N/A'}'),
-            _buildInfoRow(
-              Icons.location_on,
-              'Hình thức: ${lichHoc.hinhThuc ?? 'N/A'}',
-            ),
+            // Thông tin chi tiết - SỬ DỤNG GIÁ TRỊ MẶC ĐỊNH
             _buildInfoRow(
               Icons.access_time,
-              'Thời gian: ${lichHoc.formattedTime}',
+              'Thời gian: ${_formatTime(lichHoc.thoiGianBatDau)} - ${_formatTime(lichHoc.thoiGianKetThuc)}',
             ),
             _buildInfoRow(
               Icons.calendar_today,
-              'Ngày: ${lichHoc.formattedDate}',
+              'Ngày: ${_formatDate(lichHoc.ngayHoc)}',
             ),
 
-            const SizedBox(height: 12),
+            if (lichHoc.isLapLai && !isLichHocCon)
+              _buildInfoRow(
+                Icons.repeat,
+                'Lịch lặp lại (${hasChildren ? lichHoc.lichHocCon!.length : 0} buổi)',
+              ),
 
+
+            if (isOnline)
+              _buildInfoRow(Icons.link, 'Link: ${lichHoc.duongDan ?? ""}'),
+
+            const SizedBox(height: 12),
             // Nút hành động
-            if (lichHoc.duongDan != null &&
-                lichHoc.duongDan!.isNotEmpty &&
-                isOnline)
+            if (isOnline)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -226,8 +296,8 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                 ),
               ),
 
-            // Nút cập nhật trạng thái cho gia sư
-            if (!lichHoc.isDaHoc)
+            // Nút cập nhật trạng thái (chỉ cho lịch học chưa kết thúc)
+            if (lichHoc.trangThai != 'DaHoc' && lichHoc.trangThai != 'Huy')
               Row(
                 children: [
                   Expanded(
@@ -238,12 +308,47 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                       child: const Text('Cập nhật trạng thái'),
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        _showDeleteDialog(lichHoc);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                      ),
+                      child: const Text('Xóa'),
+                    ),
+                  ),
                 ],
               ),
           ],
         ),
       ),
     );
+  }
+
+  // Định dạng thời gian
+  String _formatTime(String time) {
+    try {
+      final timeParts = time.split(':');
+      if (timeParts.length >= 2) {
+        return '${timeParts[0]}:${timeParts[1]}';
+      }
+      return time;
+    } catch (e) {
+      return time;
+    }
+  }
+
+  // Định dạng ngày
+  String _formatDate(String date) {
+    try {
+      final dateTime = DateTime.parse(date.split(' ')[0]);
+      return DateFormat('dd/MM/yyyy').format(dateTime);
+    } catch (e) {
+      return date;
+    }
   }
 
   // Màu sắc cho trạng thái
@@ -286,7 +391,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
         children: [
           Icon(icon, size: 16, color: Colors.grey),
           const SizedBox(width: 8),
-          Expanded(child: Text(text)),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
         ],
       ),
     );
@@ -303,8 +408,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Lớp: ${lichHoc.tenLop ?? "N/A"}'),
-                Text('Học viên: ${lichHoc.tenNguoiHoc ?? "N/A"}'),
+                Text('Link: ${lichHoc.duongDan}'),
                 const SizedBox(height: 16),
                 const Text('Bạn có muốn tham gia buổi học ngay bây giờ?'),
               ],
@@ -329,7 +433,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
   void _showZoomJoinSuccess(LichHoc lichHoc) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Đang mở Zoom cho lớp ${lichHoc.tenLop ?? "N/A"}'),
+        content: Text('Đang mở Zoom: ${lichHoc.duongDan}'),
         backgroundColor: Colors.green,
       ),
     );
@@ -342,15 +446,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
       builder:
           (context) => AlertDialog(
             title: const Text('Cập nhật trạng thái'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Lớp: ${lichHoc.tenLop ?? "N/A"}'),
-                const SizedBox(height: 16),
-                const Text('Chọn trạng thái mới:'),
-              ],
-            ),
+            content: const Text('Chọn trạng thái mới:'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -359,16 +455,90 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  _updateLichHocStatus(lichHoc.lichHocID, 'DangDay');
+                  _updateLichHocStatus(lichHoc, 'DangDay');
                 },
                 child: const Text('Đang dạy'),
               ),
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  _updateLichHocStatus(lichHoc.lichHocID, 'DaHoc');
+                  _updateLichHocStatus(lichHoc, 'DaHoc');
                 },
                 child: const Text('Đã học'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _updateLichHocStatus(lichHoc, 'Huy');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Hủy'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  // Hiển thị dialog xóa lịch học
+  void _showDeleteDialog(LichHoc lichHoc) {
+    final isLichHocGoc =
+        lichHoc.lichHocGocID == null ||
+        lichHoc.lichHocGocID == lichHoc.lichHocID;
+    final hasChildren =
+        lichHoc.lichHocCon != null && lichHoc.lichHocCon!.isNotEmpty;
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Xóa lịch học'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Bạn có chắc muốn xóa lịch học này?'),
+                if (isLichHocGoc && hasChildren && lichHoc.isLapLai) ...[
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Lịch học này có các buổi lặp lại. Bạn muốn xóa:',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Hủy'),
+              ),
+              if (isLichHocGoc && hasChildren && lichHoc.isLapLai)
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _deleteLichHoc(lichHoc, xoaCaChuoi: false);
+                  },
+                  child: const Text('Chỉ buổi này'),
+                ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _deleteLichHoc(
+                    lichHoc,
+                    xoaCaChuoi: isLichHocGoc && hasChildren && lichHoc.isLapLai,
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(
+                  isLichHocGoc && hasChildren && lichHoc.isLapLai
+                      ? 'Cả chuỗi'
+                      : 'Xóa',
+                ),
               ),
             ],
           ),
@@ -376,9 +546,94 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
   }
 
   // Cập nhật trạng thái lịch học
-  void _updateLichHocStatus(int lichHocId, String trangThai) {
+  void _updateLichHocStatus(LichHoc lichHoc, String trangThai) {
+    if (lichHoc.lichHocID == null) return;
+
     context.read<LichHocBloc>().add(
-      CapNhatTrangThaiLichHocEvent(lichHocId: lichHocId, trangThai: trangThai),
+      CapNhatLichHocEvent(lichHoc.lichHocID!, {'TrangThai': trangThai}),
+    );
+  }
+
+  // Xóa lịch học
+  void _deleteLichHoc(LichHoc lichHoc, {bool xoaCaChuoi = false}) {
+    if (lichHoc.lichHocID == null) return;
+
+    context.read<LichHocBloc>().add(
+      XoaLichHocEvent(lichHoc.lichHocID!, xoaCaChuoi: xoaCaChuoi),
+    );
+  }
+
+  // Hiển thị dialog filter
+  void _showFilterDialog() {
+    String? tempTrangThai = _selectedTrangThai;
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                title: const Text('Lọc lịch học'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: tempTrangThai,
+                      decoration: const InputDecoration(
+                        labelText: 'Trạng thái',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: [
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('Tất cả trạng thái'),
+                        ),
+                        const DropdownMenuItem(
+                          value: 'SapToi',
+                          child: Text('Sắp tới'),
+                        ),
+                        const DropdownMenuItem(
+                          value: 'DangDay',
+                          child: Text('Đang dạy'),
+                        ),
+                        const DropdownMenuItem(
+                          value: 'DaHoc',
+                          child: Text('Đã học'),
+                        ),
+                        const DropdownMenuItem(
+                          value: 'Huy',
+                          child: Text('Đã hủy'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          tempTrangThai = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Hủy'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      setState(() {
+                        _selectedTrangThai = tempTrangThai;
+                      });
+                      _loadLichHocCuaGiaSu(trangThai: _selectedTrangThai);
+                    },
+                    child: const Text('Áp dụng'),
+                  ),
+                ],
+              );
+            },
+          ),
     );
   }
 
@@ -394,7 +649,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
         borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -423,8 +678,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                   DateFormat('MMMM, yyyy').format(_currentMonth).toUpperCase(),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize:
-                        16, // Sửa lại vì AppTypography.heading3 có thể không tồn tại
+                    fontSize: 16,
                     color: AppColors.textPrimary,
                   ),
                 ),
@@ -446,7 +700,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
             // Header các ngày trong tuần
             Row(
               children: List.generate(7, (index) {
-                final weekday = (index + 1) % 7; // Chủ nhật là 0
+                final weekday = (index + 1) % 7;
                 return Expanded(
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -496,10 +750,10 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                     decoration: BoxDecoration(
                       color:
                           isSelected
-                              ? AppColors.primaryBlue
-                              : isToday
-                              ? Colors.blue.shade50
-                              : Colors.transparent,
+                              ? AppColors.primary
+                              : (isToday
+                                  ? Colors.blue.shade50
+                                  : Colors.transparent),
                       borderRadius: BorderRadius.circular(8),
                       border:
                           isToday && !isSelected
@@ -545,32 +799,66 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
   Widget build(BuildContext context) {
     return BlocConsumer<LichHocBloc, LichHocState>(
       listener: (context, state) {
-        if (state is LichHocErrorState) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message)));
-        } else if (state is LichHocUpdatedState) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message)));
+        if (state is LichHocError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          );
+        } else if (state is CapNhatLichHocSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _loadLichHocCuaGiaSu();
+        } else if (state is XoaLichHocSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _loadLichHocCuaGiaSu();
+        } else if (state is TaoLichHocSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _loadLichHocCuaGiaSu();
         }
       },
       builder: (context, state) {
         List<LichHoc> allLichHoc = [];
 
-        if (state is LichHocLoadedState) {
+        if (state is LichHocCuaGiaSuLoaded) {
           allLichHoc = state.danhSachLichHoc;
-        } else if (state is LichHocTheoLopLoadedState) {
-          allLichHoc = state.danhSachLichHoc;
+          print('🎯 UI: Nhận được ${allLichHoc.length} lịch học');
+
+          // Debug chi tiết từng lịch học
+          for (var i = 0; i < allLichHoc.length; i++) {
+            final lich = allLichHoc[i];
+            print(
+              '📅 Lịch $i: ID=${lich.lichHocID}, Ngày=${lich.ngayHoc}, Trạng thái=${lich.trangThai}, Lặp lại=${lich.isLapLai}',
+            );
+          }
+
+          // Debug lịch học con
+          final allLichHocFlat = _getAllLichHoc(allLichHoc);
+          print('📊 Tổng số buổi (cả gốc và con): ${allLichHocFlat.length}');
         }
 
         final lichHocTheoNgay = _getLichHocTheoNgay(allLichHoc, _selectedDate);
         final isCurrentMonth = _selectedDate.month == _currentMonth.month;
 
+        print(
+          '📅 Ngày chọn: $_selectedDate, Số buổi: ${lichHocTheoNgay.length}',
+        );
         return Scaffold(
           appBar: AppBar(
             title: const Text(
-              'LỊCH DẠY',
+              'LỊCH DẠY CỦA TÔI',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
             backgroundColor: AppColors.primary,
@@ -578,18 +866,20 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
             elevation: 0,
             actions: [
               IconButton(
+                icon: const Icon(Icons.filter_list),
+                onPressed: _showFilterDialog,
+                tooltip: 'Lọc lịch học',
+              ),
+              IconButton(
                 icon: const Icon(Icons.refresh),
-                onPressed: () {
-                  context.read<LichHocBloc>().add(
-                    const LoadLichHocCuaGiaSuEvent(),
-                  );
-                },
+                onPressed: () => _loadLichHocCuaGiaSu(),
+                tooltip: 'Tải lại',
               ),
             ],
           ),
-          backgroundColor: AppColors.backgroundGrey,
+          backgroundColor: AppColors.backgroundGrey ?? Colors.grey.shade100,
           body:
-              state is LichHocLoadingState
+              state is LichHocLoading
                   ? const Center(child: CircularProgressIndicator())
                   : Column(
                     children: [
@@ -611,22 +901,22 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                                 fontSize: 16,
                               ),
                             ),
-                            if (!isCurrentMonth)
+                            if (lichHocTheoNgay.isNotEmpty)
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
+                                  horizontal: 12,
+                                  vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.orange.shade100,
-                                  borderRadius: BorderRadius.circular(8),
+                                  color: AppColors.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Text(
-                                  'Tháng ${_selectedDate.month}',
-                                  style: const TextStyle(
-                                    color: Colors.orange,
+                                  '${lichHocTheoNgay.length} buổi',
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 12,
+                                    color: AppColors.primary,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ),
@@ -646,11 +936,10 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                                     horizontal: 16,
                                   ),
                                   itemCount: lichHocTheoNgay.length,
-                                  itemBuilder: (context, index) {
-                                    return _buildLichHocCard(
-                                      lichHocTheoNgay[index],
-                                    );
-                                  },
+                                  itemBuilder:
+                                      (context, index) => _buildLichHocCard(
+                                        lichHocTheoNgay[index],
+                                      ),
                                 ),
                       ),
                     ],
@@ -665,14 +954,14 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.calendar_today, size: 64, color: Colors.grey),
+          Icon(Icons.calendar_today, size: 64, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           Text(
             isCurrentMonth
                 ? 'Không có lịch dạy nào\ncho ngày này'
                 : 'Không có lịch dạy nào\ncho ngày ${_selectedDate.day} tháng ${_selectedDate.month}',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 16),
           ElevatedButton(
@@ -683,7 +972,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
               });
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryBlue,
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
             ),
             child: const Text('Quay về hôm nay'),

@@ -1,89 +1,65 @@
-// bloc/lich_hoc/lich_hoc_event.dart
 import 'package:equatable/equatable.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc.dart';
 
 abstract class LichHocEvent extends Equatable {
   const LichHocEvent();
 
   @override
-  List<Object?> get props => [];
+  List<Object> get props => [];
 }
 
-// Lấy lịch học theo lớp
-class LoadLichHocTheoLopEvent extends LichHocEvent {
+class LoadLichHocEvent extends LichHocEvent {
   final int lopYeuCauId;
 
-  const LoadLichHocTheoLopEvent(this.lopYeuCauId);
+  const LoadLichHocEvent(this.lopYeuCauId);
 
   @override
-  List<Object?> get props => [lopYeuCauId];
+  List<Object> get props => [lopYeuCauId];
 }
-
-// Lấy lịch học của gia sư - EVENT CHÍNH CẦN DÙNG
 class LoadLichHocCuaGiaSuEvent extends LichHocEvent {
   const LoadLichHocCuaGiaSuEvent();
-}
-
-// Lấy lịch học của người học
-class LoadLichHocCuaNguoiHocEvent extends LichHocEvent {
-  const LoadLichHocCuaNguoiHocEvent();
-}
-
-// Lấy lịch học theo khoảng thời gian
-class LoadLichHocTheoThoiGianEvent extends LichHocEvent {
-  final String tuNgay;
-  final String denNgay;
-  final bool isGiaSu;
-
-  const LoadLichHocTheoThoiGianEvent({
-    required this.tuNgay,
-    required this.denNgay,
-    required this.isGiaSu,
-  });
 
   @override
-  List<Object?> get props => [tuNgay, denNgay, isGiaSu];
+  List<Object> get props => [];
 }
-
-// Tạo lịch học mới
 class TaoLichHocEvent extends LichHocEvent {
   final int lopYeuCauId;
-  final Map<String, dynamic> lichHocData;
+  final TaoLichHocRequest request;
 
-  const TaoLichHocEvent({
-    required this.lopYeuCauId,
-    required this.lichHocData,
-  });
+  const TaoLichHocEvent(this.lopYeuCauId, this.request);
 
   @override
-  List<Object?> get props => [lopYeuCauId, lichHocData];
+  List<Object> get props => [lopYeuCauId, request];
 }
 
-// Cập nhật lịch học
+class TaoLichHocLapLaiEvent extends LichHocEvent {
+  final int lopYeuCauId;
+  final TaoLichHocRequest request;
+
+  const TaoLichHocLapLaiEvent(this.lopYeuCauId, this.request);
+
+  @override
+  List<Object> get props => [lopYeuCauId, request];
+}
+
 class CapNhatLichHocEvent extends LichHocEvent {
   final int lichHocId;
-  final Map<String, dynamic> updateData;
+  final Map<String, dynamic> data;
 
-  const CapNhatLichHocEvent({
-    required this.lichHocId,
-    required this.updateData,
-  });
+  const CapNhatLichHocEvent(this.lichHocId, this.data);
 
   @override
-  List<Object?> get props => [lichHocId, updateData];
+  List<Object> get props => [lichHocId, data];
 }
 
-// Cập nhật trạng thái lịch học
-class CapNhatTrangThaiLichHocEvent extends LichHocEvent {
+class XoaLichHocEvent extends LichHocEvent {
   final int lichHocId;
-  final String trangThai;
-  final String? duongDan;
+  final bool xoaCaChuoi;
 
-  const CapNhatTrangThaiLichHocEvent({
-    required this.lichHocId,
-    required this.trangThai,
-    this.duongDan,
-  });
+  const XoaLichHocEvent(this.lichHocId, {this.xoaCaChuoi = false});
 
   @override
-  List<Object?> get props => [lichHocId, trangThai, duongDan];
+  List<Object> get props => [lichHocId, xoaCaChuoi];
 }
+
+class ResetLichHocStateEvent extends LichHocEvent {}

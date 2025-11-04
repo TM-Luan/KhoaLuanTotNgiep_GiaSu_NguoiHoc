@@ -1,4 +1,3 @@
-// bloc/lich_hoc/lich_hoc_state.dart
 import 'package:equatable/equatable.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc.dart';
 
@@ -6,62 +5,64 @@ abstract class LichHocState extends Equatable {
   const LichHocState();
 
   @override
-  List<Object?> get props => [];
+  List<Object> get props => [];
 }
 
-class LichHocInitialState extends LichHocState {
-  const LichHocInitialState();
-}
+class LichHocInitial extends LichHocState {}
 
-class LichHocLoadingState extends LichHocState {
-  const LichHocLoadingState();
-}
+class LichHocLoading extends LichHocState {}
 
-class LichHocLoadedState extends LichHocState {
-  final List<LichHoc> danhSachLichHoc;
-  final String? message;
+class LichHocLoaded extends LichHocState {
+  final LichHocResponse lichHocResponse;
+  List<LichHoc> get allLichHoc => lichHocResponse.lichHoc;
 
-  const LichHocLoadedState(this.danhSachLichHoc, {this.message});
+  const LichHocLoaded(this.lichHocResponse);
 
   @override
-  List<Object?> get props => [danhSachLichHoc, message];
+  List<Object> get props => [lichHocResponse];
 }
-
-class LichHocTheoLopLoadedState extends LichHocState {
+class LichHocCuaGiaSuLoaded extends LichHocState {
   final List<LichHoc> danhSachLichHoc;
-  final int lopYeuCauId;
 
-  const LichHocTheoLopLoadedState(this.danhSachLichHoc, this.lopYeuCauId);
+  const LichHocCuaGiaSuLoaded(this.danhSachLichHoc);
 
   @override
-  List<Object?> get props => [danhSachLichHoc, lopYeuCauId];
+  List<Object> get props => [danhSachLichHoc];
+}
+class LichHocError extends LichHocState {
+  final String message;
+
+  const LichHocError(this.message);
+
+  @override
+  List<Object> get props => [message];
 }
 
-class LichHocCreatedState extends LichHocState {
+class TaoLichHocSuccess extends LichHocState {
+  final List<LichHoc> lichHocTaoMoi;
+  final String message;
+
+  const TaoLichHocSuccess(this.lichHocTaoMoi, this.message);
+
+  @override
+  List<Object> get props => [lichHocTaoMoi, message];
+}
+
+class CapNhatLichHocSuccess extends LichHocState {
   final LichHoc lichHoc;
   final String message;
 
-  const LichHocCreatedState(this.lichHoc, this.message);
+  const CapNhatLichHocSuccess(this.lichHoc, this.message);
 
   @override
-  List<Object?> get props => [lichHoc, message];
+  List<Object> get props => [lichHoc, message];
 }
 
-class LichHocUpdatedState extends LichHocState {
-  final LichHoc lichHoc;
+class XoaLichHocSuccess extends LichHocState {
   final String message;
 
-  const LichHocUpdatedState(this.lichHoc, this.message);
+  const XoaLichHocSuccess(this.message);
 
   @override
-  List<Object?> get props => [lichHoc, message];
-}
-
-class LichHocErrorState extends LichHocState {
-  final String message;
-
-  const LichHocErrorState(this.message);
-
-  @override
-  List<Object?> get props => [message];
+  List<Object> get props => [message];
 }
