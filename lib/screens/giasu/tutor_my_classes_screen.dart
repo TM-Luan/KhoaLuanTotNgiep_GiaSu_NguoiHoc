@@ -12,6 +12,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_n
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/class_detail.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_add_schedule.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notification_service.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/untils/format_vnd.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_info_row.dart';
@@ -367,6 +368,28 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                               () => _navigateToClassDetail(context, lop.maLop),
                           icon: const Icon(Icons.visibility, size: 16),
                           label: const Text('Xem chi tiết'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue.shade600,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed:
+                              () => _navigateToAddSchedule(
+                                context,
+                                lop.maLop,
+                                lop.tieuDeLop,
+                              ),
+                          icon: const Icon(Icons.schedule, size: 16),
+                          label: const Text('Tạo Lịch Dạy'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue.shade600,
                             foregroundColor: Colors.white,
@@ -920,6 +943,23 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
         builder:
             (context) =>
                 ClassDetailScreen(classId: lopHocId, userRole: UserRole.tutor),
+      ),
+    );
+  }
+
+  void _navigateToAddSchedule(
+    BuildContext context,
+    int lopHocId,
+    String tenlop,
+  ) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => TaoLichHocPage(
+              lopYeuCauId: lopHocId,
+              tenLop: tenlop, // Bạn cần implement hàm này
+            ),
       ),
     );
   }

@@ -14,7 +14,7 @@ class LearnerSchedulePage extends StatefulWidget {
 class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
   DateTime _selectedDate = DateTime.now();
   DateTime _currentMonth = DateTime.now();
-  final List<LichHoc> _listLichHoc = [];
+  final List<LH> _listLH = [];
 
   @override
   void initState() {
@@ -24,8 +24,8 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
 
   void _loadSampleData() {
     // Dữ liệu mẫu cho lịch học trong tháng
-    _listLichHoc.addAll([
-      LichHoc(
+    _listLH.addAll([
+      LH(
         maLH: 'LH001',
         tenLop: 'Toán lớp 10 - Nâng cao',
         tenGiaSu: 'Nguyễn Văn A',
@@ -38,7 +38,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
         duongDanOnline: 'https://zoom.us/j/123456789',
         thoiGianDay: [],
       ),
-      LichHoc(
+      LH(
         maLH: 'LH002',
         tenLop: 'Tiếng Anh giao tiếp',
         tenGiaSu: 'Trần Thị B',
@@ -51,7 +51,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
         duongDanOnline: 'https://zoom.us/j/987654321',
         thoiGianDay: [],
       ),
-      LichHoc(
+      LH(
         maLH: 'LH003',
         tenLop: 'Vật lý lớp 11',
         tenGiaSu: 'Lê Văn C',
@@ -64,7 +64,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
         duongDanOnline: 'https://zoom.us/j/555555555',
         thoiGianDay: [],
       ),
-      LichHoc(
+      LH(
         maLH: 'LH004',
         tenLop: 'Hóa học lớp 12',
         tenGiaSu: 'Phạm Thị D',
@@ -77,7 +77,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
         duongDanOnline: 'https://zoom.us/j/111111111',
         thoiGianDay: [],
       ),
-      LichHoc(
+      LH(
         maLH: 'LH005',
         tenLop: 'Toán lớp 9',
         tenGiaSu: 'Nguyễn Văn E',
@@ -96,9 +96,9 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
   }
 
   // Lấy lịch học theo ngày được chọn
-  List<LichHoc> _getLichHocTheoNgay(DateTime date) {
-    return _listLichHoc.where((lichHoc) {
-      final lichDate = DateTime.parse(lichHoc.thoiGianBD.split(' ')[0]);
+  List<LH> _getLHTheoNgay(DateTime date) {
+    return _listLH.where((LH) {
+      final lichDate = DateTime.parse(LH.thoiGianBD.split(' ')[0]);
       return lichDate.year == date.year &&
           lichDate.month == date.month &&
           lichDate.day == date.day;
@@ -107,8 +107,8 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
 
   // Kiểm tra ngày có lịch học không
   bool _hasSchedule(DateTime date) {
-    return _listLichHoc.any((lichHoc) {
-      final lichDate = DateTime.parse(lichHoc.thoiGianBD.split(' ')[0]);
+    return _listLH.any((LH) {
+      final lichDate = DateTime.parse(LH.thoiGianBD.split(' ')[0]);
       return lichDate.year == date.year &&
           lichDate.month == date.month &&
           lichDate.day == date.day;
@@ -164,8 +164,8 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
   }
 
   // Widget hiển thị card lịch học
-  Widget _buildLichHocCard(LichHoc lichHoc) {
-    final isOnline = lichHoc.diaDiem.toLowerCase().contains('online');
+  Widget _buildLHCard(LH LH) {
+    final isOnline = LH.diaDiem.toLowerCase().contains('online');
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -180,7 +180,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Mã LH: ${lichHoc.maLH}',
+                  'Mã LH: ${LH.maLH}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.blue,
@@ -211,29 +211,29 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
 
             // Tên lớp
             Text(
-              lichHoc.tenLop,
+              LH.tenLop,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 8),
 
             // Thông tin chi tiết
-            _buildInfoRow(Icons.person, 'Giáo sư: ${lichHoc.tenGiaSu}'),
-            _buildInfoRow(Icons.book, 'Môn: ${lichHoc.monHoc}'),
-            _buildInfoRow(Icons.location_on, 'Địa điểm: ${lichHoc.diaDiem}'),
+            _buildInfoRow(Icons.person, 'Giáo sư: ${LH.tenGiaSu}'),
+            _buildInfoRow(Icons.book, 'Môn: ${LH.monHoc}'),
+            _buildInfoRow(Icons.location_on, 'Địa điểm: ${LH.diaDiem}'),
             _buildInfoRow(
               Icons.access_time,
-              'Thời gian: ${_formatTime(lichHoc.thoiGianBD)} - ${_formatTime(lichHoc.thoiGianKT)}',
+              'Thời gian: ${_formatTime(LH.thoiGianBD)} - ${_formatTime(LH.thoiGianKT)}',
             ),
 
             const SizedBox(height: 12),
 
             // Nút tham gia Zoom (chỉ hiển thị nếu có đường dẫn online)
-            if (lichHoc.duongDanOnline.isNotEmpty && isOnline)
+            if (LH.duongDanOnline.isNotEmpty && isOnline)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    _joinZoomMeeting(lichHoc);
+                    _joinZoomMeeting(LH);
                   },
                   icon: const Icon(Icons.video_call, size: 20),
                   label: const Text('Tham gia Zoom'),
@@ -274,7 +274,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
   }
 
   // Hàm xử lý tham gia Zoom
-  void _joinZoomMeeting(LichHoc lichHoc) {
+  void _joinZoomMeeting(LH LH) {
     showDialog(
       context: context,
       builder:
@@ -284,8 +284,8 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Lớp: ${lichHoc.tenLop}'),
-                Text('Giáo sư: ${lichHoc.tenGiaSu}'),
+                Text('Lớp: ${LH.tenLop}'),
+                Text('Giáo sư: ${LH.tenGiaSu}'),
                 const SizedBox(height: 16),
                 const Text('Bạn có muốn tham gia buổi học ngay bây giờ?'),
               ],
@@ -298,7 +298,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  _showZoomJoinSuccess(lichHoc);
+                  _showZoomJoinSuccess(LH);
                 },
                 child: const Text('Tham gia ngay'),
               ),
@@ -307,10 +307,10 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
     );
   }
 
-  void _showZoomJoinSuccess(LichHoc lichHoc) {
+  void _showZoomJoinSuccess(LH LH) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Đang mở Zoom cho lớp ${lichHoc.tenLop}'),
+        content: Text('Đang mở Zoom cho lớp ${LH.tenLop}'),
         backgroundColor: Colors.green,
       ),
     );
@@ -476,7 +476,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
 
   @override
   Widget build(BuildContext context) {
-    final lichHocTheoNgay = _getLichHocTheoNgay(_selectedDate);
+    final LHTheoNgay = _getLHTheoNgay(_selectedDate);
     final isCurrentMonth = _selectedDate.month == _currentMonth.month;
 
     return Scaffold(
@@ -539,13 +539,13 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
           // Danh sách lịch học
           Expanded(
             child:
-                lichHocTheoNgay.isEmpty
+                LHTheoNgay.isEmpty
                     ? _buildEmptyState()
                     : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: lichHocTheoNgay.length,
+                      itemCount: LHTheoNgay.length,
                       itemBuilder: (context, index) {
-                        return _buildLichHocCard(lichHocTheoNgay[index]);
+                        return _buildLHCard(LHTheoNgay[index]);
                       },
                     ),
           ),
@@ -590,8 +590,8 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
   }
 }
 
-// Model LichHoc
-class LichHoc {
+// Model LH
+class LH {
   final String maLH;
   final String tenLop;
   final String tenGiaSu;
@@ -602,7 +602,7 @@ class LichHoc {
   final String duongDanOnline;
   final List<ThoiGianDay> thoiGianDay;
 
-  const LichHoc({
+  const LH({
     required this.maLH,
     required this.tenLop,
     required this.tenGiaSu,

@@ -15,11 +15,8 @@ class ApiService {
     final String? token = await SecureStorage.getToken();
     Map<String, String> headers = Map.from(ApiConfig.headers);
 
-    print('🔑 Token in headers: ${token != null ? "EXISTS" : "NULL"}');
-    
     if (token != null && token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
-      print('🔑 Authorization header added');
     } else {
       print('⚠️ No token found - API call may fail');
     }
@@ -60,7 +57,7 @@ class ApiService {
     try {
       print('🌐 POST Request: ${ApiConfig.baseUrl}$endpoint');
       print('🌐 POST Data: $data');
-      
+
       final response = await http
           .post(
             Uri.parse('${ApiConfig.baseUrl}$endpoint'),
