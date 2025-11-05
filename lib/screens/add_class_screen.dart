@@ -361,7 +361,7 @@ class _AddClassPageState extends State<AddClassPage> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Center(
           child: Text(
-            isEditMode ? '💾 Lưu Thay Đổi' : '🚀 Tạo Lớp Ngay',
+            isEditMode ? 'Lưu Thay Đổi' : 'Tạo Lớp Ngay',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
