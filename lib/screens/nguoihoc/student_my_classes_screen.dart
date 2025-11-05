@@ -10,6 +10,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/student_cl
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notification_service.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/untils/format_vnd.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_info_row.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/complaint_form_screen.dart';
 
 class StudentMyClassesPage extends StatefulWidget {
   const StudentMyClassesPage({super.key});
@@ -136,37 +137,37 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
         ),
         backgroundColor: AppColors.primary,
         elevation: 0,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.md),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(AppSpacing.sm),
-              ),
-              child: IconButton(
-                onPressed: () async {
-                  final isAdded = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AddClassPage(),
-                    ),
-                  );
-                  // ✅ Khi AddClassPage pop về và trả về true → tự động reload
-                  if (isAdded == true) {
-                    _fetchClasses();
-                  }
-                },
-                icon: Icon(
-                  Icons.add,
-                  color: AppColors.primary,
-                  size: AppSpacing.smallIconSize,
-                ),
-                tooltip: 'Thêm Lớp',
-              ),
-            ),
-          ),
-        ],
+        // actions: [
+        //   Padding(
+        //     padding: const EdgeInsets.only(right: AppSpacing.md),
+        //     child: Container(
+        //       decoration: BoxDecoration(
+        //         color: AppColors.background,
+        //         borderRadius: BorderRadius.circular(AppSpacing.sm),
+        //       ),
+        //       child: IconButton(
+        //         onPressed: () async {
+        //           final isAdded = await Navigator.push(
+        //             context,
+        //             MaterialPageRoute(
+        //               builder: (context) => const AddClassPage(),
+        //             ),
+        //           );
+        //           // ✅ Khi AddClassPage pop về và trả về true → tự động reload
+        //           if (isAdded == true) {
+        //             _fetchClasses();
+        //           }
+        //         },
+        //         icon: Icon(
+        //           Icons.add,
+        //           color: AppColors.primary,
+        //           size: AppSpacing.smallIconSize,
+        //         ),
+        //         tooltip: 'Thêm Lớp',
+        //       ),
+        //     ),
+        //   ),
+        // ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48.0),
           child: Container(
@@ -185,6 +186,24 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
             ),
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          // Đây là logic bạn đã viết cho nút (+) cũ
+          final isAdded = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AddClassPage(),
+            ),
+          );
+          // Khi AddClassPage pop về và trả về true → tự động reload
+          if (isAdded == true) {
+            _fetchClasses();
+          }
+        },
+        backgroundColor: AppColors.primary, // Màu xanh chính
+        child: const Icon(Icons.add, color: Colors.white), // Dấu cộng màu trắng
+        tooltip: 'Thêm Lớp',
       ),
       body: _buildBody(),
     );
@@ -335,7 +354,9 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                         ),
                       ),
                     ),
+                    
                     Container(
+                      margin: const EdgeInsets.only(left: 8), // Thêm margin
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6,
                         vertical: 3,
@@ -568,7 +589,28 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
     if (status == 'DangHoc') {
       return Row(
         mainAxisAlignment: MainAxisAlignment.end,
-        children: [styledButton('Xem lịch', () {})],
+        children: [
+          // ✨ NÚT KHIẾU NẠI MỚI ✨
+          styledButton(
+            'Khiếu nại',
+            () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ComplaintFormScreen(
+                    lopId: lopHoc.maLop, // Truyền ID lớp học
+                  ),
+                ),
+              );
+            },
+            Colors.red.shade400, // Dùng màu đỏ cho nút
+          ),
+          const SizedBox(width: 8),
+
+          // Nút xem lịch cũ
+          styledButton('Xem lịch', () {
+            // TODO: Thêm hành động cho nút xem lịch
+          }),
+        ],
       );
     }
 
