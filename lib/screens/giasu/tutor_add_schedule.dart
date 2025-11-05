@@ -1,12 +1,8 @@
-// tao_lich_hoc_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_bloc.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_event.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_state.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc.dart';
 
 class TaoLichHocPage extends StatefulWidget {
   final int lopYeuCauId;
@@ -24,21 +20,19 @@ class TaoLichHocPage extends StatefulWidget {
 
 class _TaoLichHocPageState extends State<TaoLichHocPage> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Form controllers
   late TextEditingController _ngayHocController;
   late TextEditingController _thoiGianBatDauController;
   late TextEditingController _thoiGianKetThucController;
   late TextEditingController _duongDanController;
-  
+
   // Form values
   DateTime _ngayHoc = DateTime.now();
   TimeOfDay _thoiGianBatDau = TimeOfDay.now();
-
-TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
-  DateTime.now()
-      .add(const Duration(hours: 1)),
-);
+  TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
+    DateTime.now().add(const Duration(hours: 1)),
+  );
   String _trangThai = 'SapToi';
   bool _lapLai = false;
   int _soTuanLap = 4;
@@ -51,7 +45,7 @@ TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
     _thoiGianBatDauController = TextEditingController();
     _thoiGianKetThucController = TextEditingController();
     _duongDanController = TextEditingController();
-    
+
     _updateControllers();
   }
 
@@ -84,7 +78,7 @@ TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
       firstDate: DateTime.now(),
       lastDate: DateTime(2026),
     );
-    
+
     if (picked != null && picked != _ngayHoc) {
       setState(() {
         _ngayHoc = picked;
@@ -98,15 +92,14 @@ TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
       context: context,
       initialTime: _thoiGianBatDau,
     );
-    
+
     if (picked != null) {
       setState(() {
         _thoiGianBatDau = picked;
         // Tự động set thời gian kết thúc = thời gian bắt đầu + 1.5 giờ
-        _thoiGianKetThuc = TimeOfDay(
-          hour: (picked.hour + 1) % 24,
-          minute: (picked.minute + 30) % 60,
-        );
+        final endHour = (picked.hour + 1) % 24;
+        final endMinute = (picked.minute + 30) % 60;
+        _thoiGianKetThuc = TimeOfDay(hour: endHour, minute: endMinute);
         _updateControllers();
       });
     }
@@ -117,7 +110,7 @@ TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
       context: context,
       initialTime: _thoiGianKetThuc,
     );
-    
+
     if (picked != null) {
       setState(() {
         _thoiGianKetThuc = picked;
@@ -130,50 +123,67 @@ TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
     // Kiểm tra thời gian kết thúc phải sau thời gian bắt đầu
     final batDauMinutes = _thoiGianBatDau.hour * 60 + _thoiGianBatDau.minute;
     final ketThucMinutes = _thoiGianKetThuc.hour * 60 + _thoiGianKetThuc.minute;
-    
+
     if (ketThucMinutes <= batDauMinutes) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Thời gian kết thúc phải sau thời gian bắt đầu')),
+        const SnackBar(
+          content: Text('Thời gian kết thúc phải sau thời gian bắt đầu'),
+          backgroundColor: Colors.red,
+        ),
       );
       return false;
     }
-    
+
     // Kiểm tra nếu là online thì phải có đường dẫn
     if (_duongDanController.text.isNotEmpty) {
       final url = _duongDanController.text.trim();
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đường dẫn phải bắt đầu bằng http:// hoặc https://')),
+          const SnackBar(
+            content: Text('Đường dẫn phải bắt đầu bằng http:// hoặc https://'),
+            backgroundColor: Colors.red,
+          ),
         );
         return false;
       }
     }
-    
+
     return true;
   }
 
   void _taoLichHoc() {
     if (!_validateForm()) return;
-    
-    final request = TaoLichHocRequest(
-      thoiGianBatDau: '${_formatTimeOfDay(_thoiGianBatDau)}:00',
-      thoiGianKetThuc: '${_formatTimeOfDay(_thoiGianKetThuc)}:00',
-      ngayHoc: DateFormat('yyyy-MM-dd').format(_ngayHoc),
-      duongDan: _duongDanController.text.isNotEmpty ? _duongDanController.text : null,
-      trangThai: _trangThai,
-      lapLai: _lapLai,
-      soTuanLap: _lapLai ? _soTuanLap : null,
-    );
 
-    if (_lapLai) {
-      context.read<LichHocBloc>().add(
-        TaoLichHocLapLaiEvent(widget.lopYeuCauId, request),
-      );
-    } else {
-      context.read<LichHocBloc>().add(
-        TaoLichHocEvent(widget.lopYeuCauId, request),
-      );
-    }
+    // Format thời gian thành HH:mm:ss
+    final thoiGianBatDau = '${_formatTimeOfDay(_thoiGianBatDau)}:00';
+    final thoiGianKetThuc = '${_formatTimeOfDay(_thoiGianKetThuc)}:00';
+    final ngayHoc = DateFormat('yyyy-MM-dd').format(_ngayHoc);
+
+    print('🔄 Tạo lịch học:');
+    print('   - Lớp: ${widget.lopYeuCauId}');
+    print('   - Ngày: $ngayHoc');
+    print('   - Thời gian: $thoiGianBatDau - $thoiGianKetThuc');
+    print('   - Lặp lại: $_lapLai');
+    print('   - Số tuần: $_soTuanLap');
+    print('   - Trạng thái: $_trangThai');
+    print('   - Đường dẫn: $_duongDan');
+
+    // Gửi event tạo lịch học
+    context.read<LichHocBloc>().add(
+      CreateLichHoc(
+        lopYeuCauId: widget.lopYeuCauId,
+        thoiGianBatDau: thoiGianBatDau,
+        thoiGianKetThuc: thoiGianKetThuc,
+        ngayHoc: ngayHoc,
+        lapLai: _lapLai,
+        soTuanLap: _soTuanLap,
+        duongDan:
+            _duongDanController.text.isNotEmpty
+                ? _duongDanController.text
+                : null,
+        trangThai: _trangThai,
+      ),
+    );
   }
 
   Widget _buildFormField({
@@ -197,11 +207,12 @@ TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
           onTap: onTap,
           decoration: InputDecoration(
             hintText: hintText,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             suffixIcon: const Icon(Icons.arrow_drop_down),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 16,
+            ),
           ),
           validator: (value) {
             if (isRequired && (value == null || value.isEmpty)) {
@@ -233,7 +244,10 @@ TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -258,19 +272,29 @@ TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
   Widget build(BuildContext context) {
     return BlocListener<LichHocBloc, LichHocState>(
       listener: (context, state) {
-        if (state is TaoLichHocSuccess) {
+        if (state is LichHocCreated) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.message),
+              content: Text(
+                'Tạo thành công ${state.danhSachLichHoc.length} buổi học',
+              ),
               backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
             ),
           );
-          Navigator.pop(context, true); // Quay lại và báo thành công
+
+          // Delay một chút trước khi quay lại để người dùng thấy thông báo
+          Future.delayed(const Duration(milliseconds: 1500), () {
+            if (mounted) {
+              Navigator.pop(context, true); // Quay lại và báo thành công
+            }
+          });
         } else if (state is LichHocError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
               backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
             ),
           );
         }
@@ -304,7 +328,10 @@ TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
                       children: [
                         const Text(
                           'Thông tin lớp',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text('Mã lớp: ${widget.lopYeuCauId}'),
@@ -342,18 +369,32 @@ TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
                   children: [
                     const Text(
                       'Trạng thái *',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       value: _trangThai,
                       decoration: InputDecoration(
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 16,
+                        ),
                       ),
                       items: const [
-                        DropdownMenuItem(value: 'SapToi', child: Text('Sắp tới')),
-                        DropdownMenuItem(value: 'DangDay', child: Text('Đang dạy')),
+                        DropdownMenuItem(
+                          value: 'SapToi',
+                          child: Text('Sắp tới'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'DangDay',
+                          child: Text('Đang dạy'),
+                        ),
                         DropdownMenuItem(value: 'DaHoc', child: Text('Đã học')),
                         DropdownMenuItem(value: 'Huy', child: Text('Đã hủy')),
                       ],
@@ -373,15 +414,23 @@ TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
                   children: [
                     const Text(
                       'Đường dẫn (Online)',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _duongDanController,
                       decoration: InputDecoration(
                         hintText: 'https://meet.google.com/...',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 16,
+                        ),
                       ),
                       onChanged: (value) {
                         setState(() {
@@ -391,7 +440,9 @@ TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _duongDan != null ? 'Hình thức: ONLINE' : 'Hình thức: OFFLINE',
+                      _duongDan != null
+                          ? 'Hình thức: ONLINE'
+                          : 'Hình thức: OFFLINE',
                       style: TextStyle(
                         color: _duongDan != null ? Colors.green : Colors.blue,
                         fontWeight: FontWeight.bold,
@@ -404,7 +455,8 @@ TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
                 // Lặp lại
                 _buildSwitchField(
                   title: 'Lặp lại hàng tuần',
-                  subtitle: 'Tạo nhiều buổi học cùng khung giờ trong các tuần tiếp theo',
+                  subtitle:
+                      'Tạo nhiều buổi học cùng khung giờ trong các tuần tiếp theo',
                   value: _lapLai,
                   onChanged: (value) {
                     setState(() {
@@ -421,14 +473,22 @@ TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
                     children: [
                       const Text(
                         'Số tuần lặp lại *',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<int>(
                         value: _soTuanLap,
                         decoration: InputDecoration(
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 16,
+                          ),
                         ),
                         items: List.generate(12, (index) {
                           final week = index + 1;
@@ -446,9 +506,41 @@ TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
                       const SizedBox(height: 8),
                       Text(
                         'Sẽ tạo $_soTuanLap buổi học vào cùng khung giờ này',
-                        style: const TextStyle(color: Colors.grey, fontSize: 14),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
+                  ),
+                ],
+
+                // Thông báo preview
+                if (_lapLai) ...[
+                  const SizedBox(height: 16),
+                  Card(
+                    color: Colors.blue[50],
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            '📅 Lịch học sẽ được tạo:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          for (int i = 0; i < _soTuanLap; i++)
+                            Text(
+                              '• Tuần ${i + 1}: ${DateFormat('dd/MM/yyyy').format(_ngayHoc.add(Duration(days: i * 7)))} - ${_formatTimeOfDay(_thoiGianBatDau)} đến ${_formatTimeOfDay(_thoiGianKetThuc)}',
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
 
@@ -456,35 +548,63 @@ TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
                 const SizedBox(height: 32),
                 BlocBuilder<LichHocBloc, LichHocState>(
                   builder: (context, state) {
+                    final isLoading = state is LichHocLoading;
+
                     return SizedBox(
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: state is LichHocLoading ? null : _taoLichHoc,
+                        onPressed: isLoading ? null : _taoLichHoc,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
+                          disabledBackgroundColor: Colors.grey[400],
                         ),
-                        child: state is LichHocLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        child:
+                            isLoading
+                                ? const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text('Đang tạo...'),
+                                  ],
+                                )
+                                : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.add, size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      _lapLai
+                                          ? 'TẠO $_soTuanLap BUỔI HỌC'
+                                          : 'TẠO LỊCH HỌC',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              )
-                            : const Text(
-                                'TẠO LỊCH HỌC',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
                       ),
                     );
                   },
                 ),
+
+                const SizedBox(height: 20),
               ],
             ),
           ),

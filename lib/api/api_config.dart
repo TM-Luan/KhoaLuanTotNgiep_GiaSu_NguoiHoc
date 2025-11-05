@@ -1,4 +1,3 @@
-// api_config.dart - THÊM ENDPOINTS MỚI
 class ApiConfig {
   static const String baseUrl = 'http://10.0.2.2:8000/api';
   static const Duration connectTimeout = Duration(seconds: 15);
@@ -15,16 +14,16 @@ class ApiConfig {
   static const String resetPassword = '/resetpassword';
   static const String routeName = '/tutor-detail';
 
-  // Lịch học endpoints
-  static const String lichHocTheoLop = '/lop'; // GET /lop/{id}/lich-hoc
-  static const String taoLichHocLapLai = '/lop'; // POST /lop/{id}/lich-hoc-lap-lai
-  static const String taoLichHocDon = '/lop'; // POST /lop/{id}/lich-hoc
+  // Lịch học endpoints - CẬP NHẬT
+  static const String lichHocTheoThangGiaSu = '/giasu/lich-hoc-theo-thang';
+  static const String lichHocTheoThangNguoiHoc =
+      '/nguoihoc/lich-hoc-theo-thang';
+  static const String lichHocTheoLopVaThang =
+      '/lop'; // GET /lop/{id}/lich-hoc-theo-thang
+  static const String taoLichHocLapLai =
+      '/lop'; // POST /lop/{id}/lich-hoc-lap-lai
   static const String capNhatLichHoc = '/lich-hoc'; // PUT /lich-hoc/{id}
   static const String xoaLichHoc = '/lich-hoc'; // DELETE /lich-hoc/{id}
-  
-  // THÊM MỚI: Endpoints cho lịch học theo người học và gia sư
-  static const String lichHocNguoiHoc = '/nguoihoc/lich-hoc'; // GET
-  static const String lichHocGiaSu = '/giasu/lich-hoc'; // GET
 
   // Headers
   static Map<String, String> get headers => {
