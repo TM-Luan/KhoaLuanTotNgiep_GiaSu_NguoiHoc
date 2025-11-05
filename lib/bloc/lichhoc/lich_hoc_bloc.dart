@@ -1,187 +1,182 @@
 import 'package:bloc/bloc.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_event.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_state.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lich_hoc_repository.dart';
+import '../../api/api_response.dart';
+
+part 'lich_hoc_event.dart';
+part 'lich_hoc_state.dart';
 
 class LichHocBloc extends Bloc<LichHocEvent, LichHocState> {
-  final LichHocRepository _lichHocRepository;
-
-  LichHocBloc(this._lichHocRepository) : super(LichHocInitial()) {
-    on<LoadLichHocEvent>(_onLoadLichHoc);
-    on<TaoLichHocEvent>(_onTaoLichHoc);
-    on<TaoLichHocLapLaiEvent>(_onTaoLichHocLapLai);
-    on<CapNhatLichHocEvent>(_onCapNhatLichHoc);
-    on<XoaLichHocEvent>(_onXoaLichHoc);
-    on<ResetLichHocStateEvent>(_onResetState);
-    on<LoadLichHocCuaGiaSuEvent>(_onLoadLichHocCuaGiaSu);
+  final LichHocRepository lichHocRepository;
+  LichHocBloc(this.lichHocRepository) : super(LichHocInitial()) {
+    on<GetLichHocTheoThangGiaSu>(_onGetLichHocTheoThangGiaSu);
+    on<GetLichHocTheoThangNguoiHoc>(_onGetLichHocTheoThangNguoiHoc);
+    on<GetLichHocTheoLopVaThang>(_onGetLichHocTheoLopVaThang);
+    on<CreateLichHoc>(_onCreateLichHoc);
+    on<UpdateLichHoc>(_onUpdateLichHoc);
+    on<DeleteLichHoc>(_onDeleteLichHoc);
   }
 
-  Future<void> _onLoadLichHoc(
-    LoadLichHocEvent event,
+  // Future<void> _onGetLichHocTheoThangGiaSu(
+  //   GetLichHocTheoThangGiaSu event,
+  //   Emitter<LichHocState> emit,
+  // ) async {
+  //   emit(LichHocLoading());
+
+  //   final ApiResponse<LichHocTheoThangResponse> response =
+  //       await lichHocRepository.getLichHocTheoThangGiaSu(
+  //     thang: event.thang,
+  //     nam: event.nam,
+  //     lopYeuCauId: event.lopYeuCauId,
+  //   );
+
+  //   if (response.isSuccess && response.data != null) {
+  //     emit(LichHocTheoThangLoaded(response.data!));
+  //   } else {
+  //     emit(LichHocError(response.message));
+  //   }
+  // }
+  Future<void> _onGetLichHocTheoThangGiaSu(
+    GetLichHocTheoThangGiaSu event,
     Emitter<LichHocState> emit,
   ) async {
     emit(LichHocLoading());
+
     try {
-      final lichHocResponse = await _lichHocRepository.getLichHocTheoLop(
-        event.lopYeuCauId,
+      print('🔄 Bloc: Bắt đầu gọi API lịch học theo tháng');
+      print(
+        '📅 Tham số: thang=${event.thang}, nam=${event.nam}, lopYeuCauId=${event.lopYeuCauId}',
       );
-      emit(LichHocLoaded(lichHocResponse));
-    } catch (e) {
-      emit(LichHocError(e.toString()));
+
+      final ApiResponse<LichHocTheoThangResponse> response =
+          await lichHocRepository.getLichHocTheoThangGiaSu(
+            thang: event.thang,
+            nam: event.nam,
+            lopYeuCauId: event.lopYeuCauId,
+          );
+
+      print('📦 Bloc: Nhận được response từ repository');
+      print('📦 Response success: ${response.isSuccess}');
+      print('📦 Response message: ${response.message}');
+      print('📦 Response data: ${response.data != null ? "có data" : "null"}');
+
+      if (response.isSuccess && response.data != null) {
+        print('✅ Bloc: Phát state LichHocTheoThangLoaded');
+        emit(LichHocTheoThangLoaded(response.data!));
+      } else {
+        print('❌ Bloc: Phát state LichHocError - ${response.message}');
+        emit(LichHocError(response.message));
+      }
+    } catch (e, stackTrace) {
+      print('❌ Bloc: Lỗi nghiêm trọng: $e');
+      print('❌ Stack trace: $stackTrace');
+      emit(LichHocError('Lỗi tải lịch học: ${e.toString()}'));
     }
   }
 
-  // Future<void> _onTaoLichHoc(
-  //   TaoLichHocEvent event,
-  //   Emitter<LichHocState> emit,
-  // ) async {
-  //   try {
-  //     final lichHoc = await _lichHocRepository.taoLichHocDon(
-  //       event.lopYeuCauId,
-  //       event.request,
-  //     );
-  //     emit(TaoLichHocSuccess([lichHoc], 'Tạo lịch học thành công'));
-  //   } catch (e) {
-  //     emit(LichHocError(e.toString()));
-  //   }
-  // }
-  Future<void> _onTaoLichHoc(
-    TaoLichHocEvent event,
-    Emitter<LichHocState> emit,
-  ) async {
-    emit(LichHocLoading()); // <-- THÊM DÒNG NÀY
-    try {
-      final lichHoc = await _lichHocRepository.taoLichHocDon(
-        event.lopYeuCauId,
-        event.request,
-      );
-      emit(TaoLichHocSuccess([lichHoc], 'Tạo lịch học thành công'));
-    } catch (e) {
-      emit(LichHocError(e.toString()));
-    }
-  }
-
-  // Future<void> _onTaoLichHocLapLai(
-  //   TaoLichHocLapLaiEvent event,
-  //   Emitter<LichHocState> emit,
-  // ) async {
-  //   try {
-  //     final lichHocList = await _lichHocRepository.taoLichHocLapLai(
-  //       event.lopYeuCauId,
-  //       event.request,
-  //     );
-  //     final message =
-  //         event.request.lapLai
-  //             ? "Đã tạo ${lichHocList.length} buổi học lặp lại thành công"
-  //             : "Tạo lịch học thành công";
-  //     emit(TaoLichHocSuccess(lichHocList, message));
-  //   } catch (e) {
-  //     emit(LichHocError(e.toString()));
-  //   }
-  // }
-  Future<void> _onTaoLichHocLapLai(
-    TaoLichHocLapLaiEvent event,
-    Emitter<LichHocState> emit,
-  ) async {
-    emit(LichHocLoading()); // <-- THÊM DÒNG NÀY
-    try {
-      final lichHocList = await _lichHocRepository.taoLichHocLapLai(
-        event.lopYeuCauId,
-        event.request,
-      );
-      final message =
-          event.request.lapLai
-              ? "Đã tạo ${lichHocList.length} buổi học lặp lại thành công"
-              : "Tạo lịch học thành công";
-      emit(TaoLichHocSuccess(lichHocList, message));
-    } catch (e) {
-      emit(LichHocError(e.toString()));
-    }
-  }
-
-  // Future<void> _onCapNhatLichHoc(
-  //   CapNhatLichHocEvent event,
-  //   Emitter<LichHocState> emit,
-  // ) async {
-  //   try {
-  //     final lichHoc = await _lichHocRepository.capNhatLichHoc(
-  //       event.lichHocId,
-  //       event.data,
-  //     );
-  //     emit(CapNhatLichHocSuccess(lichHoc, 'Cập nhật lịch học thành công'));
-  //   } catch (e) {
-  //     emit(LichHocError(e.toString()));
-  //   }
-  // }
-  Future<void> _onCapNhatLichHoc(
-    CapNhatLichHocEvent event,
-    Emitter<LichHocState> emit,
-  ) async {
-    emit(LichHocLoading()); // <-- THÊM DÒNG NÀY
-    try {
-      final lichHoc = await _lichHocRepository.capNhatLichHoc(
-        event.lichHocId,
-        event.data,
-      );
-      emit(CapNhatLichHocSuccess(lichHoc, 'Cập nhật lịch học thành công'));
-    } catch (e) {
-      emit(LichHocError(e.toString()));
-    }
-  }
-
-  // Future<void> _onXoaLichHoc(
-  //   XoaLichHocEvent event,
-  //   Emitter<LichHocState> emit,
-  // ) async {
-  //   try {
-  //     await _lichHocRepository.xoaLichHoc(
-  //       event.lichHocId,
-  //       xoaCaChuoi: event.xoaCaChuoi,
-  //     );
-  //     final message =
-  //         event.xoaCaChuoi
-  //             ? 'Đã xóa cả chuỗi lịch học thành công'
-  //             : 'Đã xóa buổi học thành công';
-  //     emit(XoaLichHocSuccess(message));
-  //   } catch (e) {
-  //     emit(LichHocError(e.toString()));
-  //   }
-  // }
-  Future<void> _onXoaLichHoc(
-    XoaLichHocEvent event,
-    Emitter<LichHocState> emit,
-  ) async {
-    emit(LichHocLoading()); // <-- THÊM DÒNG NÀY
-    try {
-      await _lichHocRepository.xoaLichHoc(
-        event.lichHocId,
-        xoaCaChuoi: event.xoaCaChuoi,
-      );
-      final message =
-          event.xoaCaChuoi
-              ? 'Đã xóa cả chuỗi lịch học thành công'
-              : 'Đã xóa buổi học thành công';
-      emit(XoaLichHocSuccess(message));
-    } catch (e) {
-      emit(LichHocError(e.toString()));
-    }
-  }
-
-  void _onResetState(ResetLichHocStateEvent event, Emitter<LichHocState> emit) {
-    emit(LichHocInitial());
-  }
-
-  // THÊM MỚI: Xử lý sự kiện load lịch học của gia sư
-  Future<void> _onLoadLichHocCuaGiaSu(
-    LoadLichHocCuaGiaSuEvent event,
+  Future<void> _onGetLichHocTheoThangNguoiHoc(
+    GetLichHocTheoThangNguoiHoc event,
     Emitter<LichHocState> emit,
   ) async {
     emit(LichHocLoading());
-    try {
-      final danhSachLichHoc = await _lichHocRepository.getLichHocTheoGiaSu();
-      emit(LichHocCuaGiaSuLoaded(danhSachLichHoc));
-    } catch (e) {
-      emit(LichHocError(e.toString()));
+
+    final ApiResponse<LichHocTheoThangResponse> response =
+        await lichHocRepository.getLichHocTheoThangNguoiHoc(
+          thang: event.thang,
+          nam: event.nam,
+          lopYeuCauId: event.lopYeuCauId,
+        );
+
+    if (response.isSuccess && response.data != null) {
+      emit(LichHocTheoThangLoaded(response.data!));
+    } else {
+      emit(LichHocError(response.message));
+    }
+  }
+
+  Future<void> _onGetLichHocTheoLopVaThang(
+    GetLichHocTheoLopVaThang event,
+    Emitter<LichHocState> emit,
+  ) async {
+    emit(LichHocLoading());
+
+    final ApiResponse<LichHocTheoThangResponse> response =
+        await lichHocRepository.getLichHocTheoLopVaThang(
+          lopYeuCauId: event.lopYeuCauId,
+          thang: event.thang,
+          nam: event.nam,
+        );
+
+    if (response.isSuccess && response.data != null) {
+      emit(LichHocTheoThangLoaded(response.data!));
+    } else {
+      emit(LichHocError(response.message));
+    }
+  }
+
+  Future<void> _onCreateLichHoc(
+    CreateLichHoc event,
+    Emitter<LichHocState> emit,
+  ) async {
+    emit(LichHocLoading());
+
+    final ApiResponse<List<LichHoc>> response = await lichHocRepository
+        .taoLichHocLapLai(
+          lopYeuCauId: event.lopYeuCauId,
+          thoiGianBatDau: event.thoiGianBatDau,
+          thoiGianKetThuc: event.thoiGianKetThuc,
+          ngayHoc: event.ngayHoc,
+          lapLai: event.lapLai,
+          soTuanLap: event.soTuanLap,
+          duongDan: event.duongDan,
+          trangThai: event.trangThai,
+        );
+
+    if (response.isSuccess && response.data != null) {
+      emit(LichHocCreated(response.data!));
+    } else {
+      emit(LichHocError(response.message));
+    }
+  }
+
+  Future<void> _onUpdateLichHoc(
+    UpdateLichHoc event,
+    Emitter<LichHocState> emit,
+  ) async {
+    emit(LichHocLoading());
+
+    final ApiResponse<LichHoc> response = await lichHocRepository
+        .capNhatLichHoc(
+          lichHocId: event.lichHocId,
+          thoiGianBatDau: event.thoiGianBatDau,
+          thoiGianKetThuc: event.thoiGianKetThuc,
+          ngayHoc: event.ngayHoc,
+          duongDan: event.duongDan,
+          trangThai: event.trangThai,
+        );
+
+    if (response.isSuccess && response.data != null) {
+      emit(LichHocUpdated(response.data!));
+    } else {
+      emit(LichHocError(response.message));
+    }
+  }
+
+  Future<void> _onDeleteLichHoc(
+    DeleteLichHoc event,
+    Emitter<LichHocState> emit,
+  ) async {
+    emit(LichHocLoading());
+
+    final ApiResponse<dynamic> response = await lichHocRepository.xoaLichHoc(
+      lichHocId: event.lichHocId,
+      xoaCaChuoi: event.xoaCaChuoi,
+    );
+
+    if (response.isSuccess) {
+      emit(LichHocDeleted(response.message));
+    } else {
+      emit(LichHocError(response.message));
     }
   }
 }

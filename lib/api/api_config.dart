@@ -24,8 +24,6 @@ class ApiConfig {
   
   // THÊM MỚI: Endpoints cho lịch học theo người học và gia sư
   static const String lichHocNguoiHoc = '/nguoihoc/lich-hoc'; // GET
-  static const String lopCuaNguoiHoc = '/nguoihoc/lopcuatoi';
-
   static const String lichHocGiaSu = '/giasu/lich-hoc'; // GET
 
   // Headers
