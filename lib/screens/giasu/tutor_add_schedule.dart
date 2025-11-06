@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 
 class TaoLichHocPage extends StatefulWidget {
   final int lopYeuCauId;
@@ -292,9 +293,16 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('TẠO LỊCH HỌC'),
           backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.white,
+          title: Text(
+            'Tạo Lịch Dạy',
+            style: TextStyle(
+              color: AppColors.textLight,
+              fontWeight: FontWeight.bold,
+              fontSize: AppTypography.appBarTitle,
+            ),
+          ),
           actions: [
             IconButton(
               icon: const Icon(Icons.save),

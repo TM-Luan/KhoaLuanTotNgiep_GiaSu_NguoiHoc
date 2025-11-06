@@ -70,7 +70,9 @@ class _AccountState extends State<Account> {
               padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 color: AppColors.primaryContainer,
-                borderRadius: BorderRadius.circular(AppSpacing.iconContainerRadius),
+                borderRadius: BorderRadius.circular(
+                  AppSpacing.iconContainerRadius,
+                ),
               ),
               child: Icon(
                 icon,
@@ -140,7 +142,7 @@ class _AccountState extends State<Account> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha:0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 3),
                   ),
@@ -156,7 +158,7 @@ class _AccountState extends State<Account> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withValues(alpha:0.2),
+                            color: AppColors.primary.withValues(alpha: 0.2),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -170,26 +172,29 @@ class _AccountState extends State<Account> {
                             width: 4,
                           ),
                         ),
-                        child: _profile?.anhDaiDien?.isNotEmpty == true
-                            ? CircleAvatar(
-                                radius: 55,
-                                backgroundColor: AppColors.primarySurface,
-                                backgroundImage: NetworkImage(_profile!.anhDaiDien!),
-                                onBackgroundImageError: (_, __) {},
-                              )
-                            : CircleAvatar(
-                                radius: 55,
-                                backgroundColor: AppColors.primarySurface,
-                                child: Icon(
-                                  Icons.person,
-                                  size: 55,
-                                  color: AppColors.primary,
+                        child:
+                            _profile?.anhDaiDien?.isNotEmpty == true
+                                ? CircleAvatar(
+                                  radius: 55,
+                                  backgroundColor: AppColors.primarySurface,
+                                  backgroundImage: NetworkImage(
+                                    _profile!.anhDaiDien!,
+                                  ),
+                                  onBackgroundImageError: (_, __) {},
+                                )
+                                : CircleAvatar(
+                                  radius: 55,
+                                  backgroundColor: AppColors.primarySurface,
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 55,
+                                    color: AppColors.primary,
+                                  ),
                                 ),
-                              ),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    
+
                     // User Name
                     Text(
                       _profile?.hoTen ?? "Người dùng",
@@ -201,7 +206,7 @@ class _AccountState extends State<Account> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    
+
                     // User Role
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -212,10 +217,12 @@ class _AccountState extends State<Account> {
                         gradient: LinearGradient(
                           colors: [AppColors.primaryLight, AppColors.primary],
                         ),
-                        borderRadius: BorderRadius.circular(AppSpacing.buttonBorderRadius * 3),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.buttonBorderRadius * 3,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withValues(alpha:0.3),
+                            color: AppColors.primary.withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 4),
                           ),
@@ -234,9 +241,9 @@ class _AccountState extends State<Account> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.lg),
-            
+
             // Menu Items
             _buildAccountItem(
               title: 'Trang cá nhân',
@@ -285,12 +292,11 @@ class _AccountState extends State<Account> {
                 final res = await _repo.logout(token);
 
                 if (!context.mounted) return;
-                final msg =
-                    res.success ? (res.data ?? 'Đã đăng xuất') : (res.message);
+                final msg = (res.message);
 
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(msg)));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(msg), backgroundColor: Colors.green),
+                );
                 await SecureStorage.deleteToken();
 
                 if (!context.mounted) return;
