@@ -1,8 +1,10 @@
-
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc.dart';
 
 class LearnerSchedulePage extends StatefulWidget {
   const LearnerSchedulePage({super.key});
@@ -14,105 +16,35 @@ class LearnerSchedulePage extends StatefulWidget {
 class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
   DateTime _selectedDate = DateTime.now();
   DateTime _currentMonth = DateTime.now();
-  final List<LH> _listLH = [];
-
+  
   @override
   void initState() {
     super.initState();
-    _loadSampleData();
+    _loadLichHocTheoThang();
   }
 
-  void _loadSampleData() {
-    // Dữ liệu mẫu cho lịch học trong tháng
-    _listLH.addAll([
-      LH(
-        maLH: 'LH001',
-        tenLop: 'Toán lớp 10 - Nâng cao',
-        tenGiaSu: 'Nguyễn Văn A',
-        monHoc: 'Toán',
-        diaDiem: 'Phòng 201, 123 Nguyễn Văn Linh',
-        thoiGianBD:
-            '${DateFormat('yyyy-MM-dd').format(DateTime.now())} 14:00:00',
-        thoiGianKT:
-            '${DateFormat('yyyy-MM-dd').format(DateTime.now())} 16:00:00',
-        duongDanOnline: 'https://zoom.us/j/123456789',
-        thoiGianDay: [],
+  void _loadLichHocTheoThang() {
+    context.read<LichHocBloc>().add(
+      GetLichHocTheoThangNguoiHoc(
+        thang: _currentMonth.month,
+        nam: _currentMonth.year,
       ),
-      LH(
-        maLH: 'LH002',
-        tenLop: 'Tiếng Anh giao tiếp',
-        tenGiaSu: 'Trần Thị B',
-        monHoc: 'Tiếng Anh',
-        diaDiem: 'Online',
-        thoiGianBD:
-            '${DateFormat('yyyy-MM-dd').format(DateTime.now().add(const Duration(days: 1)))} 09:00:00',
-        thoiGianKT:
-            '${DateFormat('yyyy-MM-dd').format(DateTime.now().add(const Duration(days: 1)))} 11:00:00',
-        duongDanOnline: 'https://zoom.us/j/987654321',
-        thoiGianDay: [],
-      ),
-      LH(
-        maLH: 'LH003',
-        tenLop: 'Vật lý lớp 11',
-        tenGiaSu: 'Lê Văn C',
-        monHoc: 'Vật lý',
-        diaDiem: '456 Lê Lợi, Quận 1',
-        thoiGianBD:
-            '${DateFormat('yyyy-MM-dd').format(DateTime.now().add(const Duration(days: 3)))} 16:00:00',
-        thoiGianKT:
-            '${DateFormat('yyyy-MM-dd').format(DateTime.now().add(const Duration(days: 3)))} 18:00:00',
-        duongDanOnline: 'https://zoom.us/j/555555555',
-        thoiGianDay: [],
-      ),
-      LH(
-        maLH: 'LH004',
-        tenLop: 'Hóa học lớp 12',
-        tenGiaSu: 'Phạm Thị D',
-        monHoc: 'Hóa học',
-        diaDiem: 'Online',
-        thoiGianBD:
-            '${DateFormat('yyyy-MM-dd').format(DateTime.now().add(const Duration(days: 7)))} 19:00:00',
-        thoiGianKT:
-            '${DateFormat('yyyy-MM-dd').format(DateTime.now().add(const Duration(days: 7)))} 21:00:00',
-        duongDanOnline: 'https://zoom.us/j/111111111',
-        thoiGianDay: [],
-      ),
-      LH(
-        maLH: 'LH005',
-        tenLop: 'Toán lớp 9',
-        tenGiaSu: 'Nguyễn Văn E',
-        monHoc: 'Toán',
-        diaDiem: '789 Trần Hưng Đạo',
-        thoiGianBD:
-            '${DateFormat('yyyy-MM-dd').format(DateTime.now().add(const Duration(days: 10)))} 15:00:00',
-        thoiGianKT:
-            '${DateFormat('yyyy-MM-dd').format(DateTime.now().add(const Duration(days: 10)))} 17:00:00',
-        duongDanOnline: '',
-        thoiGianDay: [],
-      ),
-    ]);
-
-    setState(() {});
+    );
   }
 
   // Lấy lịch học theo ngày được chọn
-  List<LH> _getLHTheoNgay(DateTime date) {
-    return _listLH.where((LH) {
-      final lichDate = DateTime.parse(LH.thoiGianBD.split(' ')[0]);
-      return lichDate.year == date.year &&
-          lichDate.month == date.month &&
-          lichDate.day == date.day;
-    }).toList();
+  List<LichHoc> _getLichHocTheoNgay(
+    LichHocTheoThangResponse response,
+    DateTime date,
+  ) {
+    final dateString = DateFormat('yyyy-MM-dd').format(date);
+    return response.lichHocTheoNgay[dateString] ?? [];
   }
 
   // Kiểm tra ngày có lịch học không
-  bool _hasSchedule(DateTime date) {
-    return _listLH.any((LH) {
-      final lichDate = DateTime.parse(LH.thoiGianBD.split(' ')[0]);
-      return lichDate.year == date.year &&
-          lichDate.month == date.month &&
-          lichDate.day == date.day;
-    });
+  bool _hasSchedule(LichHocTheoThangResponse response, DateTime date) {
+    final dateString = DateFormat('yyyy-MM-dd').format(date);
+    return response.lichHocTheoNgay.containsKey(dateString);
   }
 
   // Lấy danh sách ngày trong tháng
@@ -121,18 +53,15 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
     final last = DateTime(month.year, month.month + 1, 0);
     final days = <DateTime>[];
 
-    // Thêm các ngày từ tháng trước để lấp đầy tuần đầu tiên
     final firstWeekday = first.weekday;
     for (int i = firstWeekday - 1; i > 0; i--) {
       days.add(first.subtract(Duration(days: i)));
     }
 
-    // Thêm các ngày trong tháng
     for (int i = 0; i < last.day; i++) {
       days.add(DateTime(month.year, month.month, i + 1));
     }
 
-    // Thêm các ngày từ tháng sau để lấp đầy tuần cuối cùng
     final lastWeekday = last.weekday;
     for (int i = 1; i <= 7 - lastWeekday; i++) {
       days.add(last.add(Duration(days: i)));
@@ -164,9 +93,9 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
   }
 
   // Widget hiển thị card lịch học
-  Widget _buildLHCard(LH LH) {
-    final isOnline = LH.diaDiem.toLowerCase().contains('online');
-
+  Widget _buildLichHocCard(LichHoc lichHoc) {
+    final isOnline = (lichHoc.duongDan ?? '').isNotEmpty;
+    
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       elevation: 2,
@@ -175,65 +104,113 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header: Mã LH + Tên lớp
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Mã LH: ${LH.maLH}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color:
-                        isOnline ? Colors.green.shade100 : Colors.blue.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    isOnline ? 'ONLINE' : 'OFFLINE',
-                    style: TextStyle(
-                      color: isOnline ? Colors.green : Colors.blue,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Mã LH: ${lichHoc.lichHocID}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
                     ),
-                  ),
+                    Text(
+                      'Lớp: ${lichHoc.lopYeuCauID}',
+                      style: const TextStyle(fontSize: 12, color: Colors.green),
+                    ),
+                    if (lichHoc.lopHoc?.tenMon != null)
+                      Text(
+                        'Môn: ${lichHoc.lopHoc!.tenMon}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    // Badge trạng thái
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(lichHoc.trangThai),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _getStatusText(lichHoc.trangThai),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Badge hình thức
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isOnline 
+                            ? Colors.green.shade100 
+                            : Colors.blue.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        isOnline ? 'ONLINE' : 'OFFLINE',
+                        style: TextStyle(
+                          color: isOnline ? Colors.green : Colors.blue,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-
-            // Tên lớp
-            Text(
-              LH.tenLop,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-
-            // Thông tin chi tiết
-            _buildInfoRow(Icons.person, 'Giáo sư: ${LH.tenGiaSu}'),
-            _buildInfoRow(Icons.book, 'Môn: ${LH.monHoc}'),
-            _buildInfoRow(Icons.location_on, 'Địa điểm: ${LH.diaDiem}'),
-            _buildInfoRow(
-              Icons.access_time,
-              'Thời gian: ${_formatTime(LH.thoiGianBD)} - ${_formatTime(LH.thoiGianKT)}',
-            ),
-
             const SizedBox(height: 12),
 
-            // Nút tham gia Zoom (chỉ hiển thị nếu có đường dẫn online)
-            if (LH.duongDanOnline.isNotEmpty && isOnline)
+            // Thông tin chi tiết
+            _buildInfoRow(
+              Icons.access_time,
+              'Thời gian: ${_formatTime(lichHoc.thoiGianBatDau)} - ${_formatTime(lichHoc.thoiGianKetThuc)}',
+            ),
+            _buildInfoRow(
+              Icons.calendar_today,
+              'Ngày: ${_formatDate(lichHoc.ngayHoc)}',
+            ),
+
+            if (lichHoc.isLapLai) 
+              _buildInfoRow(Icons.repeat, 'Lịch lặp lại'),
+
+            if (lichHoc.lopHoc?.tenGiaSu != null)
+              _buildInfoRow(
+                Icons.person,
+                'Giáo sư: ${lichHoc.lopHoc!.tenGiaSu}',
+              ),
+
+            if (isOnline)
+              _buildInfoRow(Icons.link, 'Link: ${lichHoc.duongDan ?? ""}'),
+
+            const SizedBox(height: 12),
+            
+            // Nút tham gia Zoom
+            if (isOnline)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    _joinZoomMeeting(LH);
+                    _joinZoomMeeting(lichHoc);
                   },
                   icon: const Icon(Icons.video_call, size: 20),
                   label: const Text('Tham gia Zoom'),
@@ -250,6 +227,61 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
     );
   }
 
+  // Định dạng thời gian
+  String _formatTime(String time) {
+    try {
+      final timeParts = time.split(':');
+      if (timeParts.length >= 2) {
+        return '${timeParts[0]}:${timeParts[1]}';
+      }
+      return time;
+    } catch (e) {
+      return time;
+    }
+  }
+
+  // Định dạng ngày
+  String _formatDate(String date) {
+    try {
+      final dateTime = DateTime.parse(date.split(' ')[0]);
+      return DateFormat('dd/MM/yyyy').format(dateTime);
+    } catch (e) {
+      return date;
+    }
+  }
+
+  // Màu sắc cho trạng thái
+  Color _getStatusColor(String trangThai) {
+    switch (trangThai) {
+      case 'DaHoc':
+        return Colors.green;
+      case 'DangDay':
+        return Colors.orange;
+      case 'SapToi':
+        return Colors.blue;
+      case 'Huy':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // Văn bản cho trạng thái
+  String _getStatusText(String trangThai) {
+    switch (trangThai) {
+      case 'DaHoc':
+        return 'ĐÃ HỌC';
+      case 'DangDay':
+        return 'ĐANG DẠY';
+      case 'SapToi':
+        return 'SẮP TỚI';
+      case 'Huy':
+        return 'ĐÃ HỦY';
+      default:
+        return trangThai;
+    }
+  }
+
   // Widget hiển thị thông tin hàng
   Widget _buildInfoRow(IconData icon, String text) {
     return Padding(
@@ -258,66 +290,55 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
         children: [
           Icon(icon, size: 16, color: Colors.grey),
           const SizedBox(width: 8),
-          Expanded(child: Text(text)),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
         ],
       ),
     );
   }
 
-  // Định dạng thời gian từ chuỗi
-  String _formatTime(String timeString) {
-    final parts = timeString.split(' ');
-    if (parts.length >= 2) {
-      return parts[1].substring(0, 5); // Lấy HH:MM
-    }
-    return timeString;
-  }
-
   // Hàm xử lý tham gia Zoom
-  void _joinZoomMeeting(LH LH) {
+  void _joinZoomMeeting(LichHoc lichHoc) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Tham gia Zoom'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Lớp: ${LH.tenLop}'),
-                Text('Giáo sư: ${LH.tenGiaSu}'),
-                const SizedBox(height: 16),
-                const Text('Bạn có muốn tham gia buổi học ngay bây giờ?'),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Hủy'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _showZoomJoinSuccess(LH);
-                },
-                child: const Text('Tham gia ngay'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Tham gia Zoom'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Link: ${lichHoc.duongDan}'),
+            const SizedBox(height: 16),
+            const Text('Bạn có muốn tham gia buổi học ngay bây giờ?'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
           ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _showZoomJoinSuccess(lichHoc);
+            },
+            child: const Text('Tham gia ngay'),
+          ),
+        ],
+      ),
     );
   }
 
-  void _showZoomJoinSuccess(LH LH) {
+  void _showZoomJoinSuccess(LichHoc lichHoc) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Đang mở Zoom cho lớp ${LH.tenLop}'),
+        content: Text('Đang mở Zoom: ${lichHoc.duongDan}'),
         backgroundColor: Colors.green,
       ),
     );
   }
 
   // Widget lịch tháng
-  Widget _buildMonthCalendar() {
+  Widget _buildMonthCalendar(LichHocTheoThangResponse response) {
     final daysInMonth = _getDaysInMonth(_currentMonth);
     final today = DateTime.now();
 
@@ -328,7 +349,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
         borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -350,6 +371,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
                         _currentMonth.year,
                         _currentMonth.month - 1,
                       );
+                      _loadLichHocTheoThang();
                     });
                   },
                 ),
@@ -357,7 +379,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
                   DateFormat('MMMM, yyyy').format(_currentMonth).toUpperCase(),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: AppTypography.heading3,
+                    fontSize: 16,
                     color: AppColors.textPrimary,
                   ),
                 ),
@@ -369,6 +391,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
                         _currentMonth.year,
                         _currentMonth.month + 1,
                       );
+                      _loadLichHocTheoThang();
                     });
                   },
                 ),
@@ -379,7 +402,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
             // Header các ngày trong tuần
             Row(
               children: List.generate(7, (index) {
-                final weekday = (index + 1) % 7; // Chủ nhật là 0
+                final weekday = (index + 1) % 7;
                 return Expanded(
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -408,15 +431,13 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
               itemBuilder: (context, index) {
                 final date = daysInMonth[index];
                 final isCurrentMonth = date.month == _currentMonth.month;
-                final isToday =
-                    date.year == today.year &&
-                    date.month == today.month &&
+                final isToday = date.year == today.year && 
+                    date.month == today.month && 
                     date.day == today.day;
-                final isSelected =
-                    date.year == _selectedDate.year &&
-                    date.month == _selectedDate.month &&
+                final isSelected = date.year == _selectedDate.year && 
+                    date.month == _selectedDate.month && 
                     date.day == _selectedDate.day;
-                final hasSchedule = _hasSchedule(date);
+                final hasSchedule = _hasSchedule(response, date);
 
                 return GestureDetector(
                   onTap: () {
@@ -427,17 +448,13 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
                   child: Container(
                     margin: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
-                      color:
-                          isSelected
-                              ? AppColors.primaryBlue
-                              : isToday
-                              ? Colors.blue.shade50
-                              : Colors.transparent,
+                      color: isSelected 
+                          ? AppColors.primary
+                          : (isToday ? Colors.blue.shade50 : Colors.transparent),
                       borderRadius: BorderRadius.circular(8),
-                      border:
-                          isToday && !isSelected
-                              ? Border.all(color: Colors.blue)
-                              : null,
+                      border: isToday && !isSelected 
+                          ? Border.all(color: Colors.blue) 
+                          : null,
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -446,10 +463,9 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
                           date.day.toString(),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color:
-                                isCurrentMonth
-                                    ? (isSelected ? Colors.white : Colors.black)
-                                    : Colors.grey,
+                            color: isCurrentMonth 
+                                ? (isSelected ? Colors.white : Colors.black)
+                                : Colors.grey,
                           ),
                         ),
                         if (hasSchedule && isCurrentMonth)
@@ -474,101 +490,19 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final LHTheoNgay = _getLHTheoNgay(_selectedDate);
-    final isCurrentMonth = _selectedDate.month == _currentMonth.month;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'LỊCH HỌC',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: AppTypography.appBarTitle,
-          ),
-        ),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.textLight,
-        elevation: 0,
-      ),
-      backgroundColor: AppColors.backgroundGrey,
-      body: Column(
-        children: [
-          // Lịch tháng
-          _buildMonthCalendar(),
-
-          // Thông tin ngày được chọn
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  DateFormat('EEEE, dd/MM/yyyy').format(_selectedDate),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                if (!isCurrentMonth)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Tháng ${_selectedDate.month}',
-                      style: const TextStyle(
-                        color: Colors.orange,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Danh sách lịch học
-          Expanded(
-            child:
-                LHTheoNgay.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: LHTheoNgay.length,
-                      itemBuilder: (context, index) {
-                        return _buildLHCard(LHTheoNgay[index]);
-                      },
-                    ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    final isCurrentMonth = _selectedDate.month == _currentMonth.month;
-
+  Widget _buildEmptyState(bool isCurrentMonth) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.calendar_today, size: 64, color: Colors.grey),
+          Icon(Icons.calendar_today, size: 64, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           Text(
             isCurrentMonth
-                ? 'Không có lịch dạy nào\ncho ngày này'
-                : 'Không có lịch dạy nào\ncho ngày ${_selectedDate.day} tháng ${_selectedDate.month}',
+                ? 'Không có lịch học nào\ncho ngày này'
+                : 'Không có lịch học nào\ncho ngày ${_selectedDate.day} tháng ${_selectedDate.month}',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 16),
           ElevatedButton(
@@ -577,9 +511,10 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
                 _selectedDate = DateTime.now();
                 _currentMonth = DateTime.now();
               });
+              _loadLichHocTheoThang();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryBlue,
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
             ),
             child: const Text('Quay về hôm nay'),
@@ -588,42 +523,177 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
       ),
     );
   }
-}
 
-// Model LH
-class LH {
-  final String maLH;
-  final String tenLop;
-  final String tenGiaSu;
-  final String monHoc;
-  final String diaDiem;
-  final String thoiGianBD;
-  final String thoiGianKT;
-  final String duongDanOnline;
-  final List<ThoiGianDay> thoiGianDay;
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<LichHocBloc, LichHocState>(
+      listener: (context, state) {
+        if (state is LichHocError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          );
+        }
+      },
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text(
+              'LỊCH HỌC CỦA TÔI',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: _loadLichHocTheoThang,
+                tooltip: 'Tải lại',
+              ),
+            ],
+          ),
+          backgroundColor: AppColors.backgroundGrey,
+          body: state is LichHocLoading
+              ? const Center(child: CircularProgressIndicator())
+              : state is LichHocTheoThangLoaded
+                  ? _buildScheduleContent(state.response)
+                  : state is LichHocError
+                  ? _buildErrorState()
+                  : const SizedBox(),
+        );
+      },
+    );
+  }
 
-  const LH({
-    required this.maLH,
-    required this.tenLop,
-    required this.tenGiaSu,
-    required this.monHoc,
-    required this.diaDiem,
-    required this.thoiGianBD,
-    required this.thoiGianKT,
-    required this.duongDanOnline,
-    required this.thoiGianDay,
-  });
-}
+  Widget _buildScheduleContent(LichHocTheoThangResponse response) {
+    final lichHocTheoNgay = _getLichHocTheoNgay(response, _selectedDate);
+    final isCurrentMonth = _selectedDate.month == _currentMonth.month;
 
-// Model ThoiGianDay
-class ThoiGianDay {
-  final int thu; // 1=Chủ nhật, 2=Thứ 2, ..., 7=Thứ 7
-  final String gioBatDau;
-  final String gioKetThuc;
+    return Column(
+      children: [
+        // Lịch tháng
+        _buildMonthCalendar(response),
 
-  const ThoiGianDay({
-    required this.thu,
-    required this.gioBatDau,
-    required this.gioKetThuc,
-  });
+        // Thông tin ngày được chọn
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                DateFormat('EEEE, dd/MM/yyyy').format(_selectedDate),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              if (lichHocTheoNgay.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    '${lichHocTheoNgay.length} buổi',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Thống kê tháng
+        _buildThongKeThang(response.thongKeThang),
+
+        const SizedBox(height: 16),
+
+        // Danh sách lịch học
+        Expanded(
+          child: lichHocTheoNgay.isEmpty
+              ? _buildEmptyState(isCurrentMonth)
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: lichHocTheoNgay.length,
+                  itemBuilder: (context, index) => 
+                      _buildLichHocCard(lichHocTheoNgay[index]),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildThongKeThang(ThongKeThang thongKe) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildThongKeItem('Tổng', thongKe.tongSoBuoi.toString(), Colors.blue),
+          _buildThongKeItem('Sắp tới', thongKe.sapToi.toString(), Colors.orange),
+          _buildThongKeItem('Đã học', thongKe.daHoc.toString(), Colors.green),
+          _buildThongKeItem('Đã hủy', thongKe.huy.toString(), Colors.red),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThongKeItem(String title, String value, Color color) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(title, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      ],
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.red),
+          const SizedBox(height: 16),
+          const Text(
+            'Có lỗi xảy ra khi tải lịch học',
+            style: TextStyle(fontSize: 16, color: Colors.red),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _loadLichHocTheoThang,
+            child: const Text('Thử lại'),
+          ),
+        ],
+      ),
+    );
+  }
 }
