@@ -111,84 +111,104 @@ class ApiService {
     }
   }
 
+  // file: api_service.dart
+
   ApiResponse<T> _handleResponse<T>(
     http.Response response,
     T Function(Map<String, dynamic>)? fromJsonT,
   ) {
-    try {
-      final Map<String, dynamic> responseData = jsonDecode(response.body);
+    // In ra để debug
+    print('Status Code: ${response.statusCode}');
+    print('Response Body: ${response.body}');
 
-      // Kiểm tra status code
-      if (response.statusCode >= 200 && response.statusCode < 300) {
+    // BƯỚC 1: Kiểm tra mã trạng thái TRƯỚC TIÊN
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      // BƯỚC 2: Chỉ giải mã JSON KHI thành công
+      try {
+        // Xử lý trường hợp body rỗng (ví dụ: 204 No Content)
+        if (response.body.isEmpty) {
+          return ApiResponse<T>(
+            success: true,
+            message: 'Thành công',
+            data: null, // Hoặc một giá trị T mặc định
+            statusCode: response.statusCode,
+          );
+        }
+
+        // Tiến hành giải mã
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+        // Logic cũ của bạn
         return ApiResponse<T>(
           success: responseData['success'] ?? true,
           message: responseData['message'] ?? 'Thành công',
           data:
               fromJsonT != null && responseData['data'] != null
-                  ? fromJsonT(responseData)
+                  ? fromJsonT(
+                    responseData,
+                  ) // Repository sẽ trích xuất 'data' từ đây
                   : responseData as T?,
           statusCode: response.statusCode,
         );
-      } else if (response.statusCode == 401) {
-        return ApiResponse<T>(
-          success: false,
-          message: 'Tài khoản hoặc mật khẩu không hợp lệ!',
-          error: responseData['error'],
-          statusCode: response.statusCode,
+      } on FormatException catch (e) {
+        print('FormatException khi decode body: $e');
+        return _errorResponse(
+          'Lỗi xử lý dữ liệu: $e. Body nhận được: ${response.body}',
+          response.statusCode,
         );
-      } else if (response.statusCode == 403) {
-        return ApiResponse<T>(
-          success: false,
-          message: 'Không có quyền truy cập',
-          error: responseData['error'],
-          statusCode: response.statusCode,
-        );
-      } else if (response.statusCode == 404) {
-        return ApiResponse<T>(
-          success: false,
-          message: 'Không tìm thấy dữ liệu',
-          error: responseData['error'],
-          statusCode: response.statusCode,
-        );
-      } else if (response.statusCode == 409) {
-        return ApiResponse<T>(
-          success: false,
-          message: responseData['message'] ?? 'Xung đột dữ liệu',
-          error: responseData['error'],
-          statusCode: response.statusCode,
-        );
-      } else if (response.statusCode == 422) {
-        return ApiResponse<T>(
-          success: false,
-          message: responseData['message'] ?? 'Dữ liệu không hợp lệ',
-          error: responseData['error'],
-          statusCode: response.statusCode,
-        );
-      } else if (response.statusCode >= 500) {
-        return ApiResponse<T>(
-          success: false,
-          message: 'Lỗi máy chủ',
-          error: responseData['error'],
-          statusCode: response.statusCode,
-        );
-      } else {
-        return ApiResponse<T>(
-          success: false,
-          message: responseData['message'] ?? 'Có lỗi xảy ra',
-          error: responseData['error'],
-          statusCode: response.statusCode,
-        );
+      } catch (e) {
+        // Các lỗi khác
+        return _errorResponse('Lỗi không xác định: $e', response.statusCode);
       }
-    } catch (e) {
-      return ApiResponse<T>(
-        success: false,
-        message: 'Lỗi xử lý dữ liệu: $e',
-        statusCode: response.statusCode,
+    }
+    // BƯỚC 3: Xử lý các mã lỗi (Không giải mã JSON)
+    else if (response.statusCode == 401) {
+      return _errorResponse(
+        'Tài khoản hoặc mật khẩu không hợp lệ!',
+        response.statusCode,
+      );
+    } else if (response.statusCode == 403) {
+      return _errorResponse('Không có quyền truy cập', response.statusCode);
+    } else if (response.statusCode == 404) {
+      return _errorResponse('Không tìm thấy dữ liệu', response.statusCode);
+    } else if (response.statusCode == 422) {
+      // Thử decode body lỗi, vì 422 của Laravel thường là JSON
+      try {
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
+        return _errorResponse(
+          errorData['message'] ?? 'Dữ liệu không hợp lệ',
+          response.statusCode,
+        );
+      } catch (e) {
+        return _errorResponse('Dữ liệu không hợp lệ', response.statusCode);
+      }
+    } else if (response.statusCode == 429) {
+      // Lỗi Rate Limiting
+      return _errorResponse(
+        'Bạn thao tác quá nhanh, vui lòng thử lại sau!',
+        response.statusCode,
+      );
+    } else if (response.statusCode >= 500) {
+      // Lỗi 500 (Server Error, Timeout)
+      // response.body lúc này có thể là HTML hoặc chuỗi bị cắt
+      return _errorResponse(
+        'Lỗi máy chủ: ${response.body}',
+        response.statusCode,
+      );
+    } else {
+      // Các lỗi 4xx khác
+      return _errorResponse(
+        'Có lỗi xảy ra: ${response.body}',
+        response.statusCode,
       );
     }
   }
 
-  ApiResponse<T> _errorResponse<T>(String message) {
-    return ApiResponse<T>(success: false, message: message, statusCode: 0);
+  ApiResponse<T> _errorResponse<T>(String message, [int statusCode = 0]) {
+    return ApiResponse<T>(
+      success: false,
+      message: message,
+      statusCode: statusCode,
+    );
   }
 }

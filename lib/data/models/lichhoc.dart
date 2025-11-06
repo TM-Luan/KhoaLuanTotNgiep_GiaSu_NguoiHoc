@@ -117,14 +117,14 @@ class LichHoc {
 
 class LichHocTheoThangResponse {
   final Map<String, List<LichHoc>> lichHocTheoNgay;
-  final ThongKeThang thongKeThang;
+  final ThongKeThang? thongKeThang; // <-- SỬA 1: Thêm dấu ? (nullable)
   final List<LopHoc> lopHocTrongThang;
   final int thang;
   final int nam;
 
   LichHocTheoThangResponse({
     required this.lichHocTheoNgay,
-    required this.thongKeThang,
+    this.thongKeThang, // <-- SỬA 2: Xóa 'required'
     required this.lopHocTrongThang,
     required this.thang,
     required this.nam,
@@ -150,9 +150,10 @@ class LichHocTheoThangResponse {
         }
       });
 
-      // Xử lý thong_ke_thang an toàn
-      final thongKeData = json['thong_ke_thang'] as Map<String, dynamic>? ?? {};
-      final thongKeThang = ThongKeThang.fromJson(thongKeData);
+      // SỬA 3: Xử lý thong_ke_thang an toàn (có thể null)
+      final thongKeData = json['thong_ke_thang'] as Map<String, dynamic>?;
+      final thongKeThang =
+          thongKeData != null ? ThongKeThang.fromJson(thongKeData) : null;
 
       // Xử lý lop_hoc_trong_thang an toàn
       final lopHocData = json['lop_hoc_trong_thang'] as List<dynamic>? ?? [];
@@ -176,7 +177,7 @@ class LichHocTheoThangResponse {
       final nam = safeParseMonthYear(json['nam']);
       return LichHocTheoThangResponse(
         lichHocTheoNgay: lichHocTheoNgay,
-        thongKeThang: thongKeThang,
+        thongKeThang: thongKeThang, // <-- SỬA 4: Gán giá trị (có thể null)
         lopHocTrongThang: lopHocTrongThang,
         thang: thang,
         nam: nam,
@@ -185,13 +186,7 @@ class LichHocTheoThangResponse {
       // Trả về response rỗng để tránh crash
       return LichHocTheoThangResponse(
         lichHocTheoNgay: {},
-        thongKeThang: ThongKeThang(
-          tongSoBuoi: 0,
-          sapToi: 0,
-          dangDay: 0,
-          daHoc: 0,
-          huy: 0,
-        ),
+        thongKeThang: null, // <-- SỬA 5: Trả về null trong catch
         lopHocTrongThang: [],
         thang: DateTime.now().month,
         nam: DateTime.now().year,
@@ -203,15 +198,15 @@ class LichHocTheoThangResponse {
   Map<String, dynamic> toDebugMap() {
     return {
       'soNgayCoLich': lichHocTheoNgay.length,
-      'tongSoBuoi': thongKeThang.tongSoBuoi,
+      'tongSoBuoi': thongKeThang?.tongSoBuoi ?? 0, // <-- SỬA 6: Thêm check null
       'soLopTrongThang': lopHocTrongThang.length,
       'thang': thang,
       'nam': nam,
       'chiTietThongKe': {
-        'sapToi': thongKeThang.sapToi,
-        'dangDay': thongKeThang.dangDay,
-        'daHoc': thongKeThang.daHoc,
-        'huy': thongKeThang.huy,
+        'sapToi': thongKeThang?.sapToi ?? 0, // <-- SỬA 7: Thêm check null
+        'dangDay': thongKeThang?.dangDay ?? 0, // <-- SỬA 8: Thêm check null
+        'daHoc': thongKeThang?.daHoc ?? 0, // <-- SỬA 9: Thêm check null
+        'huy': thongKeThang?.huy ?? 0, // <-- SỬA 10: Thêm check null
       },
     };
   }

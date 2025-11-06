@@ -1,22 +1,28 @@
 part of 'lich_hoc_bloc.dart';
+
 abstract class LichHocEvent {}
 
-// Lấy lịch học theo tháng cho gia sư
-class GetLichHocTheoThangGiaSu extends LichHocEvent {
-  final int? thang;
-  final int? nam;
-  final int? lopYeuCauId;
+// [MỚI] Event khi tải cả tháng (summary) VÀ chi tiết cho 1 ngày
+class LoadLichHocCalendar extends LichHocEvent {
+  final int thang;
+  final int nam;
+  final DateTime ngayChon;
+  final bool isGiaSu; // Để BLoC biết gọi repo nào
 
-  GetLichHocTheoThangGiaSu({this.thang, this.nam, this.lopYeuCauId});
+  LoadLichHocCalendar({
+    required this.thang,
+    required this.nam,
+    required this.ngayChon,
+    required this.isGiaSu,
+  });
 }
 
-// Lấy lịch học theo tháng cho người học
-class GetLichHocTheoThangNguoiHoc extends LichHocEvent {
-  final int? thang;
-  final int? nam;
-  final int? lopYeuCauId;
+// [MỚI] Event khi chỉ đổi ngày (lấy chi tiết, giữ summary cũ)
+class ChangeLichHocNgay extends LichHocEvent {
+  final DateTime ngayChon;
+  final bool isGiaSu;
 
-  GetLichHocTheoThangNguoiHoc({this.thang, this.nam, this.lopYeuCauId});
+  ChangeLichHocNgay({required this.ngayChon, required this.isGiaSu});
 }
 
 // Lấy lịch học theo lớp và tháng

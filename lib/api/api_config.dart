@@ -1,10 +1,10 @@
-// api_config.dart - THÊM ENDPOINTS MỚI
+// api_config.dart - ĐÃ CẬP NHẬT
 class ApiConfig {
   static const String baseUrl = 'http://10.0.2.2:8000/api';
   static const Duration connectTimeout = Duration(seconds: 15);
   static const Duration receiveTimeout = Duration(seconds: 15);
 
-  // Endpoints
+  // Endpoints (Chung)
   static const String login = '/login';
   static const String register = '/register';
   static const String logout = '/logout';
@@ -15,16 +15,27 @@ class ApiConfig {
   static const String resetPassword = '/resetpassword';
   static const String routeName = '/tutor-detail';
 
-  // Lịch học endpoints
-  static const String lichHocTheoLop = '/lop'; // GET /lop/{id}/lich-hoc
-  static const String taoLichHocLapLai = '/lop'; // POST /lop/{id}/lich-hoc-lap-lai
-  static const String taoLichHocDon = '/lop'; // POST /lop/{id}/lich-hoc
+  // Lịch học (Quản lý)
+  static const String lichHocTheoLop =
+      '/lop'; // GET /lop/{id}/lich-hoc-theo-thang
+  static const String taoLichHocLapLai =
+      '/lop'; // POST /lop/{id}/lich-hoc-lap-lai
   static const String capNhatLichHoc = '/lich-hoc'; // PUT /lich-hoc/{id}
   static const String xoaLichHoc = '/lich-hoc'; // DELETE /lich-hoc/{id}
-  
-  // THÊM MỚI: Endpoints cho lịch học theo người học và gia sư
-  static const String lichHocNguoiHoc = '/nguoihoc/lich-hoc'; // GET
-  static const String lichHocGiaSu = '/giasu/lich-hoc'; // GET
+
+  // === SỬA ĐỔI CHO GIẢI PHÁP 2 ===
+  // Endpoints Lịch học Gia Sư
+  static const String lichHocGiaSuSummary =
+      '/giasu/lich-hoc-summary'; // GET (Tóm tắt tháng)
+  static const String lichHocGiaSuTheoNgay =
+      '/giasu/lich-hoc-theo-ngay'; // GET (Chi tiết ngày)
+
+  // Endpoints Lịch học Người Học
+  static const String lichHocNguoiHocSummary =
+      '/nguoihoc/lich-hoc-summary'; // GET (Tóm tắt tháng)
+  static const String lichHocNguoiHocTheoNgay =
+      '/nguoihoc/lich-hoc-theo-ngay'; // GET (Chi tiết ngày)
+  // === KẾT THÚC SỬA ĐỔI ===
 
   // Headers
   static Map<String, String> get headers => {

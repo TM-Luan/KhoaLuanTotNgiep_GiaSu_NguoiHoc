@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_service.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc.dart';
@@ -5,81 +6,16 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc.dart';
 class LichHocRepository {
   final ApiService _apiService = ApiService();
 
-  // Future<ApiResponse<LichHocTheoThangResponse>> getLichHocTheoThangGiaSu({
-  //   int? thang,
-  //   int? nam,
-  //   int? lopYeuCauId,
-  // }) async {
-  //   String endpoint = '/giasu/lich-hoc-theo-thang';
-  //   final params = <String, String>{};
-
-  //   if (thang != null) params['thang'] = thang.toString();
-  //   if (nam != null) params['nam'] = nam.toString();
-  //   if (lopYeuCauId != null) params['lop_yeu_cau_id'] = lopYeuCauId.toString();
-
-  //   if (params.isNotEmpty) {
-  //     endpoint += '?${Uri(queryParameters: params).query}';
-  //   }
-
-  //   return await _apiService.get(
-  //     endpoint,
-  //     fromJsonT:
-  //         (json) => LichHocTheoThangResponse.fromJson(json['data'] ?? json),
-  //   );
-  // }
-  Future<ApiResponse<LichHocTheoThangResponse>> getLichHocTheoThangGiaSu({
+  // [MỚI] Lấy tóm tắt (dấu chấm) cho lịch Gia Sư
+  Future<ApiResponse<Set<String>>> getLichHocSummaryGiaSu({
     int? thang,
     int? nam,
-    int? lopYeuCauId,
   }) async {
-    String endpoint = '/giasu/lich-hoc-theo-thang';
+    String endpoint = '/giasu/lich-hoc-summary';
     final params = <String, String>{};
 
     if (thang != null) params['thang'] = thang.toString();
     if (nam != null) params['nam'] = nam.toString();
-    if (lopYeuCauId != null) params['lop_yeu_cau_id'] = lopYeuCauId.toString();
-
-    if (params.isNotEmpty) {
-      endpoint += '?${Uri(queryParameters: params).query}';
-    }
-
-    final response = await _apiService.get(
-      endpoint,
-      fromJsonT: (json) {
-        if (json['data'] != null) {
-          // Log chi tiết cấu trúc data
-          if (json['data'] is Map) {
-            final data = json['data'] as Map<String, dynamic>;
-            data.forEach((key, value) {});
-          }
-        }
-
-        try {
-          final parsedData = LichHocTheoThangResponse.fromJson(
-            json['data'] ?? json,
-          );
-          return parsedData;
-        } catch (e) {
-          if (json['data'] != null) {}
-          rethrow;
-        }
-      },
-    );
-
-    return response;
-  }
-
-  Future<ApiResponse<LichHocTheoThangResponse>> getLichHocTheoThangNguoiHoc({
-    int? thang,
-    int? nam,
-    int? lopYeuCauId,
-  }) async {
-    String endpoint = '/nguoihoc/lich-hoc-theo-thang';
-    final params = <String, String>{};
-
-    if (thang != null) params['thang'] = thang.toString();
-    if (nam != null) params['nam'] = nam.toString();
-    if (lopYeuCauId != null) params['lop_yeu_cau_id'] = lopYeuCauId.toString();
 
     if (params.isNotEmpty) {
       endpoint += '?${Uri(queryParameters: params).query}';
@@ -87,8 +23,77 @@ class LichHocRepository {
 
     return await _apiService.get(
       endpoint,
-      fromJsonT:
-          (json) => LichHocTheoThangResponse.fromJson(json['data'] ?? json),
+      fromJsonT: (json) {
+        // API trả về mảng data: ["2025-11-05", "2025-11-06"]
+        final List<dynamic> dataList = json['data'] as List;
+        return dataList.map((e) => e.toString()).toSet();
+      },
+    );
+  }
+
+  // [MỚI] Lấy chi tiết lịch học theo 1 NGÀY cho Gia Sư
+  Future<ApiResponse<List<LichHoc>>> getLichHocTheoNgayGiaSu({
+    required DateTime ngay,
+  }) async {
+    String endpoint = '/giasu/lich-hoc-theo-ngay';
+    final params = <String, String>{
+      'ngay': DateFormat('yyyy-MM-dd').format(ngay),
+    };
+    endpoint += '?${Uri(queryParameters: params).query}';
+
+    return await _apiService.get(
+      endpoint,
+      fromJsonT: (json) {
+        // API trả về mảng data: [LichHoc, LichHoc, ...]
+        final List<dynamic> dataList = json['data'] as List;
+        return dataList.map((item) => LichHoc.fromJson(item)).toList();
+      },
+    );
+  }
+
+
+  // XÓA HÀM CŨ: getLichHocTheoThangNguoiHoc
+
+  // [MỚI] Lấy tóm tắt (dấu chấm) cho lịch Người Học
+  Future<ApiResponse<Set<String>>> getLichHocSummaryNguoiHoc({
+    int? thang,
+    int? nam,
+  }) async {
+    String endpoint = '/nguoihoc/lich-hoc-summary';
+    final params = <String, String>{};
+
+    if (thang != null) params['thang'] = thang.toString();
+    if (nam != null) params['nam'] = nam.toString();
+
+    if (params.isNotEmpty) {
+      endpoint += '?${Uri(queryParameters: params).query}';
+    }
+
+    return await _apiService.get(
+      endpoint,
+      fromJsonT: (json) {
+        final List<dynamic> dataList = json['data'] as List;
+        return dataList.map((e) => e.toString()).toSet();
+      },
+    );
+  }
+
+  // [MỚI] Lấy chi tiết lịch học theo 1 NGÀY cho Người Học
+  Future<ApiResponse<List<LichHoc>>> getLichHocTheoNgayNguoiHoc({
+    required DateTime ngay,
+  }) async {
+    String endpoint = '/nguoihoc/lich-hoc-theo-ngay';
+    final params = <String, String>{
+      'ngay': DateFormat('yyyy-MM-dd').format(ngay),
+    };
+    endpoint += '?${Uri(queryParameters: params).query}';
+
+    return await _apiService.get(
+      endpoint,
+      fromJsonT: (json) {
+        final List<dynamic> dataList = json['data'] as List;
+        return dataList.map((item) => LichHoc.fromJson(item)).toList();
+      },
     );
   }
 
