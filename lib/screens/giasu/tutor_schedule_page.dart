@@ -16,7 +16,7 @@ class TutorSchedulePage extends StatefulWidget {
 class _TutorSchedulePageState extends State<TutorSchedulePage> {
   DateTime _selectedDate = DateTime.now();
   DateTime _currentMonth = DateTime.now();
-
+  
   @override
   void initState() {
     super.initState();
@@ -24,9 +24,6 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
   }
 
   void _loadLichHocTheoThang() {
-    print(
-      '🔄 Loading lịch học tháng ${_currentMonth.month}/${_currentMonth.year}',
-    );
     context.read<LichHocBloc>().add(
       GetLichHocTheoThangGiaSu(
         thang: _currentMonth.month,
@@ -98,7 +95,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
   // Widget hiển thị card lịch học
   Widget _buildLichHocCard(LichHoc lichHoc) {
     final isOnline = (lichHoc.duongDan ?? '').isNotEmpty;
-
+    
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       elevation: 2,
@@ -107,7 +104,6 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header: Mã LH + Trạng thái
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -229,24 +225,44 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
             if (lichHoc.trangThai != 'DaHoc' && lichHoc.trangThai != 'Huy')
               Row(
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        _showUpdateStatusDialog(lichHoc);
-                      },
-                      child: const Text('Cập nhật trạng thái'),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      _showUpdateStatusDialog(lichHoc);
+                    },
+                    icon: const Icon(Icons.update, size: 16),
+                    label: const Text('Cập nhật trạng thái'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        _showDeleteDialog(lichHoc);
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
+
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      _showDeleteDialog(lichHoc);
+                    },
+                    icon: const Icon(Icons.delete, size: 16),
+                    label: const Text('Xóa'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
                       ),
-                      child: const Text('Xóa'),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
                     ),
                   ),
                 ],
@@ -384,13 +400,6 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  _updateLichHocStatus(lichHoc, 'DangDay');
-                },
-                child: const Text('Đang dạy'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
                   _updateLichHocStatus(lichHoc, 'DaHoc');
                 },
                 child: const Text('Đã học'),
@@ -496,7 +505,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
         borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha:0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -722,7 +731,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
               ),
             ],
           ),
-          backgroundColor: AppColors.backgroundGrey ?? Colors.grey.shade100,
+          backgroundColor: AppColors.backgroundGrey,
           body:
               state is LichHocLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -765,7 +774,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha:0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
@@ -814,7 +823,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha:0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

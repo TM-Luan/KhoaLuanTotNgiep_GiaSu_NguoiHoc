@@ -36,15 +36,11 @@ class TutorClassesBloc extends Bloc<TutorClassesEvent, TutorClassesState> {
     emit(TutorClassesLoadInProgress());
 
     try {
-      print('Loading classes for giaSuId: $giaSuId'); // Debug log
       final result = await _yeuCauNhanLopRepository.getLopCuaGiaSu(giaSuId);
 
       if (result.success && result.data != null) {
         final data = result.data!;
-        print('Received data keys: ${data.keys.toList()}'); // Debug log
-        print('lopDangDay data: ${data['lopDangDay']}'); // Debug log  
-        print('lopDeNghi data: ${data['lopDeNghi']}'); // Debug log
-        
+
         final lopDangDay = (data['lopDangDay'] as List? ?? [])
             .whereType<Map<String, dynamic>>()
             .map(LopHoc.fromJson)
@@ -54,10 +50,6 @@ class TutorClassesBloc extends Bloc<TutorClassesEvent, TutorClassesState> {
             .whereType<Map<String, dynamic>>()
             .map(YeuCauNhanLop.fromJson)
             .toList();
-
-        print('Parsed lopDangDay count: ${lopDangDay.length}'); // Debug log
-        print('Parsed lopDeNghi count: ${lopDeNghi.length}'); // Debug log
-
         emit(
           TutorClassesLoadSuccess(
             lopDangDay: lopDangDay,
@@ -65,7 +57,6 @@ class TutorClassesBloc extends Bloc<TutorClassesEvent, TutorClassesState> {
           ),
         );
       } else {
-        print('API call failed: ${result.message}'); // Debug log
         emit(
           TutorClassesLoadFailure(
             result.message.isNotEmpty ? result.message : 'Không thể tải dữ liệu.',
@@ -73,7 +64,6 @@ class TutorClassesBloc extends Bloc<TutorClassesEvent, TutorClassesState> {
         );
       }
     } catch (e) {
-      print('Exception in _reloadClasses: $e'); // Debug log
       emit(TutorClassesLoadFailure('Lỗi tải dữ liệu: $e'));
     }
   }

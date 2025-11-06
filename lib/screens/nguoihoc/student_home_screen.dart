@@ -57,20 +57,18 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
   }
 
   Future<void> _loadFilterOptions() async {
-    try {
+     {
       final response = await _searchRepo.getFilterOptions();
       if (response.isSuccess && mounted) {
         setState(() {
           _filterOptions = response.data;
         });
       }
-    } catch (e) {
-      print('Error loading filter options: $e');
-    }
+    } 
   }
 
   Future<void> _performSearch({String? query}) async {
-    print('🔍 StudentHome: Starting search with query: $query');
+
     setState(() {
       _isSearching = true;
       _searchQuery = query;
@@ -82,9 +80,9 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
         filter: _currentFilter.hasActiveFilters ? _currentFilter : null,
       );
 
-      print('🔍 StudentHome: Search response - success: ${response.isSuccess}');
+
       if (!response.isSuccess) {
-        print('🔍 StudentHome: Search error: ${response.message}');
+       
       }
 
       if (response.isSuccess && mounted) {
@@ -92,7 +90,7 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
           _searchResults = response.data ?? [];
           _isSearching = false;
         });
-        print('🔍 StudentHome: Found ${_searchResults.length} results');
+
       } else {
         setState(() {
           _isSearching = false;
@@ -104,7 +102,6 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
         }
       }
     } catch (e) {
-      print('💥 StudentHome: Exception during search: $e');
       setState(() {
         _isSearching = false;
       });

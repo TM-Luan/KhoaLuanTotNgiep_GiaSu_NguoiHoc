@@ -43,47 +43,24 @@ class LichHocRepository {
       endpoint += '?${Uri(queryParameters: params).query}';
     }
 
-    print('🌐 GET LichHocTheoThangGiaSu: $endpoint');
-
     final response = await _apiService.get(
       endpoint,
       fromJsonT: (json) {
-        print('📦 Raw API Response nhận được');
-        print('📦 Success: ${json['success']}');
-        print('📦 Message: ${json['message']}');
-
         if (json['data'] != null) {
-          print('📦 Data type: ${json['data'].runtimeType}');
-
           // Log chi tiết cấu trúc data
           if (json['data'] is Map) {
             final data = json['data'] as Map<String, dynamic>;
-            print('📊 Cấu trúc data:');
-            data.forEach((key, value) {
-              print('   $key: ${value.runtimeType}');
-            });
+            data.forEach((key, value) {});
           }
-        } else {
-          print('⚠️ Không có data trong response');
         }
 
         try {
           final parsedData = LichHocTheoThangResponse.fromJson(
             json['data'] ?? json,
           );
-          print('✅ Parse thành công!');
-          print('📊 Kết quả parse: ${parsedData.toDebugMap()}');
           return parsedData;
-        } catch (e, stackTrace) {
-          print('❌ Lỗi parse chi tiết:');
-          print('❌ Error: $e');
-          print('❌ Stack trace: $stackTrace');
-
-          // Log thêm thông tin về data gây lỗi
-          if (json['data'] != null) {
-            print('❌ Data gây lỗi: ${json['data']}');
-          }
-
+        } catch (e) {
+          if (json['data'] != null) {}
           rethrow;
         }
       },

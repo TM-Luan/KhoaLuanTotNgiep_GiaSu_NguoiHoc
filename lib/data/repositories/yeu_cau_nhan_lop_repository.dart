@@ -11,10 +11,11 @@ class YeuCauNhanLopRepository {
     if (response.isSuccess && response.data != null) {
       final dynamic raw = response.data!['data'];
       if (raw is List) {
-        final list = raw
-            .whereType<Map<String, dynamic>>()
-            .map(YeuCauNhanLop.fromJson)
-            .toList();
+        final list =
+            raw
+                .whereType<Map<String, dynamic>>()
+                .map(YeuCauNhanLop.fromJson)
+                .toList();
 
         return ApiResponse<List<YeuCauNhanLop>>(
           success: true,
@@ -62,7 +63,9 @@ class YeuCauNhanLopRepository {
     return _mapListResponse(response);
   }
 
-  Future<ApiResponse<List<YeuCauNhanLop>>> getDeNghiTheoLop(int lopYeuCauId) async {
+  Future<ApiResponse<List<YeuCauNhanLop>>> getDeNghiTheoLop(
+    int lopYeuCauId,
+  ) async {
     final response = await _apiService.get<Map<String, dynamic>>(
       '/lophocyeucau/$lopYeuCauId/de-nghi',
       fromJsonT: (json) => json,
@@ -77,25 +80,14 @@ class YeuCauNhanLopRepository {
     required int nguoiGuiTaiKhoanId,
     String? ghiChu,
   }) async {
-    print('📤 YeuCauNhanLopRepository.giaSuGuiYeuCau:');
-    print('   lopId: $lopId');
-    print('   giaSuId: $giaSuId');
-    print('   nguoiGuiTaiKhoanId: $nguoiGuiTaiKhoanId');
-    print('   ghiChu: "$ghiChu"');
-    
     final data = {
       'LopYeuCauID': lopId,
       'GiaSuID': giaSuId,
       'NguoiGuiTaiKhoanID': nguoiGuiTaiKhoanId,
       'GhiChu': ghiChu,
     };
-    
-    print('📤 Final data to send: $data');
-    
-    return _apiService.post(
-      '/giasu/guiyeucau',
-      data: data,
-    );
+
+    return _apiService.post('/giasu/guiyeucau', data: data);
   }
 
   Future<ApiResponse<dynamic>> nguoiHocMoiGiaSu({
@@ -122,10 +114,7 @@ class YeuCauNhanLopRepository {
   }) async {
     return _apiService.put(
       '/yeucau/$yeuCauId',
-      data: {
-        'NguoiGuiTaiKhoanID': nguoiGuiTaiKhoanId,
-        'GhiChu': ghiChu,
-      },
+      data: {'NguoiGuiTaiKhoanID': nguoiGuiTaiKhoanId, 'GhiChu': ghiChu},
     );
   }
 
@@ -156,12 +145,13 @@ class YeuCauNhanLopRepository {
     if (response.isSuccess && response.data != null) {
       // API trả về structure: { success: true, message: "...", data: { lopDangDay: [...], lopDeNghi: [...] } }
       final data = response.data!;
-      print('Raw API response: $data'); // Debug log
-      
+
       // Kiểm tra xem có field 'data' không, nếu có thì lấy, nếu không thì dùng trực tiếp
-      final actualData = data.containsKey('data') ? data['data'] as Map<String, dynamic> : data;
-      print('Processed data: $actualData'); // Debug log
-      
+      final actualData =
+          data.containsKey('data')
+              ? data['data'] as Map<String, dynamic>
+              : data;
+
       return ApiResponse<Map<String, dynamic>>(
         success: true,
         message: response.message,

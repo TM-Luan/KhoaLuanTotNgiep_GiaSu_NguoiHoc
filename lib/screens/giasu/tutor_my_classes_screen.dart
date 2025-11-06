@@ -41,9 +41,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
         .listen((event) {
           // Refresh data khi có proposal được chấp nhận/từ chối
           if (_currentBloc != null) {
-            print(
-              '🔔 Nhận notification proposal update: ${event.type}, classId: ${event.classId}',
-            );
             _currentBloc!.add(TutorClassesRefreshRequested());
           }
         });

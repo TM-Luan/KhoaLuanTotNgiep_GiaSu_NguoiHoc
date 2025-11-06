@@ -86,14 +86,10 @@ class LoginResponse {
   LoginResponse({required this.token, required this.user});
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
-    print('🔍 LoginResponse parsing json: $json');
     
     // Token ở cấp độ gốc, data ở trong object "data"
     final userData = json['data'] ?? {}; 
     final token = json['token'] ?? '';
-    
-    print('� Token từ json: $token');
-    print('🔍 User data từ json: $userData');
 
     return LoginResponse(
       token: token,

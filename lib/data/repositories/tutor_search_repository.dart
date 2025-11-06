@@ -35,23 +35,18 @@ class TutorSearchRepository {
       }
 
       final finalUri = uri.replace(queryParameters: queryParams);
-      print('🔍 TutorSearch: Making request to $finalUri');
 
       final response = await http.get(
         finalUri,
         headers: {'Accept': 'application/json'},
       );
 
-      print('🔍 TutorSearch: Response status: ${response.statusCode}');
-      print('🔍 TutorSearch: Response body: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}...');
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
           final List<dynamic> tutorsJson = data['data'];
-          final List<Tutor> tutors = tutorsJson
-              .map((json) => Tutor.fromJson(json))
-              .toList();
+          final List<Tutor> tutors =
+              tutorsJson.map((json) => Tutor.fromJson(json)).toList();
           return ApiResponse(
             success: true,
             message: 'Thành công',
@@ -73,7 +68,6 @@ class TutorSearchRepository {
         );
       }
     } catch (e) {
-      print('💥 TutorSearchRepository error: $e');
       return ApiResponse(
         success: false,
         message: 'Lỗi kết nối: $e',
@@ -94,39 +88,41 @@ class TutorSearchRepository {
         if (data['success'] == true) {
           final filterData = data['data'] as Map<String, dynamic>;
           final Map<String, dynamic> options = {};
-          
+
           filterData.forEach((key, value) {
             if (value is List) {
               // Lưu cả thông tin ID và tên cho subjects
               if (key == 'subjects') {
-                options[key] = value.map((item) {
-                  if (item is Map<String, dynamic>) {
-                    return {
-                      'id': item['MonID'],
-                      'name': item['TenMon'],
-                    };
-                  }
-                  return item;
-                }).toList();
+                options[key] =
+                    value.map((item) {
+                      if (item is Map<String, dynamic>) {
+                        return {'id': item['MonID'], 'name': item['TenMon']};
+                      }
+                      return item;
+                    }).toList();
               } else {
                 // Các filter khác vẫn giữ nguyên
-                options[key] = value.map((item) {
-                  if (item is Map<String, dynamic>) {
-                    switch (key) {
-                      case 'grades':
-                        return item['BacHoc']?.toString() ?? item.values.first.toString();
-                      case 'targets':
-                        return item['TenDoiTuong']?.toString() ?? item.values.first.toString();
-                      default:
-                        return item['label']?.toString() ?? item.values.first.toString();
-                    }
-                  }
-                  return item.toString();
-                }).toList();
+                options[key] =
+                    value.map((item) {
+                      if (item is Map<String, dynamic>) {
+                        switch (key) {
+                          case 'grades':
+                            return item['BacHoc']?.toString() ??
+                                item.values.first.toString();
+                          case 'targets':
+                            return item['TenDoiTuong']?.toString() ??
+                                item.values.first.toString();
+                          default:
+                            return item['label']?.toString() ??
+                                item.values.first.toString();
+                        }
+                      }
+                      return item.toString();
+                    }).toList();
               }
             }
           });
-          
+
           return ApiResponse(
             success: true,
             message: 'Thành công',
@@ -148,7 +144,6 @@ class TutorSearchRepository {
         );
       }
     } catch (e) {
-      print('getFilterOptions error: $e');
       return ApiResponse(
         success: false,
         message: 'Lỗi kết nối: $e',

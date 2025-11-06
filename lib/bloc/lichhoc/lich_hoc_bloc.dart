@@ -16,26 +16,6 @@ class LichHocBloc extends Bloc<LichHocEvent, LichHocState> {
     on<UpdateLichHoc>(_onUpdateLichHoc);
     on<DeleteLichHoc>(_onDeleteLichHoc);
   }
-
-  // Future<void> _onGetLichHocTheoThangGiaSu(
-  //   GetLichHocTheoThangGiaSu event,
-  //   Emitter<LichHocState> emit,
-  // ) async {
-  //   emit(LichHocLoading());
-
-  //   final ApiResponse<LichHocTheoThangResponse> response =
-  //       await lichHocRepository.getLichHocTheoThangGiaSu(
-  //     thang: event.thang,
-  //     nam: event.nam,
-  //     lopYeuCauId: event.lopYeuCauId,
-  //   );
-
-  //   if (response.isSuccess && response.data != null) {
-  //     emit(LichHocTheoThangLoaded(response.data!));
-  //   } else {
-  //     emit(LichHocError(response.message));
-  //   }
-  // }
   Future<void> _onGetLichHocTheoThangGiaSu(
     GetLichHocTheoThangGiaSu event,
     Emitter<LichHocState> emit,
@@ -43,33 +23,18 @@ class LichHocBloc extends Bloc<LichHocEvent, LichHocState> {
     emit(LichHocLoading());
 
     try {
-      print('🔄 Bloc: Bắt đầu gọi API lịch học theo tháng');
-      print(
-        '📅 Tham số: thang=${event.thang}, nam=${event.nam}, lopYeuCauId=${event.lopYeuCauId}',
-      );
-
       final ApiResponse<LichHocTheoThangResponse> response =
           await lichHocRepository.getLichHocTheoThangGiaSu(
             thang: event.thang,
             nam: event.nam,
             lopYeuCauId: event.lopYeuCauId,
           );
-
-      print('📦 Bloc: Nhận được response từ repository');
-      print('📦 Response success: ${response.isSuccess}');
-      print('📦 Response message: ${response.message}');
-      print('📦 Response data: ${response.data != null ? "có data" : "null"}');
-
       if (response.isSuccess && response.data != null) {
-        print('✅ Bloc: Phát state LichHocTheoThangLoaded');
         emit(LichHocTheoThangLoaded(response.data!));
       } else {
-        print('❌ Bloc: Phát state LichHocError - ${response.message}');
         emit(LichHocError(response.message));
       }
-    } catch (e, stackTrace) {
-      print('❌ Bloc: Lỗi nghiêm trọng: $e');
-      print('❌ Stack trace: $stackTrace');
+    } catch (e) {
       emit(LichHocError('Lỗi tải lịch học: ${e.toString()}'));
     }
   }

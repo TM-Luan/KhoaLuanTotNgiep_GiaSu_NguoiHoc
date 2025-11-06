@@ -35,16 +35,11 @@ class ClassSearchRepository {
       }
 
       final finalUri = uri.replace(queryParameters: queryParams);
-      print('🔍 ClassSearch: Making request to $finalUri');
 
       final response = await http.get(
         finalUri,
         headers: {'Accept': 'application/json'},
       );
-
-      print('🔍 ClassSearch: Response status: ${response.statusCode}');
-      print('🔍 ClassSearch: Response body: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}...');
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
@@ -73,7 +68,6 @@ class ClassSearchRepository {
         );
       }
     } catch (e) {
-      print('💥 ClassSearchRepository error: $e');
       return ApiResponse(
         success: false,
         message: 'Lỗi kết nối: $e',
@@ -148,7 +142,6 @@ class ClassSearchRepository {
         );
       }
     } catch (e) {
-      print('getFilterOptions error: $e');
       return ApiResponse(
         success: false,
         message: 'Lỗi kết nối: $e',

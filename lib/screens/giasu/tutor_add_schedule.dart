@@ -159,15 +159,6 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
     final thoiGianKetThuc = '${_formatTimeOfDay(_thoiGianKetThuc)}:00';
     final ngayHoc = DateFormat('yyyy-MM-dd').format(_ngayHoc);
 
-    print('🔄 Tạo lịch học:');
-    print('   - Lớp: ${widget.lopYeuCauId}');
-    print('   - Ngày: $ngayHoc');
-    print('   - Thời gian: $thoiGianBatDau - $thoiGianKetThuc');
-    print('   - Lặp lại: $_lapLai');
-    print('   - Số tuần: $_soTuanLap');
-    print('   - Trạng thái: $_trangThai');
-    print('   - Đường dẫn: $_duongDan');
-
     // Gửi event tạo lịch học
     context.read<LichHocBloc>().add(
       CreateLichHoc(

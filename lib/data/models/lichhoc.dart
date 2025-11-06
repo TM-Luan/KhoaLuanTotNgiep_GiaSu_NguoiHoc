@@ -63,7 +63,6 @@ class LichHoc {
         try {
           return value.map((item) => LichHoc.fromJson(item)).toList();
         } catch (e) {
-          print('❌ Lỗi parse lichHocCon: $e');
           return null;
         }
       }
@@ -77,7 +76,6 @@ class LichHoc {
         try {
           return LopHoc.fromJson(value);
         } catch (e) {
-          print('❌ Lỗi parse lopHoc: $e');
           return null;
         }
       }
@@ -134,25 +132,18 @@ class LichHocTheoThangResponse {
 
   factory LichHocTheoThangResponse.fromJson(Map<String, dynamic> json) {
     try {
-      print('🔍 Bắt đầu parse LichHocTheoThangResponse');
-
       // Xử lý lich_hoc_theo_ngay an toàn
       final lichHocTheoNgayData =
           json['lich_hoc_theo_ngay'] as Map<String, dynamic>? ?? {};
       final lichHocTheoNgay = <String, List<LichHoc>>{};
 
-      print('📅 Số ngày có lịch: ${lichHocTheoNgayData.length}');
-
       lichHocTheoNgayData.forEach((key, value) {
         if (value is List) {
           final lichHocList = <LichHoc>[];
           for (var item in value) {
-            try {
+            {
               final lichHoc = LichHoc.fromJson(item);
               lichHocList.add(lichHoc);
-            } catch (e) {
-              print('❌ Lỗi parse LichHoc cho ngày $key: $e');
-              print('❌ Data gây lỗi: $item');
             }
           }
           lichHocTheoNgay[key] = lichHocList;
@@ -168,12 +159,9 @@ class LichHocTheoThangResponse {
       final lopHocTrongThang = <LopHoc>[];
 
       for (var item in lopHocData) {
-        try {
+        {
           final lopHoc = LopHoc.fromJson(item);
           lopHocTrongThang.add(lopHoc);
-        } catch (e) {
-          print('❌ Lỗi parse LopHoc: $e');
-          print('❌ Data gây lỗi: $item');
         }
       }
 
@@ -186,13 +174,6 @@ class LichHocTheoThangResponse {
 
       final thang = safeParseMonthYear(json['thang']);
       final nam = safeParseMonthYear(json['nam']);
-
-      print('✅ Parse thành công:');
-      print('   - Số ngày có lịch: ${lichHocTheoNgay.length}');
-      print('   - Tổng số buổi: ${thongKeThang.tongSoBuoi}');
-      print('   - Số lớp trong tháng: ${lopHocTrongThang.length}');
-      print('   - Tháng/Năm: $thang/$nam');
-
       return LichHocTheoThangResponse(
         lichHocTheoNgay: lichHocTheoNgay,
         thongKeThang: thongKeThang,
@@ -200,11 +181,7 @@ class LichHocTheoThangResponse {
         thang: thang,
         nam: nam,
       );
-    } catch (e, stackTrace) {
-      print('❌ Lỗi nghiêm trọng khi parse LichHocTheoThangResponse: $e');
-      print('❌ Stack trace: $stackTrace');
-      print('❌ Data gây lỗi: $json');
-
+    } catch (e) {
       // Trả về response rỗng để tránh crash
       return LichHocTheoThangResponse(
         lichHocTheoNgay: {},

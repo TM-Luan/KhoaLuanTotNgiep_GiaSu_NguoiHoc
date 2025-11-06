@@ -65,20 +65,17 @@ class _TutorHomePageState extends State<TutorHomePage> {
   }
 
   Future<void> _loadFilterOptions() async {
-    try {
+    {
       final response = await _searchRepo.getFilterOptions();
       if (response.isSuccess && mounted) {
         setState(() {
           _filterOptions = response.data;
         });
       }
-    } catch (e) {
-      print('Error loading filter options: $e');
     }
   }
 
   Future<void> _performSearch({String? query}) async {
-    print('🔍 TutorHome: Starting search with query: $query');
     setState(() {
       _isSearching = true;
       _searchQuery = query;
@@ -90,17 +87,11 @@ class _TutorHomePageState extends State<TutorHomePage> {
         filter: _currentFilter.hasActiveFilters ? _currentFilter : null,
       );
 
-      print('🔍 TutorHome: Search response - success: ${response.isSuccess}');
-      if (!response.isSuccess) {
-        print('🔍 TutorHome: Search error: ${response.message}');
-      }
-
       if (response.isSuccess && mounted) {
         setState(() {
           _searchResults = response.data ?? [];
           _isSearching = false;
         });
-        print('🔍 TutorHome: Found ${_searchResults.length} results');
       } else {
         setState(() {
           _isSearching = false;
@@ -112,7 +103,6 @@ class _TutorHomePageState extends State<TutorHomePage> {
         }
       }
     } catch (e) {
-      print('💥 TutorHome: Exception during search: $e');
       setState(() {
         _isSearching = false;
       });
@@ -238,10 +228,6 @@ class _TutorHomePageState extends State<TutorHomePage> {
           )
           .timeout(Duration(seconds: 10));
 
-      print(
-        '📡 Response: success=${response.success}, message=${response.message}',
-      );
-
       // Hide loading snackbar first
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -282,8 +268,7 @@ class _TutorHomePageState extends State<TutorHomePage> {
           ),
         );
       }
-    } on TimeoutException catch (e) {
-      print('⏰ Request timeout: $e');
+
       // Hide loading snackbar
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -296,8 +281,6 @@ class _TutorHomePageState extends State<TutorHomePage> {
         );
       }
     } catch (e) {
-      print('💥 Exception trong _handleDeNghiDay: $e');
-      // Hide loading snackbar
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         await Future.delayed(const Duration(milliseconds: 200));

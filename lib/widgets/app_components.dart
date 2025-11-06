@@ -15,7 +15,7 @@ class AppCard extends StatelessWidget {
   final VoidCallback? onTap;
 
   const AppCard({
-    Key? key,
+    super.key,
     required this.child,
     this.padding,
     this.margin,
@@ -25,7 +25,7 @@ class AppCard extends StatelessWidget {
     this.borderRadius,
     this.border,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +73,7 @@ class AppButton extends StatelessWidget {
   final ButtonType type;
 
   const AppButton({
-    Key? key,
+    super.key,
     required this.child,
     this.onPressed,
     this.backgroundColor,
@@ -84,10 +84,10 @@ class AppButton extends StatelessWidget {
     this.borderRadius,
     this.isLoading = false,
     this.type = ButtonType.primary,
-  }) : super(key: key);
+  });
 
   const AppButton.primary({
-    Key? key,
+    super.key,
     required this.child,
     this.onPressed,
     this.isLoading = false,
@@ -97,11 +97,10 @@ class AppButton extends StatelessWidget {
        border = null,
        padding = null,
        borderRadius = null,
-       type = ButtonType.primary,
-       super(key: key);
+       type = ButtonType.primary;
 
   const AppButton.secondary({
-    Key? key,
+    super.key,
     required this.child,
     this.onPressed,
     this.isLoading = false,
@@ -111,8 +110,7 @@ class AppButton extends StatelessWidget {
        border = null,
        padding = null,
        borderRadius = null,
-       type = ButtonType.secondary,
-       super(key: key);
+       type = ButtonType.secondary;
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +203,7 @@ class AppIconContainer extends StatelessWidget {
   final VoidCallback? onTap;
 
   const AppIconContainer({
-    Key? key,
+    super.key,
     required this.icon,
     this.iconColor,
     this.backgroundColor,
@@ -214,7 +212,7 @@ class AppIconContainer extends StatelessWidget {
     this.borderRadius,
     this.border,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -253,7 +251,7 @@ class StandardAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool automaticallyImplyLeading;
 
   const StandardAppBar({
-    Key? key,
+    super.key,
     required this.title,
     this.subtitle,
     this.leadingIcon,
@@ -261,7 +259,7 @@ class StandardAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.bottom,
     this.backgroundColor,
     this.automaticallyImplyLeading = true,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -43,9 +43,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
         .proposalUpdateStream
         .listen((event) {
           // Refresh data khi có proposal được chấp nhận/từ chối
-          print(
-            '🔔 Student screen nhận notification proposal update: ${event.type}, classId: ${event.classId}',
-          );
+          
           _fetchClasses();
         });
 
@@ -201,9 +199,9 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
             _fetchClasses();
           }
         },
-        backgroundColor: AppColors.primary, // Màu xanh chính
-        child: const Icon(Icons.add, color: Colors.white), // Dấu cộng màu trắng
-        tooltip: 'Thêm Lớp',
+        backgroundColor: AppColors.primary, // Dấu cộng màu trắng
+        tooltip: 'Thêm Lớp', // Màu xanh chính
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       body: _buildBody(),
     );
@@ -608,7 +606,6 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
 
           // Nút xem lịch cũ
           styledButton('Xem lịch', () {
-            // TODO: Thêm hành động cho nút xem lịch
           }),
         ],
       );

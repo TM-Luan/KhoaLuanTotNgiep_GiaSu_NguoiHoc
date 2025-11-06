@@ -184,7 +184,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     widget.user.anhDaiDien ??
                     'https://i.postimg.cc/cCsYDjvj/user-2.png',
                 imageUploadBtnPress: () {
-                  // TODO: Thêm chức năng upload ảnh
                 },
               ),
               const Divider(),
