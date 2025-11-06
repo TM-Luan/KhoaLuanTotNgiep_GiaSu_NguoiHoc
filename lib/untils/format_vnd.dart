@@ -5,6 +5,7 @@ final currencyFormat = NumberFormat.currency(
   locale: 'vi_VN',
   symbol: 'VNĐ/Buổi',
 );
+final phiFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'VNĐ');
 String formatCurrency(String? amount) {
   // Nếu null, rỗng, hoặc không parse được → trả về mặc định
   if (amount == null || amount.isEmpty) {
@@ -19,6 +20,23 @@ String formatCurrency(String? amount) {
   }
 
   return currencyFormat.format(value);
+}
+
+String formatPhi(String? amount) {
+  // Nếu null, rỗng, hoặc không parse được → trả về mặc định
+  if (amount == null || amount.isEmpty) {
+    return 'Chưa có';
+  }
+
+  double? value = double.tryParse(
+    amount.replaceAll(RegExp(r'[^\d]'), ''),
+  ); // Xóa ký tự không phải số
+  if (value == null) {
+    return amount; // Nếu không phải số, giữ nguyên (ví dụ: "Miễn phí")
+  }
+  value = value * 3;
+
+  return phiFormat.format(value);
 }
 
 String getTrangThaiVietNam(String? trangThai) {

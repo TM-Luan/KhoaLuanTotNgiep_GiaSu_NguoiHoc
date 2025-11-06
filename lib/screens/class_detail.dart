@@ -7,10 +7,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/untils/format_vnd.dart';
 
-enum UserRole {
-  tutor,
-  student,
-}
+enum UserRole { tutor, student }
 
 class ClassDetailScreen extends StatefulWidget {
   final int classId;
@@ -69,31 +66,31 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
     switch (trangThaiCode) {
       case 'DangHoc':
         return {
-          'text': 'Đang học',
+          'text': 'Đang hoạt động',
           'color': Colors.green,
           'icon': Icons.check_circle_outline,
-          'bgColor': Colors.green.withValues(alpha:0.15),
+          'bgColor': Colors.green.withValues(alpha: 0.15),
         };
       case 'TimGiaSu':
         return {
           'text': 'Tìm gia sư',
           'color': Colors.orange,
           'icon': Icons.search,
-          'bgColor': Colors.orange.withValues(alpha:0.15),
+          'bgColor': Colors.orange.withValues(alpha: 0.15),
         };
       case 'ChoDuyet':
         return {
           'text': 'Chờ duyệt',
           'color': Colors.blue,
           'icon': Icons.pending_outlined,
-          'bgColor': Colors.blue.withValues(alpha:0.15),
+          'bgColor': Colors.blue.withValues(alpha: 0.15),
         };
       default:
         return {
           'text': 'Không xác định',
           'color': Colors.grey,
           'icon': Icons.info_outline,
-          'bgColor': Colors.grey.withValues(alpha:0.15),
+          'bgColor': Colors.grey.withValues(alpha: 0.15),
         };
     }
   }
@@ -230,7 +227,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
           const Divider(height: 32),
 
           // === THÔNG TIN CHÍNH - HIỂN THỊ THEO ROLE ===
-          if (isTutor) 
+          if (isTutor)
             _buildDetailRow(Icons.person, 'Người đăng', _lopHoc!.tenNguoiHoc),
           if (!isTutor)
             _buildDetailRow(

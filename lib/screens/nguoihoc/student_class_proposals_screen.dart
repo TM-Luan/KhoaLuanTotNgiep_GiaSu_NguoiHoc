@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/yeu_cau_nhan_lop.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notification_service.dart';
@@ -40,7 +42,7 @@ class _StudentClassProposalsScreenState
 
   Future<void> _loadProposals({bool showLoader = true}) async {
     if (!mounted) return;
-    
+
     if (showLoader) {
       setState(() {
         _isLoading = true;
@@ -91,7 +93,7 @@ class _StudentClassProposalsScreenState
     String? actionType, // Thêm tham số để xác định loại action
   }) async {
     if (!mounted) return;
-    
+
     _setActionProgress(yeuCauId, true);
 
     try {
@@ -104,7 +106,7 @@ class _StudentClassProposalsScreenState
       if (response.isSuccess) {
         _showSnack(successMessage, false);
         await _loadProposals(showLoader: false);
-        
+
         // Gửi notification khi chấp nhận proposal để tutor screen refresh
         if (actionType == 'accept') {
           final proposal = _proposals.firstWhere((p) => p.yeuCauID == yeuCauId);
@@ -144,7 +146,20 @@ class _StudentClassProposalsScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Đề nghị cho lớp ${widget.lopHocId}'),
+        backgroundColor: AppColors.primary,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.background),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'Đề nghị cho lớp ${widget.lopHocId}',
+          style: TextStyle(
+            color: AppColors.textLight,
+            fontWeight: FontWeight.bold,
+            fontSize: AppTypography.appBarTitle,
+          ),
+        ),
       ),
       body: _buildBody(),
     );
@@ -232,9 +247,10 @@ class _StudentClassProposalsScreenState
                 ),
                 Chip(
                   label: Text(yeuCau.trangThai),
-                  backgroundColor: yeuCau.isPending
-                      ? Colors.orange.shade100
-                      : Colors.green.shade100,
+                  backgroundColor:
+                      yeuCau.isPending
+                          ? Colors.orange.shade100
+                          : Colors.green.shade100,
                 ),
               ],
             ),
@@ -243,19 +259,21 @@ class _StudentClassProposalsScreenState
             Text('Học phí: ${yeuCau.lopHoc.hocPhi}'),
             if (yeuCau.ghiChu?.isNotEmpty ?? false) ...[
               const SizedBox(height: 8),
-              Text('Ghi chú: ${yeuCau.ghiChu}')
+              Text('Ghi chú: ${yeuCau.ghiChu}'),
             ],
+            
             const SizedBox(height: 12),
             if (isPending)
               Align(
                 alignment: Alignment.centerRight,
-                child: isLoading
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : _buildActionButtons(yeuCau, sentByTutor),
+                child:
+                    isLoading
+                        ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : _buildActionButtons(yeuCau, sentByTutor),
               )
             else
               const SizedBox.shrink(),
@@ -271,22 +289,24 @@ class _StudentClassProposalsScreenState
         mainAxisSize: MainAxisSize.min,
         children: [
           TextButton(
-            onPressed: () => _performAction(
-              yeuCauId: yeuCau.yeuCauID,
-              action: () => _yeuCauRepo.tuChoiYeuCau(yeuCau.yeuCauID),
-              successMessage: 'Đã từ chối đề nghị của gia sư.',
-              actionType: 'reject',
-            ),
+            onPressed:
+                () => _performAction(
+                  yeuCauId: yeuCau.yeuCauID,
+                  action: () => _yeuCauRepo.tuChoiYeuCau(yeuCau.yeuCauID),
+                  successMessage: 'Đã từ chối đề nghị của gia sư.',
+                  actionType: 'reject',
+                ),
             child: const Text('Từ chối', style: TextStyle(color: Colors.red)),
           ),
           const SizedBox(width: 8),
           ElevatedButton(
-            onPressed: () => _performAction(
-              yeuCauId: yeuCau.yeuCauID,
-              action: () => _yeuCauRepo.xacNhanYeuCau(yeuCau.yeuCauID),
-              successMessage: 'Đã chấp nhận đề nghị của gia sư.',
-              actionType: 'accept',
-            ),
+            onPressed:
+                () => _performAction(
+                  yeuCauId: yeuCau.yeuCauID,
+                  action: () => _yeuCauRepo.xacNhanYeuCau(yeuCau.yeuCauID),
+                  successMessage: 'Đã chấp nhận đề nghị của gia sư.',
+                  actionType: 'accept',
+                ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
@@ -303,16 +323,20 @@ class _StudentClassProposalsScreenState
         TextButton(
           onPressed: () async {
             if (_taiKhoanId == null) {
-              _showSnack('Không tìm thấy thông tin tài khoản để hủy đề nghị.', true);
+              _showSnack(
+                'Không tìm thấy thông tin tài khoản để hủy đề nghị.',
+                true,
+              );
               return;
             }
 
             await _performAction(
               yeuCauId: yeuCau.yeuCauID,
-              action: () => _yeuCauRepo.huyYeuCau(
-                yeuCauId: yeuCau.yeuCauID,
-                nguoiGuiTaiKhoanId: _taiKhoanId!,
-              ),
+              action:
+                  () => _yeuCauRepo.huyYeuCau(
+                    yeuCauId: yeuCau.yeuCauID,
+                    nguoiGuiTaiKhoanId: _taiKhoanId!,
+                  ),
               successMessage: 'Đã hủy lời mời gia sư.',
               actionType: 'cancel',
             );
@@ -323,7 +347,10 @@ class _StudentClassProposalsScreenState
         ElevatedButton(
           onPressed: () async {
             if (_taiKhoanId == null) {
-              _showSnack('Không tìm thấy thông tin tài khoản để chỉnh sửa.', true);
+              _showSnack(
+                'Không tìm thấy thông tin tài khoản để chỉnh sửa.',
+                true,
+              );
               return;
             }
 
@@ -334,11 +361,12 @@ class _StudentClassProposalsScreenState
 
             await _performAction(
               yeuCauId: yeuCau.yeuCauID,
-              action: () => _yeuCauRepo.capNhatYeuCau(
-                yeuCauId: yeuCau.yeuCauID,
-                nguoiGuiTaiKhoanId: _taiKhoanId!,
-                ghiChu: note.isEmpty ? null : note,
-              ),
+              action:
+                  () => _yeuCauRepo.capNhatYeuCau(
+                    yeuCauId: yeuCau.yeuCauID,
+                    nguoiGuiTaiKhoanId: _taiKhoanId!,
+                    ghiChu: note.isEmpty ? null : note,
+                  ),
               successMessage: 'Đã cập nhật ghi chú đề nghị.',
               actionType: 'update',
             );

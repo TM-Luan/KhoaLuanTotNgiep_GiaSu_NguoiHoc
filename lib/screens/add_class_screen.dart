@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/dropdown_repository.dart';
@@ -127,27 +129,31 @@ class _AddClassPageState extends State<AddClassPage> {
         'MoTaChiTiet': _moTaController.text,
       };
 
-      ApiResponse<LopHoc> res = isEditMode
-          ? await _lopHocRepo.updateLopHoc(widget.classId!, data)
-          : await _lopHocRepo.createLopHoc(data);
+      ApiResponse<LopHoc> res =
+          isEditMode
+              ? await _lopHocRepo.updateLopHoc(widget.classId!, data)
+              : await _lopHocRepo.createLopHoc(data);
 
       if (!mounted) return;
       if (res.isSuccess) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(isEditMode
-              ? 'Cập nhật lớp học thành công!'
-              : 'Tạo lớp học mới thành công!'),
-          backgroundColor: Colors.green,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isEditMode
+                  ? 'Cập nhật lớp học thành công!'
+                  : 'Tạo lớp học mới thành công!',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
         Navigator.pop(context, true);
       } else {
         throw Exception(res.message);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Lỗi: $e'),
-        backgroundColor: Colors.red,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
+      );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -158,30 +164,38 @@ class _AddClassPageState extends State<AddClassPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: Text(isEditMode ? 'Sửa Lớp Học' : 'Tạo Lớp Học Mới'),
-        centerTitle: true,
-        elevation: 3,
-        backgroundColor: Colors.blue,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+        title: Text(
+          isEditMode ? 'Sửa Lớp Học' : 'Tạo Lớp Học Mới',
+          style: TextStyle(
+            color: AppColors.textLight,
+            fontWeight: FontWeight.bold,
+            fontSize: AppTypography.appBarTitle,
+          ),
+        ),
+        backgroundColor: AppColors.primary,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.background),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: _isDropdownLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _dropdownError != null
+      body:
+          _isDropdownLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _dropdownError != null
               ? Center(child: Text(_dropdownError!))
               : _isSubmitting
-                  ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: 16),
-                          Text('Đang xử lý...'),
-                        ],
-                      ),
-                    )
-                  : _buildForm(),
+              ? const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Đang xử lý...'),
+                  ],
+                ),
+              )
+              : _buildForm(),
     );
   }
 
@@ -211,42 +225,63 @@ class _AddClassPageState extends State<AddClassPage> {
                 const SizedBox(height: 20),
 
                 _buildDropdownField(
-                    _selectedMonID, 'Chọn Môn Học', _monHocList,
-                    onChanged: (v) => setState(() => _selectedMonID = v),
-                    icon: Icons.book_outlined),
+                  _selectedMonID,
+                  'Chọn Môn Học',
+                  _monHocList,
+                  onChanged: (v) => setState(() => _selectedMonID = v),
+                  icon: Icons.book_outlined,
+                ),
                 _buildDropdownField(
-                    _selectedKhoiLopID, 'Chọn Khối Lớp', _khoiLopList,
-                    onChanged: (v) => setState(() => _selectedKhoiLopID = v),
-                    icon: Icons.stairs_outlined),
+                  _selectedKhoiLopID,
+                  'Chọn Khối Lớp',
+                  _khoiLopList,
+                  onChanged: (v) => setState(() => _selectedKhoiLopID = v),
+                  icon: Icons.stairs_outlined,
+                ),
                 _buildDropdownField(
-                    _selectedDoiTuongID, 'Chọn Đối Tượng', _doiTuongList,
-                    onChanged: (v) => setState(() => _selectedDoiTuongID = v),
-                    icon: Icons.school_outlined),
-                _buildDropdownField(_selectedThoiGianDayID, 'Chọn Thời Gian Dạy',
-                    _thoiGianDayList,
-                    onChanged: (v) => setState(() => _selectedThoiGianDayID = v),
-                    icon: Icons.access_time_outlined),
+                  _selectedDoiTuongID,
+                  'Chọn Đối Tượng',
+                  _doiTuongList,
+                  onChanged: (v) => setState(() => _selectedDoiTuongID = v),
+                  icon: Icons.school_outlined,
+                ),
+                _buildDropdownField(
+                  _selectedThoiGianDayID,
+                  'Chọn Thời Gian Dạy',
+                  _thoiGianDayList,
+                  onChanged: (v) => setState(() => _selectedThoiGianDayID = v),
+                  icon: Icons.access_time_outlined,
+                ),
                 _buildStringDropdownField(
-                    _selectedHinhThuc, 'Chọn Hình Thức', _hinhThucOptions,
-                    onChanged: (v) => setState(() => _selectedHinhThuc = v),
-                    icon: Icons.computer_outlined),
+                  _selectedHinhThuc,
+                  'Chọn Hình Thức',
+                  _hinhThucOptions,
+                  onChanged: (v) => setState(() => _selectedHinhThuc = v),
+                  icon: Icons.computer_outlined,
+                ),
                 _buildTextField(
-                    controller: _hocPhiController,
-                    label: 'Học phí (VNĐ/buổi)',
-                    icon: Icons.attach_money),
+                  controller: _hocPhiController,
+                  label: 'Học phí (VNĐ/buổi)',
+                  icon: Icons.attach_money,
+                ),
                 _buildStringDropdownField(
-                    _selectedThoiLuong, 'Chọn Thời Lượng', _thoiLuongOptions,
-                    onChanged: (v) => setState(() => _selectedThoiLuong = v),
-                    icon: Icons.schedule_outlined),
+                  _selectedThoiLuong,
+                  'Chọn Thời Lượng',
+                  _thoiLuongOptions,
+                  onChanged: (v) => setState(() => _selectedThoiLuong = v),
+                  icon: Icons.schedule_outlined,
+                ),
                 _buildTextField(
-                    controller: _soLuongController,
-                    label: 'Số lượng học viên',
-                    icon: Icons.people_outline),
+                  controller: _soLuongController,
+                  label: 'Số lượng học viên',
+                  icon: Icons.people_outline,
+                ),
                 _buildTextField(
-                    controller: _moTaController,
-                    label: 'Mô tả chi tiết',
-                    icon: Icons.notes_outlined,
-                    maxLines: 3),
+                  controller: _moTaController,
+                  label: 'Mô tả chi tiết',
+                  icon: Icons.notes_outlined,
+                  maxLines: 3,
+                ),
 
                 const SizedBox(height: 24),
                 _buildSubmitButton(),
@@ -276,10 +311,13 @@ class _AddClassPageState extends State<AddClassPage> {
           fillColor: Colors.blue.shade50,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        items: items
-            .map((item) =>
-                DropdownMenuItem(value: item.id, child: Text(item.ten)))
-            .toList(),
+        items:
+            items
+                .map(
+                  (item) =>
+                      DropdownMenuItem(value: item.id, child: Text(item.ten)),
+                )
+                .toList(),
         onChanged: onChanged,
         validator: (v) => v == null ? 'Vui lòng chọn' : null,
       ),
@@ -304,9 +342,10 @@ class _AddClassPageState extends State<AddClassPage> {
           fillColor: Colors.blue.shade50,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        items: items
-            .map((item) => DropdownMenuItem(value: item, child: Text(item)))
-            .toList(),
+        items:
+            items
+                .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+                .toList(),
         onChanged: onChanged,
         validator: (v) => v == null ? 'Vui lòng chọn' : null,
       ),
@@ -331,8 +370,8 @@ class _AddClassPageState extends State<AddClassPage> {
           fillColor: Colors.blue.shade50,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        validator: (v) =>
-            (v == null || v.isEmpty) ? 'Vui lòng không để trống' : null,
+        validator:
+            (v) => (v == null || v.isEmpty) ? 'Vui lòng không để trống' : null,
       ),
     );
   }
@@ -352,7 +391,7 @@ class _AddClassPageState extends State<AddClassPage> {
               color: Colors.blueAccent.withOpacity(0.4),
               blurRadius: 10,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         padding: const EdgeInsets.symmetric(vertical: 16),

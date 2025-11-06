@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_service.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 
 class ComplaintFormScreen extends StatefulWidget {
   // ✨ BƯỚC 1: THÊM CÁC THAM SỐ NÀY ĐỂ NHẬN ID ✨
@@ -56,31 +58,31 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
         '/khieunai',
         data: {
           "NoiDung": noiDungController.text.trim(),
-          
+
           // ✨ BƯỚC 2: GỬI ID ĐI TRONG API CALL ✨
-          "LopYeuCauID": widget.lopId, 
+          "LopYeuCauID": widget.lopId,
           "GiaoDichID": widget.giaoDichId,
         },
       );
 
-      if (!mounted) return; 
+      if (!mounted) return;
 
       if (res.success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Gửi khiếu nại thành công!")),
         );
         // Đóng màn hình khiếu nại sau khi gửi thành công
-        Navigator.of(context).pop(); 
+        Navigator.of(context).pop();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Lỗi: ${res.message}")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Lỗi: ${res.message}")));
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lỗi gửi khiếu nại: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Lỗi gửi khiếu nại: $e")));
     } finally {
       if (mounted) {
         setState(() => isSubmitting = false);
@@ -92,9 +94,20 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_pageTitle), // Dùng tiêu đề động
-        backgroundColor: Colors.lightBlue,
-        elevation: 2,
+        backgroundColor: AppColors.primary,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.background),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          _pageTitle,
+          style: TextStyle(
+            color: AppColors.textLight,
+            fontWeight: FontWeight.bold,
+            fontSize: AppTypography.appBarTitle,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -121,16 +134,17 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
             const SizedBox(height: 30),
             Center(
               child: ElevatedButton.icon(
-                icon: isSubmitting
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.send),
+                icon:
+                    isSubmitting
+                        ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                        : const Icon(Icons.send),
                 label: Text(
                   isSubmitting ? "Đang gửi..." : "Gửi khiếu nại",
                   style: const TextStyle(
@@ -140,8 +154,10 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.lightBlue,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 14,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),

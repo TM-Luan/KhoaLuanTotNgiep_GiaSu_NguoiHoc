@@ -10,7 +10,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_re
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/class_search_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/class_detail.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/student_card.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_card.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_filter_widget.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/app_components.dart';
@@ -265,18 +265,6 @@ class _TutorHomePageState extends State<TutorHomePage> {
             ),
             backgroundColor: Colors.orange.shade600,
             duration: const Duration(seconds: 4),
-          ),
-        );
-      }
-
-      // Hide loading snackbar
-      if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('⏰ Yêu cầu quá thời gian. Vui lòng thử lại.'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 3),
           ),
         );
       }

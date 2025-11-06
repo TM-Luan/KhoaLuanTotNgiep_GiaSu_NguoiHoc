@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/untils/format_vnd.dart';
@@ -92,7 +91,14 @@ class LopHocCard extends StatelessWidget {
                 ],
 
                 const SizedBox(height: 12),
+                InfoRow(
+                  icon: Icons.money_off,
+                  label: "Phí nhận lớp",
+                  value: formatPhi(lopHoc.hocPhi),
+                  valueStyle: const TextStyle(fontWeight: FontWeight.bold),
+                ),
 
+                const SizedBox(height: 12),
                 // Nút "Đề nghị dạy"
                 Align(
                   alignment: Alignment.centerRight,
