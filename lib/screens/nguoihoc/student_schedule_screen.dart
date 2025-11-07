@@ -5,6 +5,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_bloc.
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/lich_hoc_dialogs.dart';
 
 class LearnerSchedulePage extends StatefulWidget {
   const LearnerSchedulePage({super.key});
@@ -229,23 +230,55 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
 
             const SizedBox(height: 12),
 
-            // Nút tham gia Zoom
-            if (isOnline)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    _joinZoomMeeting(lichHoc);
-                  },
-                  icon: const Icon(Icons.video_call, size: 20),
-                  label: const Text('Tham gia Zoom'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+            // Nút hành động
+            Row(
+              children: [
+                // Nút xem chi tiết
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => ChiTietLichHocDialog(
+                          lichHoc: lichHoc,
+                          isGiaSu: false,
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.visibility, size: 16),
+                    label: const Text('Chi tiết'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: BorderSide(color: AppColors.primary),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                // Nút tham gia Zoom
+                if (isOnline)
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        _joinZoomMeeting(lichHoc);
+                      },
+                      icon: const Icon(Icons.video_call, size: 16),
+                      label: const Text('Tham gia'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
@@ -321,14 +354,22 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
     );
   }
 
-  // Hàm xử lý tham gia Zoom (Giữ nguyên)
+  // Hàm xử lý tham gia Zoom
   void _joinZoomMeeting(LichHoc lichHoc) {
-    // ... (logic giữ nguyên) ...
-  }
-
-  // (Giữ nguyên)
-  void _showZoomJoinSuccess(LichHoc lichHoc) {
-    // ... (logic giữ nguyên) ...
+    if (lichHoc.duongDan != null && lichHoc.duongDan!.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Link Zoom: ${lichHoc.duongDan}'),
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'Copy',
+            onPressed: () {
+              // Có thể thêm logic copy vào clipboard
+            },
+          ),
+        ),
+      );
+    }
   }
 
   // [SỬA] Widget lịch tháng
