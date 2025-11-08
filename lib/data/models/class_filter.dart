@@ -5,6 +5,7 @@ class ClassFilter {
   final String? maxHocPhi;
   final String? capHoc;
   final String? trangThai;
+  final String? hinhThuc; // NEW: Lọc theo hình thức (Online/Offline/Cả hai)
 
   ClassFilter({
     this.monHoc,
@@ -13,17 +14,59 @@ class ClassFilter {
     this.maxHocPhi,
     this.capHoc,
     this.trangThai,
+    this.hinhThuc,
   });
 
   Map<String, dynamic> toJson() {
-    return {
-      if (monHoc != null) 'subject_id': int.tryParse(monHoc!) ?? monHoc,
-      if (khuVuc != null) 'location': khuVuc,
-      if (minHocPhi != null) 'min_price': minHocPhi,
-      if (maxHocPhi != null) 'max_price': maxHocPhi,
-      if (capHoc != null) 'grade_id': int.tryParse(capHoc!) ?? capHoc,
-      if (trangThai != null) 'status': trangThai,
-    };
+    final result = <String, dynamic>{};
+    
+    // Môn học
+    if (monHoc != null && monHoc!.isNotEmpty) {
+      final subjectId = int.tryParse(monHoc!);
+      if (subjectId != null) {
+        result['subject_id'] = subjectId;
+      }
+    }
+    
+    // Khu vực
+    if (khuVuc != null && khuVuc!.isNotEmpty) {
+      result['location'] = khuVuc;
+    }
+    
+    // Giá
+    if (minHocPhi != null && minHocPhi!.isNotEmpty) {
+      final price = double.tryParse(minHocPhi!) ?? int.tryParse(minHocPhi!);
+      if (price != null) {
+        result['min_price'] = price;
+      }
+    }
+    
+    if (maxHocPhi != null && maxHocPhi!.isNotEmpty) {
+      final price = double.tryParse(maxHocPhi!) ?? int.tryParse(maxHocPhi!);
+      if (price != null) {
+        result['max_price'] = price;
+      }
+    }
+    
+    // Cấp học
+    if (capHoc != null && capHoc!.isNotEmpty) {
+      final gradeId = int.tryParse(capHoc!);
+      if (gradeId != null) {
+        result['grade_id'] = gradeId;
+      }
+    }
+    
+    // Trạng thái
+    if (trangThai != null && trangThai!.isNotEmpty) {
+      result['status'] = trangThai;
+    }
+    
+    // Hình thức
+    if (hinhThuc != null && hinhThuc!.isNotEmpty) {
+      result['form'] = hinhThuc;
+    }
+    
+    return result;
   }
 
   bool get hasActiveFilters {
@@ -32,28 +75,35 @@ class ClassFilter {
         minHocPhi != null ||
         maxHocPhi != null ||
         capHoc != null ||
-        trangThai != null;
+        trangThai != null ||
+        hinhThuc != null;
   }
 
   ClassFilter copyWith({
-    String? monHoc,
-    String? khuVuc,
-    String? minHocPhi,
-    String? maxHocPhi,
-    String? capHoc,
-    String? trangThai,
+    Object? monHoc = const _Undefined(),
+    Object? khuVuc = const _Undefined(),
+    Object? minHocPhi = const _Undefined(),
+    Object? maxHocPhi = const _Undefined(),
+    Object? capHoc = const _Undefined(),
+    Object? trangThai = const _Undefined(),
+    Object? hinhThuc = const _Undefined(),
   }) {
     return ClassFilter(
-      monHoc: monHoc ?? this.monHoc,
-      khuVuc: khuVuc ?? this.khuVuc,
-      minHocPhi: minHocPhi ?? this.minHocPhi,
-      maxHocPhi: maxHocPhi ?? this.maxHocPhi,
-      capHoc: capHoc ?? this.capHoc,
-      trangThai: trangThai ?? this.trangThai,
+      monHoc: monHoc is _Undefined ? this.monHoc : monHoc as String?,
+      khuVuc: khuVuc is _Undefined ? this.khuVuc : khuVuc as String?,
+      minHocPhi: minHocPhi is _Undefined ? this.minHocPhi : minHocPhi as String?,
+      maxHocPhi: maxHocPhi is _Undefined ? this.maxHocPhi : maxHocPhi as String?,
+      capHoc: capHoc is _Undefined ? this.capHoc : capHoc as String?,
+      trangThai: trangThai is _Undefined ? this.trangThai : trangThai as String?,
+      hinhThuc: hinhThuc is _Undefined ? this.hinhThuc : hinhThuc as String?,
     );
   }
 
   ClassFilter clearAll() {
     return ClassFilter();
   }
+}
+
+class _Undefined {
+  const _Undefined();
 }

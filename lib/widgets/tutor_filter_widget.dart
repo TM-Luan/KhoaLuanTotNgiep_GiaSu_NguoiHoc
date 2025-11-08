@@ -40,7 +40,7 @@ class _TutorFilterWidgetState extends State<TutorFilterWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -54,16 +54,17 @@ class _TutorFilterWidgetState extends State<TutorFilterWidget> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Header
+          // Header - compact
           Row(
             children: [
-              Icon(Icons.filter_list, color: AppColors.primary),
-              const SizedBox(width: AppSpacing.sm),
+              Icon(Icons.filter_list, size: 20, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.xs),
               const Text(
-                'Bộ lọc tìm kiếm',
+                'Bộ lọc',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -76,23 +77,30 @@ class _TutorFilterWidgetState extends State<TutorFilterWidget> {
                     });
                     _updateFilter();
                   },
-                  child: const Text('Xóa tất cả'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text('Xóa', style: TextStyle(fontSize: 12)),
                 ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
 
           // Chuyên môn
           if (widget.filterOptions?['subjects'] != null) ...[
-            const Text('Chuyên môn:', style: TextStyle(fontWeight: FontWeight.w500)),
-            const SizedBox(height: AppSpacing.sm),
+            const Text('Chuyên môn:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+            const SizedBox(height: 6),
             DropdownButtonFormField<String>(
               value: _currentFilter.chuyenMon,
+              isDense: true,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: 'Chọn chuyên môn',
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               ),
+              style: const TextStyle(fontSize: 13, color: Colors.black87),
               items: [
                 const DropdownMenuItem<String>(
                   value: null,
@@ -118,20 +126,22 @@ class _TutorFilterWidgetState extends State<TutorFilterWidget> {
                 _updateFilter();
               },
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
           ],
 
           // Khu vực
           if (widget.filterOptions?['khuVuc'] != null) ...[
-            const Text('Khu vực:', style: TextStyle(fontWeight: FontWeight.w500)),
-            const SizedBox(height: AppSpacing.sm),
+            const Text('Khu vực:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+            const SizedBox(height: 6),
             DropdownButtonFormField<String>(
               value: _currentFilter.khuVuc,
+              isDense: true,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: 'Chọn khu vực',
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               ),
+              style: const TextStyle(fontSize: 13, color: Colors.black87),
               items: [
                 const DropdownMenuItem<String>(
                   value: null,
@@ -151,53 +161,119 @@ class _TutorFilterWidgetState extends State<TutorFilterWidget> {
                 _updateFilter();
               },
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
           ],
 
-          // Giới tính
-          const Text('Giới tính:', style: TextStyle(fontWeight: FontWeight.w500)),
-          const SizedBox(height: AppSpacing.sm),
-          DropdownButtonFormField<String>(
-            value: _currentFilter.gioiTinh,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: 'Chọn giới tính',
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-            items: const [
-              DropdownMenuItem<String>(
-                value: null,
-                child: Text('Tất cả'),
+          // Giới tính và Kinh nghiệm (2 cột)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Giới tính
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Giới tính:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                    const SizedBox(height: 6),
+                    DropdownButtonFormField<String>(
+                      value: _currentFilter.gioiTinh,
+                      isDense: true,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Chọn',
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      ),
+                      style: const TextStyle(fontSize: 13, color: Colors.black87),
+                      items: const [
+                        DropdownMenuItem<String>(
+                          value: null,
+                          child: Text('Tất cả'),
+                        ),
+                        DropdownMenuItem<String>(
+                          value: 'Nam',
+                          child: Text('Nam'),
+                        ),
+                        DropdownMenuItem<String>(
+                          value: 'Nữ',
+                          child: Text('Nữ'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _currentFilter = _currentFilter.copyWith(gioiTinh: value);
+                        });
+                        _updateFilter();
+                      },
+                    ),
+                  ],
+                ),
               ),
-              DropdownMenuItem<String>(
-                value: 'Nam',
-                child: Text('Nam'),
-              ),
-              DropdownMenuItem<String>(
-                value: 'Nữ',
-                child: Text('Nữ'),
+              const SizedBox(width: 8),
+              // Kinh nghiệm
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Kinh nghiệm:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                    const SizedBox(height: 6),
+                    DropdownButtonFormField<String>(
+                      value: _currentFilter.kinhNghiem,
+                      isDense: true,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Chọn',
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      ),
+                      style: const TextStyle(fontSize: 13, color: Colors.black87),
+                      items: const [
+                        DropdownMenuItem<String>(
+                          value: null,
+                          child: Text('Tất cả'),
+                        ),
+                        DropdownMenuItem<String>(
+                          value: '1',
+                          child: Text('1 năm'),
+                        ),
+                        DropdownMenuItem<String>(
+                          value: '2',
+                          child: Text('2 năm'),
+                        ),
+                        DropdownMenuItem<String>(
+                          value: '3',
+                          child: Text('3 năm'),
+                        ),
+                        DropdownMenuItem<String>(
+                          value: '5+',
+                          child: Text('5+ năm'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _currentFilter = _currentFilter.copyWith(kinhNghiem: value);
+                        });
+                        _updateFilter();
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
-            onChanged: (value) {
-              setState(() {
-                _currentFilter = _currentFilter.copyWith(gioiTinh: value);
-              });
-              _updateFilter();
-            },
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
 
           // Bằng cấp
           if (widget.filterOptions?['bangCap'] != null) ...[
-            const Text('Bằng cấp:', style: TextStyle(fontWeight: FontWeight.w500)),
-            const SizedBox(height: AppSpacing.sm),
+            const Text('Bằng cấp:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+            const SizedBox(height: 6),
             DropdownButtonFormField<String>(
               value: _currentFilter.bangCap,
+              isDense: true,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: 'Chọn bằng cấp',
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               ),
+              style: const TextStyle(fontSize: 13, color: Colors.black87),
               items: [
                 const DropdownMenuItem<String>(
                   value: null,
@@ -217,44 +293,50 @@ class _TutorFilterWidgetState extends State<TutorFilterWidget> {
                 _updateFilter();
               },
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
           ],
 
-          // Kinh nghiệm
-          const Text('Kinh nghiệm:', style: TextStyle(fontWeight: FontWeight.w500)),
-          const SizedBox(height: AppSpacing.sm),
+          // Đánh giá (Rating)
+          const Text('Đánh giá tối thiểu:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 6),
           DropdownButtonFormField<String>(
-            value: _currentFilter.kinhNghiem,
+            value: _currentFilter.minRating,
+            isDense: true,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
-              hintText: 'Chọn mức kinh nghiệm',
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              hintText: 'Chọn đánh giá tối thiểu',
+              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             ),
+            style: const TextStyle(fontSize: 13, color: Colors.black87),
             items: const [
               DropdownMenuItem<String>(
                 value: null,
                 child: Text('Tất cả'),
               ),
               DropdownMenuItem<String>(
-                value: '1',
-                child: Text('1 năm'),
+                value: '3.0',
+                child: Text('⭐ 3.0+'),
               ),
               DropdownMenuItem<String>(
-                value: '2',
-                child: Text('2 năm'),
+                value: '3.5',
+                child: Text('⭐ 3.5+'),
               ),
               DropdownMenuItem<String>(
-                value: '3',
-                child: Text('3 năm'),
+                value: '4.0',
+                child: Text('⭐ 4.0+'),
               ),
               DropdownMenuItem<String>(
-                value: '5+',
-                child: Text('5+ năm'),
+                value: '4.5',
+                child: Text('⭐ 4.5+'),
+              ),
+              DropdownMenuItem<String>(
+                value: '5.0',
+                child: Text('⭐ 5.0'),
               ),
             ],
             onChanged: (value) {
               setState(() {
-                _currentFilter = _currentFilter.copyWith(kinhNghiem: value);
+                _currentFilter = _currentFilter.copyWith(minRating: value);
               });
               _updateFilter();
             },

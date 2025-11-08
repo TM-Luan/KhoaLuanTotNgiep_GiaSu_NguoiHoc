@@ -82,6 +82,16 @@ class TutorCard extends StatelessWidget {
                           tutor.diemSo.toStringAsFixed(1),
                           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                         ),
+                        if (tutor.tongSoDanhGia > 0) ...[
+                          const SizedBox(width: 2),
+                          Text(
+                            '(${tutor.tongSoDanhGia})',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
                         const Spacer(),
                         if (onOfferTap != null)
                           InkWell(

@@ -153,6 +153,7 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
     if (_searchResults.isEmpty) {
       return Center(
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
@@ -525,72 +526,180 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Gửi đề nghị tới gia sư ${tutor.hoTen}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Chọn lớp học:'),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<int>(
-                    value: selectedClassId,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                    ),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setModalState(() {
-                          selectedClassId = value;
-                        });
-                      }
-                    },
-                    items: availableClasses.map((lop) {
-                      return DropdownMenuItem<int>(
-                        value: lop.maLop,
-                        child: Text(
-                          lop.tieuDeLop,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Ghi chú (tùy chọn):'),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: noteController,
-                    maxLines: 3,
-                    maxLength: 500,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'Thêm ghi chú cho đề nghị...',
-                      contentPadding: EdgeInsets.all(12),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                  // Header với icon
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Hủy'),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.school,
+                          color: Colors.blue,
+                          size: 24,
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context, {
-                            'classId': selectedClassId,
-                            'note': noteController.text.trim(),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Gửi đề nghị dạy học',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Gia sư: ${tutor.hoTen}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  // Chọn lớp học
+                  Text(
+                    'Chọn lớp học',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DropdownButtonFormField<int>(
+                      value: selectedClassId,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                        prefixIcon: Icon(Icons.class_, size: 20),
+                      ),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setModalState(() {
+                            selectedClassId = value;
                           });
-                        },
-                        child: const Text('Gửi đề nghị'),
+                        }
+                      },
+                      items: availableClasses.map((lop) {
+                        return DropdownMenuItem<int>(
+                          value: lop.maLop,
+                          child: Text(
+                            lop.tieuDeLop,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Ghi chú
+                  Text(
+                    'Ghi chú (tùy chọn)',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: TextField(
+                      controller: noteController,
+                      maxLines: 4,
+                      maxLength: 500,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Mô tả yêu cầu, thời gian mong muốn, hoặc câu hỏi cho gia sư...',
+                        hintStyle: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[400],
+                        ),
+                        contentPadding: const EdgeInsets.all(12),
+                        counterStyle: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Action buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            side: BorderSide(color: Colors.grey[300]!),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            'Hủy',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context, {
+                              'classId': selectedClassId,
+                              'note': noteController.text.trim(),
+                            });
+                          },
+                          icon: const Icon(Icons.send, size: 18),
+                          label: const Text(
+                            'Gửi đề nghị',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),

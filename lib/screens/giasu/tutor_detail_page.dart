@@ -4,10 +4,13 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor/tutor_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/danhgia/danhgia_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/giasu.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/danhgia/danhgia_dialog.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/danhgia/danhgia_list_screen.dart';
 
 class TutorDetailPage extends StatefulWidget {
   static const String routeName = '/tutor-detail';
@@ -128,43 +131,84 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
           // Nút hành động
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      _showContactDialog(tutor);
-                    },
-                    icon: const Icon(Icons.message),
-                    label: const Text('Liên hệ ngay'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                // Hàng đầu tiên: Liên hệ và Đề nghị dạy
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          _showContactDialog(tutor);
+                        },
+                        icon: const Icon(Icons.message),
+                        label: const Text('Liên hệ ngay'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed:
+                            _isProcessingInvite
+                                ? null
+                                : () => _showOfferDialog(tutor),
+                        icon:
+                            _isProcessingInvite
+                                ? const SizedBox.shrink()
+                                : const Icon(Icons.school),
+                        label:
+                            _isProcessingInvite
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : const Text('Đề nghị dạy'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed:
-                        _isProcessingInvite
-                            ? null
-                            : () => _showOfferDialog(tutor),
-                    icon:
-                        _isProcessingInvite
-                            ? const SizedBox.shrink()
-                            : const Icon(Icons.school),
-                    label:
-                        _isProcessingInvite
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Text('Đề nghị dạy'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                const SizedBox(height: 12),
+                // Hàng thứ hai: Xem đánh giá và Đánh giá gia sư
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DanhGiaListScreen(tutor: tutor),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.rate_review),
+                        label: Text('Xem đánh giá (${tutor.tongSoDanhGia})'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showRatingDialog(tutor),
+                        icon: const Icon(Icons.star_rate),
+                        label: const Text('Đánh giá'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          backgroundColor: Colors.amber,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -374,6 +418,9 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
     final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
         return Padding(
           padding: EdgeInsets.only(
@@ -388,64 +435,186 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Chọn lớp để mời gia sư',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
-                    value: selectedClassId,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Lớp học',
-                    ),
-                    items: availableClasses
-                        .map((lop) {
-                          final title =
-                              lop.tieuDeLop.trim().isEmpty
-                                  ? 'Chưa đặt tên'
-                                  : lop.tieuDeLop;
-                          return DropdownMenuItem<int>(
-                            value: lop.maLop,
-                            child: Text('${lop.maLop} - $title'),
-                          );
-                        })
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setModalState(() {
-                          selectedClassId = value;
-                        });
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: noteController,
-                    maxLines: 3,
-                    maxLength: 500,
-                    decoration: const InputDecoration(
-                      hintText: 'Ghi chú cho gia sư (không bắt buộc)',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
+                  // Header với icon
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Hủy'),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.school,
+                          color: Colors.blue,
+                          size: 24,
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context, {
-                            'lopId': selectedClassId,
-                            'note': noteController.text.trim(),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Gửi đề nghị dạy học',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Gia sư: ${tutor.name}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  // Chọn lớp học
+                  Text(
+                    'Chọn lớp học',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DropdownButtonFormField<int>(
+                      value: selectedClassId,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                        prefixIcon: Icon(Icons.class_, size: 20),
+                      ),
+                      items: availableClasses
+                          .map((lop) {
+                            final title =
+                                lop.tieuDeLop.trim().isEmpty
+                                    ? 'Chưa đặt tên'
+                                    : lop.tieuDeLop;
+                            return DropdownMenuItem<int>(
+                              value: lop.maLop,
+                              child: Text(
+                                '${lop.maLop} - $title',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          })
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setModalState(() {
+                            selectedClassId = value;
                           });
-                        },
-                        child: const Text('Gửi đề nghị'),
+                        }
+                      },
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Ghi chú
+                  Text(
+                    'Ghi chú (tùy chọn)',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: TextField(
+                      controller: noteController,
+                      maxLines: 4,
+                      maxLength: 500,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Mô tả yêu cầu, thời gian mong muốn, hoặc câu hỏi cho gia sư...',
+                        hintStyle: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[400],
+                        ),
+                        contentPadding: const EdgeInsets.all(12),
+                        counterStyle: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Action buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            side: BorderSide(color: Colors.grey[300]!),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            'Hủy',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context, {
+                              'lopId': selectedClassId,
+                              'note': noteController.text.trim(),
+                            });
+                          },
+                          icon: const Icon(Icons.send, size: 18),
+                          label: const Text(
+                            'Gửi đề nghị',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            backgroundColor: Colors.blue,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -527,6 +696,311 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
           backgroundColor: isError ? Colors.red : Colors.green,
         ),
       );
+  }
+
+  void _showRatingDialog(Tutor tutor) async {
+    final authState = context.read<AuthBloc>().state;
+
+    if (authState is! AuthAuthenticated || authState.user.nguoiHocID == null) {
+      _showSnack('Vui lòng đăng nhập bằng tài khoản người học để đánh giá', true);
+      return;
+    }
+
+    // Hiển thị loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    // Kiểm tra xem học viên có được phép đánh giá không
+    context.read<DanhGiaBloc>().add(KiemTraDaDanhGia(
+      giaSuId: tutor.giaSuID,
+    ));
+
+    // Đợi kết quả kiểm tra
+    await Future.delayed(const Duration(milliseconds: 800));
+    
+    if (!mounted) return;
+    
+    final danhGiaBloc = context.read<DanhGiaBloc>();
+    final state = danhGiaBloc.state;
+    
+    // Đóng loading dialog
+    Navigator.pop(context);
+
+    if (state is DanhGiaError) {
+      _showSnack(state.message, true);
+      return;
+    }
+
+    if (state is! KiemTraDanhGiaLoaded) {
+      _showSnack('Không thể kiểm tra quyền đánh giá', true);
+      return;
+    }
+
+    final checkResult = state.response;
+
+    // Kiểm tra có thể đánh giá không
+    if (!checkResult.coTheDanhGia) {
+      _showSnack(checkResult.message ?? 'Bạn chưa học với gia sư này', true);
+      return;
+    }
+
+    // Nếu đã đánh giá rồi, hiển thị cảnh báo
+    if (checkResult.daDanhGia && checkResult.danhGia != null) {
+      final danhGiaCu = checkResult.danhGia!;
+      
+      // Nếu đã sửa rồi, không cho sửa nữa
+      if (checkResult.daSua) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red[100],
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.block, color: Colors.red[700], size: 24),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Không thể chỉnh sửa',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Đánh giá hiện tại:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Text(
+                            danhGiaCu.diemSo.toStringAsFixed(1),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.star, color: Colors.amber, size: 20),
+                        ],
+                      ),
+                      if (danhGiaCu.binhLuan != null && danhGiaCu.binhLuan!.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          danhGiaCu.binhLuan!,
+                          style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red[200]!, width: 1),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.red[700], size: 20),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          'Bạn đã chỉnh sửa đánh giá này rồi. Mỗi học viên chỉ được sửa đánh giá 1 lần duy nhất và không thể thay đổi nữa.',
+                          style: TextStyle(fontSize: 13, height: 1.4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Đóng'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+      
+      // Nếu chưa sửa, cho phép sửa 1 lần
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.orange[100],
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.edit_note, color: Colors.orange[700], size: 24),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Chỉnh sửa đánh giá',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Đánh giá hiện tại:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text(
+                          danhGiaCu.diemSo.toStringAsFixed(1),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.star, color: Colors.amber, size: 20),
+                      ],
+                    ),
+                    if (danhGiaCu.binhLuan != null && danhGiaCu.binhLuan!.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        danhGiaCu.binhLuan!,
+                        style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange[200]!, width: 1),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.warning_amber, color: Colors.orange[700], size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'LƯU Ý: Bạn chỉ có thể chỉnh sửa đánh giá này 1 LẦN DUY NHẤT. Sau khi sửa, bạn sẽ không thể thay đổi nữa.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.4,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Hủy'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.pop(context, true),
+              icon: const Icon(Icons.edit, size: 18),
+              label: const Text('Tôi hiểu, tiếp tục sửa'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed != true) return;
+    }
+
+    // Hiện dialog đánh giá với dữ liệu cũ (nếu có)
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => DanhGiaGiaSuDialog(
+        tutor: tutor,
+        initialRating: checkResult.danhGia?.diemSo.toDouble(),
+        initialComment: checkResult.danhGia?.binhLuan,
+      ),
+    );
+
+    // Reload dữ liệu nếu đánh giá thành công
+    if (result == true && mounted) {
+      // Reload tutor detail
+      context.read<TutorBloc>().add(LoadTutorByIdEvent(tutor.giaSuID));
+      
+      // Reload toàn bộ danh sách gia sư
+      context.read<TutorBloc>().add(LoadAllTutorsEvent());
+      
+      _showSnack('Cảm ơn bạn đã đánh giá!', false);
+      
+      // Quay về trang trước sau 1 giây
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      });
+    }
   }
 
   @override

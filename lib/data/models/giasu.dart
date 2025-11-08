@@ -8,6 +8,7 @@ class Tutor {
   final String? kinhNghiem;
   final String? anhDaiDien;
   final double diemSo;
+  final int tongSoDanhGia;
   final TaiKhoan taiKhoan;
 
   String? soDienThoai;
@@ -22,6 +23,7 @@ class Tutor {
     this.kinhNghiem,
     this.anhDaiDien,
     required this.diemSo,
+    this.tongSoDanhGia = 0,
     required this.taiKhoan,
   });
 
@@ -36,6 +38,7 @@ class Tutor {
       kinhNghiem: json['KinhNghiem'],
       anhDaiDien: json['AnhDaiDien'],
       diemSo: (json['DiemSo'] as num?)?.toDouble() ?? 0.0,
+      tongSoDanhGia: json['TongSoDanhGia'] ?? 0,
       taiKhoan: TaiKhoan.fromJson(json['TaiKhoan']),
     );
   }
@@ -45,6 +48,7 @@ class Tutor {
   String? get subject => bangCap;
   double get rating => diemSo;
   String get image => anhDaiDien ?? '';
+  int get reviewCount => tongSoDanhGia;
 }
 
 class TaiKhoan {
