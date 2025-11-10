@@ -1,7 +1,8 @@
+// file: api_service.dart (PHIÊN BẢN NÂNG CẤP DÙNG DIO)
+
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart'; // <--- Dùng Dio
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_config.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/flutter_secure_storage.dart';
@@ -9,39 +10,58 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/flutter_secure_
 class ApiService {
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
-  ApiService._internal();
 
-  Future<Map<String, String>> _getHeaders() async {
-    final String? token = await SecureStorage.getToken();
-    Map<String, String> headers = Map.from(ApiConfig.headers);
+  late final Dio _dio; // <--- Khai báo Dio
 
-    if (token != null && token.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $token';
-    }
-    return headers;
+  ApiService._internal() {
+    // Cấu hình Dio
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: ApiConfig.baseUrl,
+        receiveTimeout: ApiConfig.receiveTimeout,
+        connectTimeout: const Duration(
+          seconds: 10,
+        ), // Bạn có thể thêm vào ApiConfig
+        headers: ApiConfig.headers,
+      ),
+    );
+
+    // Thêm Interceptor để tự động chèn Token
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          // Lấy token
+          final String? token = await SecureStorage.getToken();
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+
+          // Dio sẽ tự động xử lý 'Content-Type'
+          // Nó sẽ là 'application/json' cho Map
+          // và 'multipart/form-data' cho FormData
+          return handler.next(options);
+        },
+        onError: (e, handler) {
+          // Có thể xử lý lỗi 401 (hết hạn token) ở đây
+          return handler.next(e);
+        },
+      ),
+    );
   }
+
+  // KHÔNG CẦN _getHeaders() nữa vì Interceptor đã xử lý
 
   Future<ApiResponse<T>> get<T>(
     String endpoint, {
     T Function(Map<String, dynamic>)? fromJsonT,
   }) async {
     try {
-      final response = await http
-          .get(
-            Uri.parse('${ApiConfig.baseUrl}$endpoint'),
-            headers: await _getHeaders(),
-          )
-          .timeout(ApiConfig.receiveTimeout);
-
+      final response = await _dio.get(endpoint);
       return _handleResponse<T>(response, fromJsonT);
-    } on SocketException {
-      return _errorResponse('Không có kết nối internet');
-    } on TimeoutException {
-      return _errorResponse('Kết nối quá thời gian');
-    } on FormatException {
-      return _errorResponse('Dữ liệu không hợp lệ');
+    } on DioException catch (e) {
+      return _errorResponse(e);
     } catch (e) {
-      return _errorResponse('Lỗi kết nối: $e');
+      return _errorResponse(null, 'Lỗi không xác định: $e');
     }
   }
 
@@ -50,15 +70,18 @@ class ApiService {
     dynamic data,
     T Function(Map<String, dynamic>)? fromJsonT,
   }) async {
-    final response = await http
-        .post(
-          Uri.parse('${ApiConfig.baseUrl}$endpoint'),
-          headers: await _getHeaders(),
-          body: jsonEncode(data),
-        )
-        .timeout(ApiConfig.receiveTimeout);
-
-    return _handleResponse<T>(response, fromJsonT);
+    try {
+      final response = await _dio.post(
+        endpoint,
+        data: data, // <--- CHỈ CẦN TRUYỀN DATA
+        // Dio tự biết là JSON hay FormData
+      );
+      return _handleResponse<T>(response, fromJsonT);
+    } on DioException catch (e) {
+      return _errorResponse(e);
+    } catch (e) {
+      return _errorResponse(null, 'Lỗi không xác định: $e');
+    }
   }
 
   Future<ApiResponse<T>> put<T>(
@@ -67,23 +90,15 @@ class ApiService {
     T Function(Map<String, dynamic>)? fromJsonT,
   }) async {
     try {
-      final response = await http
-          .put(
-            Uri.parse('${ApiConfig.baseUrl}$endpoint'),
-            headers: await _getHeaders(),
-            body: jsonEncode(data),
-          )
-          .timeout(ApiConfig.receiveTimeout);
-
+      final response = await _dio.put(
+        endpoint,
+        data: data, // <--- TƯƠNG TỰ HÀM POST
+      );
       return _handleResponse<T>(response, fromJsonT);
-    } on SocketException {
-      return _errorResponse('Không có kết nối internet');
-    } on TimeoutException {
-      return _errorResponse('Kết nối quá thời gian');
-    } on FormatException {
-      return _errorResponse('Dữ liệu không hợp lệ');
+    } on DioException catch (e) {
+      return _errorResponse(e);
     } catch (e) {
-      return _errorResponse('Lỗi kết nối: $e');
+      return _errorResponse(null, 'Lỗi không xác định: $e');
     }
   }
 
@@ -92,123 +107,108 @@ class ApiService {
     T Function(Map<String, dynamic>)? fromJsonT,
   }) async {
     try {
-      final response = await http
-          .delete(
-            Uri.parse('${ApiConfig.baseUrl}$endpoint'),
-            headers: await _getHeaders(),
-          )
-          .timeout(ApiConfig.receiveTimeout);
-
+      final response = await _dio.delete(endpoint);
       return _handleResponse<T>(response, fromJsonT);
-    } on SocketException {
-      return _errorResponse('Không có kết nối internet');
-    } on TimeoutException {
-      return _errorResponse('Kết nối quá thời gian');
-    } on FormatException {
-      return _errorResponse('Dữ liệu không hợp lệ');
+    } on DioException catch (e) {
+      return _errorResponse(e);
     } catch (e) {
-      return _errorResponse('Lỗi kết nối: $e');
+      return _errorResponse(null, 'Lỗi không xác định: $e');
     }
   }
 
-  // file: api_service.dart
-
+  // Xử lý response thành công (cho mã 2xx)
   ApiResponse<T> _handleResponse<T>(
-    http.Response response,
+    Response response, // <--- Dùng Response của Dio
     T Function(Map<String, dynamic>)? fromJsonT,
   ) {
-    // In ra để debug
-    print('Status Code: ${response.statusCode}');
-    print('Response Body: ${response.body}');
+    // Dio tự động giải mã JSON, nên response.data đã là Map
+    final Map<String, dynamic> responseData = response.data;
 
-    // BƯỚC 1: Kiểm tra mã trạng thái TRƯỚC TIÊN
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      // BƯỚC 2: Chỉ giải mã JSON KHI thành công
-      try {
-        // Xử lý trường hợp body rỗng (ví dụ: 204 No Content)
-        if (response.body.isEmpty) {
-          return ApiResponse<T>(
-            success: true,
-            message: 'Thành công',
-            data: null, // Hoặc một giá trị T mặc định
-            statusCode: response.statusCode,
-          );
-        }
-
-        // Tiến hành giải mã
-        final Map<String, dynamic> responseData = jsonDecode(response.body);
-
-        // Logic cũ của bạn
-        return ApiResponse<T>(
-          success: responseData['success'] ?? true,
-          message: responseData['message'] ?? 'Thành công',
-          data:
-              fromJsonT != null && responseData['data'] != null
-                  ? fromJsonT(
-                    responseData,
-                  ) // Repository sẽ trích xuất 'data' từ đây
-                  : responseData as T?,
-          statusCode: response.statusCode,
-        );
-      } on FormatException catch (e) {
-        print('FormatException khi decode body: $e');
-        return _errorResponse(
-          'Lỗi xử lý dữ liệu: $e. Body nhận được: ${response.body}',
-          response.statusCode,
-        );
-      } catch (e) {
-        // Các lỗi khác
-        return _errorResponse('Lỗi không xác định: $e', response.statusCode);
-      }
-    }
-    // BƯỚC 3: Xử lý các mã lỗi (Không giải mã JSON)
-    else if (response.statusCode == 401) {
-      return _errorResponse(
-        'Tài khoản hoặc mật khẩu không hợp lệ!',
-        response.statusCode,
-      );
-    } else if (response.statusCode == 403) {
-      return _errorResponse('Không có quyền truy cập', response.statusCode);
-    } else if (response.statusCode == 404) {
-      return _errorResponse('Không tìm thấy dữ liệu', response.statusCode);
-    } else if (response.statusCode == 422) {
-      // Thử decode body lỗi, vì 422 của Laravel thường là JSON
-      try {
-        final Map<String, dynamic> errorData = jsonDecode(response.body);
-        return _errorResponse(
-          errorData['message'] ?? 'Dữ liệu không hợp lệ',
-          response.statusCode,
-        );
-      } catch (e) {
-        return _errorResponse('Dữ liệu không hợp lệ', response.statusCode);
-      }
-    } else if (response.statusCode == 429) {
-      // Lỗi Rate Limiting
-      return _errorResponse(
-        'Bạn thao tác quá nhanh, vui lòng thử lại sau!',
-        response.statusCode,
-      );
-    } else if (response.statusCode >= 500) {
-      // Lỗi 500 (Server Error, Timeout)
-      // response.body lúc này có thể là HTML hoặc chuỗi bị cắt
-      return _errorResponse(
-        'Lỗi máy chủ: ${response.body}',
-        response.statusCode,
-      );
-    } else {
-      // Các lỗi 4xx khác
-      return _errorResponse(
-        'Có lỗi xảy ra: ${response.body}',
-        response.statusCode,
-      );
-    }
+    return ApiResponse<T>(
+      success: responseData['success'] ?? true,
+      message: responseData['message'] ?? 'Thành công',
+      // Sửa lỗi logic: fromJsonT nên nhận vào responseData['data']
+      data:
+          fromJsonT != null
+              ? fromJsonT(responseData) // Gửi cả responseData cho fromJsonT
+              : responseData as T?,
+      statusCode: response.statusCode ?? 0,
+    );
   }
 
-  ApiResponse<T> _errorResponse<T>(String message, [int statusCode = 0]) {
-    return ApiResponse<T>(
-      success: false,
-      message: message,
-      statusCode: statusCode,
-    );
+  // Xử lý lỗi (cho mã 4xx, 5xx, và lỗi mạng)
+  ApiResponse<T> _errorResponse<T>(DioException? e, [String? customMessage]) {
+    if (customMessage != null) {
+      return ApiResponse<T>(
+        success: false,
+        message: customMessage,
+        statusCode: 0,
+      );
+    }
+
+    if (e == null) {
+      return ApiResponse<T>(
+        success: false,
+        message: 'Lỗi không xác định',
+        statusCode: 0,
+      );
+    }
+
+    // Xử lý các loại lỗi của Dio
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return ApiResponse<T>(
+          success: false,
+          message: 'Kết nối quá thời gian',
+          statusCode: e.response?.statusCode ?? 0,
+        );
+
+      case DioExceptionType.badResponse:
+        // Đây là nơi xử lý lỗi 4xx, 5xx
+        if (e.response != null && e.response!.data is Map) {
+          final errorData = e.response!.data as Map<String, dynamic>;
+          return ApiResponse<T>(
+            success: false,
+            message: errorData['message'] ?? 'Có lỗi xảy ra',
+            statusCode: e.response!.statusCode ?? 0,
+          );
+        }
+        return ApiResponse<T>(
+          success: false,
+          message: 'Lỗi máy chủ: ${e.response?.statusCode}',
+          statusCode: e.response?.statusCode ?? 0,
+        );
+
+      case DioExceptionType.cancel:
+        return ApiResponse<T>(
+          success: false,
+          message: 'Yêu cầu đã bị hủy',
+          statusCode: 0,
+        );
+
+      case DioExceptionType.connectionError:
+        return ApiResponse<T>(
+          success: false,
+          message: 'Không có kết nối internet',
+          statusCode: 0,
+        );
+
+      case DioExceptionType.unknown:
+      default:
+        if (e.error is SocketException) {
+          return ApiResponse<T>(
+            success: false,
+            message: 'Không có kết nối internet',
+            statusCode: 0,
+          );
+        }
+        return ApiResponse<T>(
+          success: false,
+          message: 'Lỗi: ${e.message}',
+          statusCode: 0,
+        );
+    }
   }
 }

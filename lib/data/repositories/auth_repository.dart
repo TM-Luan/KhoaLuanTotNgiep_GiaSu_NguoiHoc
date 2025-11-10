@@ -2,6 +2,10 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_config.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_service.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
+import 'dart:io';
+import 'package:dio/dio.dart'; // <--- THÊM
+import 'package:http_parser/http_parser.dart'; // <--- THÊM
+import 'package:path/path.dart' as p; // <--- THÊM (để lấy đuôi file)
 
 class AuthRepository {
   final ApiService _apiService = ApiService();
@@ -128,11 +132,88 @@ class AuthRepository {
     }
   }
 
+  // Future<ApiResponse<UserProfile>> updateProfile(UserProfile user) async {
+  //   try {
+  //     final response = await _apiService.put<UserProfile>(
+  //       ApiConfig.updateProfile,
+  //       data: user.toJson(),
+  //       fromJsonT: (json) => UserProfile.fromJson(json['data'] ?? json),
+  //     );
+
+  //     return ApiResponse<UserProfile>(
+  //       success: response.success,
+  //       message: response.message,
+  //       data: response.data,
+  //       statusCode: response.statusCode,
+  //     );
+  //   } catch (e) {
+  //     return ApiResponse<UserProfile>(
+  //       success: false,
+  //       message: 'Lỗi cập nhật thông tin: $e',
+  //       statusCode: 0,
+  //     );
+  //   }
+  // }
   Future<ApiResponse<UserProfile>> updateProfile(UserProfile user) async {
     try {
-      final response = await _apiService.put<UserProfile>(
-        ApiConfig.updateProfile,
-        data: user.toJson(),
+      // 1. Tạo FormData
+      // Lấy các trường text từ toJson()
+      // Lưu ý: toJson() của bạn đã được thiết kế đúng
+      // (chỉ chứa các trường text, không chứa file)
+      final Map<String, dynamic> textData = user.toJson();
+
+      // Thêm _method: 'PUT' để Laravel hiểu đây là request PUT
+      textData['_method'] = 'PUT';
+
+      final formData = FormData.fromMap(textData);
+
+      // 2. Hàm trợ giúp để thêm file vào FormData
+      Future<void> addFileToFormData(File? file, String key) async {
+        if (file != null) {
+          String fileName = p.basename(file.path);
+          String fileExtension = p.extension(file.path).toLowerCase();
+
+          // Xác định kiểu nội dung (contentType)
+          MediaType contentType;
+          if (fileExtension == '.png') {
+            contentType = MediaType('image', 'png');
+          } else if (fileExtension == '.jpg' || fileExtension == '.jpeg') {
+            contentType = MediaType('image', 'jpeg');
+          } else if (fileExtension == '.gif') {
+            contentType = MediaType('image', 'gif');
+          } else {
+            contentType = MediaType(
+              'application',
+              'octet-stream',
+            ); // Kiểu mặc định
+          }
+
+          formData.files.add(
+            MapEntry(
+              key,
+              await MultipartFile.fromFile(
+                file.path,
+                filename: fileName,
+                contentType: contentType,
+              ),
+            ),
+          );
+        }
+      }
+
+      // 3. Thêm các file (nếu người dùng đã chọn)
+      // Key ('AnhDaiDien') PHẢI KHỚP với key trong AuthController.php
+      await addFileToFormData(user.newAnhDaiDienFile, 'AnhDaiDien');
+      await addFileToFormData(user.newAnhCCCDMatTruocFile, 'AnhCCCD_MatTruoc');
+      await addFileToFormData(user.newAnhCCCDMatSauFile, 'AnhCCCD_MatSau');
+      await addFileToFormData(user.newAnhBangCapFile, 'AnhBangCap');
+
+      // 4. Gửi request
+      // Chúng ta dùng _apiService.post vì đang gửi FormData
+      // Laravel sẽ tự nhận diện đây là PUT nhờ trường '_method'
+      final response = await _apiService.post<UserProfile>(
+        ApiConfig.updateProfile, // Endpoint vẫn là /update-profile
+        data: formData, // Gửi FormData thay vì JSON
         fromJsonT: (json) => UserProfile.fromJson(json['data'] ?? json),
       );
 
@@ -143,9 +224,18 @@ class AuthRepository {
         statusCode: response.statusCode,
       );
     } catch (e) {
+      // Xử lý lỗi từ Dio (nếu có)
+      String errorMessage = 'Lỗi cập nhật thông tin: $e';
+      if (e is DioException) {
+        errorMessage = 'Lỗi Dio: ${e.message}';
+        if (e.response != null) {
+          errorMessage += '\nData: ${e.response?.data}';
+        }
+      }
+
       return ApiResponse<UserProfile>(
         success: false,
-        message: 'Lỗi cập nhật thông tin: $e',
+        message: errorMessage,
         statusCode: 0,
       );
     }

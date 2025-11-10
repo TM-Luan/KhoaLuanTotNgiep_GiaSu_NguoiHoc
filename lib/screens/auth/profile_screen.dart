@@ -6,7 +6,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
-
+import 'package:intl/intl.dart';
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -474,7 +474,7 @@ class ProfileImageInfo extends StatelessWidget {
     if (imageUrl != null && imageUrl!.isNotEmpty) {
       return Image.network(
         imageUrl!,
-        fit: BoxFit.cover,
+        fit: BoxFit.contain,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return const Center(child: CircularProgressIndicator());
