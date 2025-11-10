@@ -1,7 +1,8 @@
 // user_profile.dart
 
+import 'dart:io'; // <--- THÊM DÒNG NÀY
+
 class UserProfile {
-  bool? success;
   int? taiKhoanID;
   String? email;
   String? hoTen;
@@ -11,15 +12,28 @@ class UserProfile {
   String? diaChi;
   String? gioiTinh;
   String? ngaySinh;
-  String? bangCap;
-  String? kinhNghiem;
   String? anhDaiDien;
 
   int? nguoiHocID;
+  
+  // Trường của Gia Sư
   int? giaSuID;
+  String? bangCap;
+  String? kinhNghiem;
+  String? anhCCCDMatTruoc;
+  String? anhCCCDMatSau;
+  String? anhBangCap;
+  String? truongDaoTao;
+  String? chuyenNganh;
+  String? thanhTich;
+
+  // ⭐️ THÊM: Các trường File để lưu ảnh TẠM THỜI từ gallery/camera
+  File? newAnhDaiDienFile;
+  File? newAnhCCCDMatTruocFile;
+  File? newAnhCCCDMatSauFile;
+  File? newAnhBangCapFile;
 
   UserProfile({
-    this.success,
     this.taiKhoanID,
     this.email,
     this.hoTen,
@@ -29,36 +43,55 @@ class UserProfile {
     this.diaChi,
     this.gioiTinh,
     this.ngaySinh,
-    this.bangCap,
-    this.kinhNghiem,
     this.anhDaiDien,
     this.nguoiHocID,
     this.giaSuID,
+    this.bangCap,
+    this.kinhNghiem,
+    this.anhCCCDMatTruoc,
+    this.anhCCCDMatSau,
+    this.anhBangCap,
+    this.truongDaoTao,
+    this.chuyenNganh,
+    this.thanhTich,
+    // ⭐️ THÊM vào constructor
+    this.newAnhDaiDienFile,
+    this.newAnhCCCDMatTruocFile,
+    this.newAnhCCCDMatSauFile,
+    this.newAnhBangCapFile,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
-    final data = json['data'] ?? json;
-
     return UserProfile(
-      success: json['success'],
-      taiKhoanID: data['TaiKhoanID'],
-      email: data['Email'],
-      hoTen: data['HoTen'],
-      soDienThoai: data['SoDienThoai'],
-      vaiTro: data['VaiTro'],
-      trangThai: data['TrangThai'],
-      diaChi: data['DiaChi'],
-      gioiTinh: data['GioiTinh'],
-      ngaySinh: data['NgaySinh'],
-      bangCap: data['BangCap'],
-      kinhNghiem: data['KinhNghiem'],
-      anhDaiDien: data['AnhDaiDien'],
-      nguoiHocID: data['NguoiHocID'],
-      giaSuID: data['GiaSuID'],
+      taiKhoanID: json['TaiKhoanID'],
+      email: json['Email'],
+      hoTen: json['HoTen'],
+      soDienThoai: json['SoDienThoai'],
+      vaiTro: json['VaiTro'],
+      trangThai: json['TrangThai'],
+      diaChi: json['DiaChi'],
+      gioiTinh: json['GioiTinh'],
+      ngaySinh: json['NgaySinh'],
+      anhDaiDien: json['AnhDaiDien'],
+      
+      nguoiHocID: json['NguoiHocID'],
+      giaSuID: json['GiaSuID'],
+
+      bangCap: json['BangCap'],
+      kinhNghiem: json['KinhNghiem'],
+      anhCCCDMatTruoc: json['AnhCCCD_MatTruoc'],
+      anhCCCDMatSau: json['AnhCCCD_MatSau'],
+      anhBangCap: json['AnhBangCap'],
+      truongDaoTao: json['TruongDaoTao'],
+      chuyenNganh: json['ChuyenNganh'],
+      thanhTich: json['ThanhTich'],
+      // ⭐️ KHÔNG parse các trường File từ JSON vì chúng chỉ là tạm thời ở client
     );
   }
 
   Map<String, dynamic> toJson() {
+    // ⭐️ Lưu ý: toJson này chỉ dùng cho dữ liệu TEXT.
+    // Việc gửi file cần một hàm riêng với multipart/form-data.
     return {
       'TaiKhoanID': taiKhoanID,
       'Email': email,
@@ -69,16 +102,23 @@ class UserProfile {
       'DiaChi': diaChi,
       'GioiTinh': gioiTinh,
       'NgaySinh': ngaySinh,
-      'BangCap': bangCap,
-      'KinhNghiem': kinhNghiem,
-      'AnhDaiDien': anhDaiDien,
+      // 'AnhDaiDien': anhDaiDien, // Ảnh đại diện sẽ được gửi riêng nếu là File
+      
       'NguoiHocID': nguoiHocID,
       'GiaSuID': giaSuID,
+
+      'BangCap': bangCap,
+      'KinhNghiem': kinhNghiem,
+      // 'AnhCCCD_MatTruoc': anhCCCDMatTruoc, // Các ảnh này sẽ được gửi riêng nếu là File
+      // 'AnhCCCD_MatSau': anhCCCDMatSau,
+      // 'AnhBangCap': anhBangCap,
+      'TruongDaoTao': truongDaoTao,
+      'ChuyenNganh': chuyenNganh,
+      'ThanhTich': thanhTich,
     };
   }
 }
 
-// ✅ LoginResponse chuẩn
 class LoginResponse {
   final String token;
   final UserProfile user;
@@ -86,14 +126,12 @@ class LoginResponse {
   LoginResponse({required this.token, required this.user});
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
-    
-    // Token ở cấp độ gốc, data ở trong object "data"
-    final userData = json['data'] ?? {}; 
+    final userData = json['data'] ?? {};
     final token = json['token'] ?? '';
 
     return LoginResponse(
       token: token,
-      user: UserProfile.fromJson({'data': userData}), // Wrap userData trong data để UserProfile.fromJson parse đúng
+      user: UserProfile.fromJson(userData),
     );
   }
 }

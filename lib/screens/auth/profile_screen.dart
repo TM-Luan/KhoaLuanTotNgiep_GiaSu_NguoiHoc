@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_event.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
-
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
@@ -19,7 +18,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Lấy hồ sơ từ BLoC
     context.read<AuthBloc>().add(const FetchProfileRequested());
   }
 
@@ -35,14 +33,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   String _getGenderText(String? gioiTinh) {
-    switch (gioiTinh) {
-      case 'M':
-        return "Nam";
-      case 'F':
-        return "Nữ";
-      default:
-        return "Chưa cập nhật";
+    if (gioiTinh == null || gioiTinh.isEmpty) {
+      return "Chưa cập nhật";
     }
+    return gioiTinh;
   }
 
   String _formatDate(String? date) {
@@ -66,13 +60,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           userData = state.user;
         }
 
+        final bool isGiaSu = userData?.vaiTro == 2;
+
         return Scaffold(
           appBar: AppBar(
             centerTitle: false,
             elevation: 0,
             backgroundColor: AppColors.primary,
             foregroundColor: AppColors.textLight,
-            title: Text("Trang cá nhân",
+            title: Text(
+              "Trang cá nhân",
               style: TextStyle(
                 fontSize: AppTypography.appBarTitle,
                 fontWeight: FontWeight.w600,
@@ -90,10 +87,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.all(AppSpacing.xxl),
                   decoration: BoxDecoration(
                     color: AppColors.background,
-                    borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
+                    borderRadius: BorderRadius.circular(
+                      AppSpacing.cardBorderRadius,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha:0.05),
+                        color: Colors.black.withOpacity(0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -101,10 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   child: Column(
                     children: [
-                      ProfilePic(
-                        image: userData?.anhDaiDien ??
-                            "https://i.postimg.cc/cCsYDjvj/user-2.png",
-                      ),
+                      ProfilePic(image: userData?.anhDaiDien ?? ""),
                       const SizedBox(height: AppSpacing.lg),
                       Text(
                         userData?.hoTen ?? "Chưa có tên",
@@ -122,7 +118,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.primaryContainer,
-                          borderRadius: BorderRadius.circular(AppSpacing.buttonBorderRadius),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.buttonBorderRadius,
+                          ),
                         ),
                         child: Text(
                           _getRoleText(userData?.vaiTro),
@@ -144,10 +142,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     color: AppColors.background,
-                    borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
+                    borderRadius: BorderRadius.circular(
+                      AppSpacing.cardBorderRadius,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha:0.05),
+                        color: Colors.black.withOpacity(0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -162,7 +162,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             padding: const EdgeInsets.all(AppSpacing.sm),
                             decoration: BoxDecoration(
                               color: AppColors.primaryContainer,
-                              borderRadius: BorderRadius.circular(AppSpacing.iconContainerRadius),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.iconContainerRadius,
+                              ),
                             ),
                             child: Icon(
                               Icons.person,
@@ -185,7 +187,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                       Info(
                         infoKey: "Mã tài khoản",
-                        info: userData?.taiKhoanID?.toString() ?? "Chưa cập nhật",
+                        info:
+                            userData?.taiKhoanID?.toString() ?? "Chưa cập nhật",
                       ),
                       Info(
                         infoKey: "Email",
@@ -207,14 +210,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         infoKey: "Địa chỉ",
                         info: userData?.diaChi ?? "Chưa cập nhật",
                       ),
-                      Info(
-                        infoKey: "Bằng cấp",
-                        info: userData?.bangCap ?? "Chưa cập nhật",
-                      ),
-                      Info(
-                        infoKey: "Kinh nghiệm",
-                        info: userData?.kinhNghiem ?? "Chưa cập nhật",
-                      ),
+
+                      // ⭐️ CHỈ HIỂN THỊ NẾU LÀ GIA SƯ
+                      if (isGiaSu) ...[
+                        Info(
+                          infoKey: "Bằng cấp",
+                          info: userData?.bangCap ?? "Chưa cập nhật",
+                        ),
+                        Info(
+                          infoKey: "Trường đào tạo",
+                          info: userData?.truongDaoTao ?? "Chưa cập nhật",
+                        ),
+                        Info(
+                          infoKey: "Chuyên ngành",
+                          info: userData?.chuyenNganh ?? "Chưa cập nhật",
+                        ),
+                        Info(
+                          infoKey: "Kinh nghiệm",
+                          info: userData?.kinhNghiem ?? "Chưa cập nhật",
+                        ),
+                        Info(
+                          infoKey: "Thành tích",
+                          info: userData?.thanhTich ?? "Chưa cập nhật",
+                        ),
+
+                        // ⭐️ SỬA LẠI: Hiển thị ảnh thay vì text
+                        ProfileImageInfo(
+                          title: "CCCD mặt trước",
+                          imageUrl: userData?.anhCCCDMatTruoc,
+                        ),
+                        ProfileImageInfo(
+                          title: "CCCD mặt sau",
+                          imageUrl: userData?.anhCCCDMatSau,
+                        ),
+                        ProfileImageInfo(
+                          title: "Ảnh bằng cấp",
+                          imageUrl: userData?.anhBangCap,
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -228,7 +261,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-// ======= UI components giữ nguyên phong cách gốc =======
+// ======= UI components (Giữ nguyên) =======
 
 class ProfilePic extends StatelessWidget {
   const ProfilePic({
@@ -249,7 +282,7 @@ class ProfilePic extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha:0.2),
+            color: AppColors.primary.withOpacity(0.2),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -261,23 +294,18 @@ class ProfilePic extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.primary,
-                width: 3,
-              ),
+              border: Border.all(color: AppColors.primary, width: 3),
             ),
             child: CircleAvatar(
               radius: 60,
-              backgroundImage: NetworkImage(image),
               backgroundColor: AppColors.primarySurface,
-              onBackgroundImageError: (_, __) {},
-              child: image.isEmpty 
-                ? Icon(
-                    Icons.person, 
-                    size: 60, 
-                    color: AppColors.primary,
-                  ) 
-                : null,
+              child: ClipOval(
+                child: SizedBox(
+                  width: 120,
+                  height: 120,
+                  child: _buildImage(image), // Gọi helper
+                ),
+              ),
             ),
           ),
           if (isShowPhotoUpload)
@@ -293,7 +321,7 @@ class ProfilePic extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha:0.2),
+                        color: Colors.black.withOpacity(0.2),
                         blurRadius: 5,
                         offset: const Offset(0, 2),
                       ),
@@ -311,6 +339,33 @@ class ProfilePic extends StatelessWidget {
       ),
     );
   }
+
+  // Helper build ảnh cho Ảnh đại diện
+  Widget _buildImage(String image) {
+    if (image.isNotEmpty) {
+      return Image.network(
+        image,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildAvatarPlaceholder();
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return const Center(child: CircularProgressIndicator());
+        },
+      );
+    }
+    // Không có ảnh nào -> Placeholder
+    return _buildAvatarPlaceholder();
+  }
+
+  // Placeholder cho ảnh đại diện
+  Widget _buildAvatarPlaceholder() {
+    return Container(
+      color: AppColors.primarySurface,
+      child: Icon(Icons.person, size: 50, color: AppColors.primary),
+    );
+  }
 }
 
 class Info extends StatelessWidget {
@@ -326,10 +381,7 @@ class Info extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.grey50,
         borderRadius: BorderRadius.circular(AppSpacing.buttonBorderRadius),
-        border: Border.all(
-          color: AppColors.borderLight,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.borderLight, width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,6 +408,102 @@ class Info extends StatelessWidget {
                 fontSize: AppTypography.body2,
                 fontWeight: FontWeight.w400,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ⭐️ WIDGET MỚI ĐỂ HIỂN THỊ ẢNH
+class ProfileImageInfo extends StatelessWidget {
+  final String title;
+  final String? imageUrl;
+
+  const ProfileImageInfo({super.key, required this.title, this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.grey50,
+        borderRadius: BorderRadius.circular(AppSpacing.buttonBorderRadius),
+        border: Border.all(color: AppColors.borderLight, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Tiêu đề
+          Text(
+            title,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: AppTypography.body2,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          // Khung hiển thị ảnh
+          Container(
+            height: 150,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColors.background, // Nền trắng
+              borderRadius: BorderRadius.circular(
+                AppSpacing.buttonBorderRadius,
+              ),
+              border: Border.all(color: AppColors.borderLight),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(
+                AppSpacing.buttonBorderRadius,
+              ),
+              child: _buildImage(), // Gọi helper
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImage() {
+    if (imageUrl != null && imageUrl!.isNotEmpty) {
+      return Image.network(
+        imageUrl!,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return const Center(child: CircularProgressIndicator());
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return _buildPlaceholder("Lỗi tải ảnh");
+        },
+      );
+    } else {
+      return _buildPlaceholder("Chưa cập nhật ảnh");
+    }
+  }
+
+  Widget _buildPlaceholder(String text) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.image_not_supported_outlined,
+            color: AppColors.textSecondary,
+            size: 40,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            text,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: AppTypography.body2,
             ),
           ),
         ],

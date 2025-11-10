@@ -1,6 +1,8 @@
 // ignore_for_file: deprecated_member_use
 
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart'; // <--- Thư viện chọn ảnh
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
@@ -17,19 +19,31 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _repo = AuthRepository();
+  final ImagePicker _picker = ImagePicker();
 
+  // Thông tin chung
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   late TextEditingController _addressController;
   late TextEditingController _birthController;
+  
+  // Thông tin Gia Sư
   late TextEditingController _degreeController;
   late TextEditingController _experienceController;
+  late TextEditingController _truongDaoTaoController;
+  late TextEditingController _chuyenNganhController;
+  late TextEditingController _thanhTichController;
+
+  // ⭐️ Các biến File để lưu ảnh mới được chọn
+  File? _newAnhDaiDienFile;
+  File? _newAnhCCCDMatTruocFile;
+  File? _newAnhCCCDMatSauFile;
+  File? _newAnhBangCapFile;
 
   bool _isLoading = false;
   DateTime? _selectedDate;
 
-  // SỬA LẠI: Sử dụng List<String> đơn giản
   final List<String> _genderOptions = ['Nam', 'Nữ', 'Khác'];
   String? _selectedGender;
 
@@ -42,33 +56,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       text: widget.user.soDienThoai ?? '',
     );
     _addressController = TextEditingController(text: widget.user.diaChi ?? '');
+    
     _degreeController = TextEditingController(text: widget.user.bangCap ?? '');
     _experienceController = TextEditingController(
       text: widget.user.kinhNghiem ?? '',
     );
+    _truongDaoTaoController = TextEditingController(text: widget.user.truongDaoTao ?? '');
+    _chuyenNganhController = TextEditingController(text: widget.user.chuyenNganh ?? '');
+    _thanhTichController = TextEditingController(text: widget.user.thanhTich ?? '');
 
-    // Xử lý giới tính - giữ nguyên giá trị từ API nếu có
     _selectedGender = widget.user.gioiTinh;
-
-    // Nếu giá trị từ API không có trong options, set về null
     if (_selectedGender != null && !_genderOptions.contains(_selectedGender)) {
       _selectedGender = null;
     }
 
-    // Xử lý ngày sinh
     if (widget.user.ngaySinh != null && widget.user.ngaySinh!.isNotEmpty) {
       try {
-        final parts = widget.user.ngaySinh!.split('-');
-        if (parts.length == 3) {
-          _selectedDate = DateTime(
-            int.parse(parts[0]),
-            int.parse(parts[1]),
-            int.parse(parts[2]),
-          );
-          _birthController = TextEditingController(text: widget.user.ngaySinh);
-        } else {
-          _birthController = TextEditingController();
-        }
+        _selectedDate = DateTime.tryParse(widget.user.ngaySinh!);
+        _birthController = TextEditingController(text: widget.user.ngaySinh);
       } catch (e) {
         _birthController = TextEditingController();
       }
@@ -77,7 +82,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  // Kiểm tra xem người dùng có phải là gia sư không
   bool get _isGiaSu => widget.user.vaiTro == 2;
 
   Future<void> _selectDate(BuildContext context) async {
@@ -114,28 +118,61 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  // ⭐️ Hàm chọn ảnh chung
+  Future<void> _pickImage(Function(File?) onImagePicked) async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (pickedFile != null) {
+      onImagePicked(File(pickedFile.path));
+    } else {
+      // User cancelled the picker
+      onImagePicked(null); // Không làm gì cả
+    }
+  }
+
+  // ⭐️ Hàm lưu hồ sơ và upload ảnh
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
     final updatedUser = UserProfile(
+      // Thông tin Text
       taiKhoanID: widget.user.taiKhoanID,
       hoTen: _nameController.text.trim(),
       email: _emailController.text.trim(),
       soDienThoai: _phoneController.text.trim(),
       diaChi: _addressController.text.trim(),
-      gioiTinh: _selectedGender, // Gửi string trực tiếp ("Nam", "Nữ", "Khác")
+      gioiTinh: _selectedGender,
       ngaySinh: _birthController.text.trim(),
-      // Chỉ cập nhật bằng cấp và kinh nghiệm nếu là gia sư
+      
+      // Thông tin Text (Gia sư)
       bangCap: _isGiaSu ? _degreeController.text.trim() : widget.user.bangCap,
-      kinhNghiem:
-          _isGiaSu ? _experienceController.text.trim() : widget.user.kinhNghiem,
+      kinhNghiem: _isGiaSu ? _experienceController.text.trim() : widget.user.kinhNghiem,
+      truongDaoTao: _isGiaSu ? _truongDaoTaoController.text.trim() : widget.user.truongDaoTao,
+      chuyenNganh: _isGiaSu ? _chuyenNganhController.text.trim() : widget.user.chuyenNganh,
+      thanhTich: _isGiaSu ? _thanhTichController.text.trim() : widget.user.thanhTich,
+
+      // ⭐️ Thông tin File (Ảnh mới)
+      newAnhDaiDienFile: _newAnhDaiDienFile,
+      newAnhCCCDMatTruocFile: _newAnhCCCDMatTruocFile,
+      newAnhCCCDMatSauFile: _newAnhCCCDMatSauFile,
+      newAnhBangCapFile: _newAnhBangCapFile,
+
+      // Giữ nguyên các giá trị cũ
       anhDaiDien: widget.user.anhDaiDien,
+      anhCCCDMatTruoc: widget.user.anhCCCDMatTruoc,
+      anhCCCDMatSau: widget.user.anhCCCDMatSau,
+      anhBangCap: widget.user.anhBangCap,
       vaiTro: widget.user.vaiTro,
+      trangThai: widget.user.trangThai,
+      giaSuID: widget.user.giaSuID,
+      nguoiHocID: widget.user.nguoiHocID,
     );
 
     try {
-      final res = await _repo.updateProfile(updatedUser);
+      // ⭐️ GỌI HÀM REPO ĐÃ ĐƯỢC CẬP NHẬT
+      // Hàm này trong repo CẦN phải được sửa để xử lý FormData (Multipart)
+      final res = await _repo.updateProfile(updatedUser); 
+      
       setState(() => _isLoading = false);
 
       if (mounted) {
@@ -179,12 +216,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           key: _formKey,
           child: Column(
             children: [
-              ProfilePic(
-                image:
-                    widget.user.anhDaiDien ??
-                    'https://i.postimg.cc/cCsYDjvj/user-2.png',
-                imageUploadBtnPress: () {
-                },
+              // ⭐️ Ảnh đại diện
+              EditProfilePic(
+                image: widget.user.anhDaiDien ?? '', // Link ảnh cũ
+                newImageFile: _newAnhDaiDienFile, // File ảnh mới chọn
+                imageUploadBtnPress: () => _pickImage(
+                  (file) {
+                    if (file != null) {
+                      setState(() => _newAnhDaiDienFile = file);
+                    }
+                  }
+                ),
               ),
               const Divider(),
 
@@ -200,15 +242,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 _phoneController,
                 keyboard: TextInputType.phone,
               ),
-              _buildField("Địa chỉ", _addressController),
-
-              // Dropdown cho giới tính - SỬA LẠI: Sử dụng List<String>
+              _buildField("Địa chỉ", _addressController, isRequired: false),
               _buildGenderDropdown(),
-
-              // Date picker cho ngày sinh
               _buildDateField(),
 
-              // Chỉ hiển thị bằng cấp và kinh nghiệm cho gia sư
+              // ⭐️ Thêm các trường và trình chọn ảnh cho gia sư
               if (_isGiaSu) ...[
                 const SizedBox(height: AppSpacing.lg),
                 Align(
@@ -230,10 +268,81 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   isRequired: false,
                 ),
                 _buildField(
+                  "Trường đào tạo",
+                  _truongDaoTaoController,
+                  maxLines: 2,
+                  isRequired: false,
+                ),
+                _buildField(
+                  "Chuyên ngành",
+                  _chuyenNganhController,
+                  maxLines: 2,
+                  isRequired: false,
+                ),
+                _buildField(
                   "Kinh nghiệm",
                   _experienceController,
                   maxLines: 3,
                   isRequired: false,
+                ),
+                _buildField(
+                  "Thành tích",
+                  _thanhTichController,
+                  maxLines: 3,
+                  isRequired: false,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Giấy tờ & Chứng chỉ",
+                    style: TextStyle(
+                      fontSize: AppTypography.heading3,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+
+                // ⭐️ Ảnh CCCD mặt trước
+                _buildImageUploadField(
+                  title: "Ảnh CCCD mặt trước",
+                  currentImageUrl: widget.user.anhCCCDMatTruoc,
+                  newImageFile: _newAnhCCCDMatTruocFile,
+                  onPickImage: () => _pickImage(
+                    (file) {
+                      if(file != null) {
+                        setState(() => _newAnhCCCDMatTruocFile = file);
+                      }
+                    } 
+                  ),
+                ),
+                // ⭐️ Ảnh CCCD mặt sau
+                _buildImageUploadField(
+                  title: "Ảnh CCCD mặt sau",
+                  currentImageUrl: widget.user.anhCCCDMatSau,
+                  newImageFile: _newAnhCCCDMatSauFile,
+                  onPickImage: () => _pickImage(
+                    (file) {
+                      if(file != null) {
+                         setState(() => _newAnhCCCDMatSauFile = file);
+                      }
+                    }
+                  ),
+                ),
+                // ⭐️ Ảnh bằng cấp
+                _buildImageUploadField(
+                  title: "Ảnh bằng cấp",
+                  currentImageUrl: widget.user.anhBangCap,
+                  newImageFile: _newAnhBangCapFile,
+                  onPickImage: () => _pickImage(
+                    (file) {
+                      if(file != null) {
+                        setState(() => _newAnhBangCapFile = file);
+                      }
+                    }
+                  ),
                 ),
               ],
 
@@ -263,23 +372,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       minimumSize: const Size(140, 48),
                     ),
                     child:
-                      _isLoading
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                color: AppColors.textLight,
-                                strokeWidth: 2,
+                        _isLoading
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: AppColors.textLight,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                "Lưu thay đổi",
+                                style: TextStyle(
+                                  color: AppColors.textLight,
+                                  fontSize: AppTypography.body1,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            )
-                          : Text(
-                              "Lưu thay đổi",
-                              style: TextStyle(
-                                color: AppColors.textLight,
-                                fontSize: AppTypography.body1,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
                   ),
                 ],
               ),
@@ -289,6 +398,113 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
     );
   }
+
+  // ⭐️ Widget chung để hiển thị/chọn ảnh
+  Widget _buildImageUploadField({
+    required String title,
+    String? currentImageUrl,
+    File? newImageFile,
+    required VoidCallback onPickImage,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: AppTypography.body1,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Container(
+            height: 150,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
+              border: Border.all(color: AppColors.borderLight),
+            ),
+            child: InkWell(
+              onTap: onPickImage,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Logic hiển thị ảnh:
+                    // 1. Ưu tiên File mới
+                    if (newImageFile != null)
+                      Image.file(
+                        newImageFile,
+                        fit: BoxFit.cover,
+                      )
+                    // 2. Nếu không, hiển thị link ảnh cũ
+                    else if (currentImageUrl != null && currentImageUrl.isNotEmpty)
+                      Image.network(
+                        currentImageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(),
+                      )
+                    // 3. Nếu không có cả 2, hiển thị placeholder
+                    else
+                      _buildImagePlaceholder(),
+                    
+                    // Nút bấm
+                    Positioned(
+                      bottom: AppSpacing.sm,
+                      right: AppSpacing.sm,
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.xs),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          (newImageFile != null || (currentImageUrl != null && currentImageUrl.isNotEmpty))
+                              ? Icons.edit
+                              : Icons.add,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ⭐️ Widget placeholder (dùng chung cho CCCD, Bằng cấp)
+  Widget _buildImagePlaceholder() {
+    return Container(
+      color: AppColors.primarySurface,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.add_photo_alternate,
+              color: AppColors.primary,
+              size: 40,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              "Chọn ảnh",
+              style: TextStyle(color: AppColors.primary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildField(
     String label,
@@ -372,7 +588,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             borderRadius: BorderRadius.circular(AppSpacing.cardBorderRadius * 4),
           ),
         ),
-        // SỬA LẠI: Sử dụng List<String> đơn giản
         items: _genderOptions.map((String gender) {
           return DropdownMenuItem<String>(
             value: gender,
@@ -391,7 +606,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           });
         },
         validator: (value) {
-          // Không bắt buộc chọn giới tính
           return null;
         },
       ),
@@ -439,7 +653,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         ),
         validator: (value) {
-          // Không bắt buộc nhập ngày sinh
           return null;
         },
       ),
@@ -453,16 +666,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _phoneController.dispose();
     _addressController.dispose();
     _birthController.dispose();
+    
     _degreeController.dispose();
     _experienceController.dispose();
+    _truongDaoTaoController.dispose();
+    _chuyenNganhController.dispose();
+    _thanhTichController.dispose();
+
     super.dispose();
   }
 }
 
-class ProfilePic extends StatelessWidget {
-  const ProfilePic({super.key, required this.image, this.imageUploadBtnPress});
+// ⭐️ UI Component cho ảnh đại diện (Đã hoàn thiện)
+class EditProfilePic extends StatelessWidget {
+  const EditProfilePic({
+    super.key,
+    required this.image, // Link ảnh cũ
+    this.newImageFile, // File ảnh mới chọn
+    this.imageUploadBtnPress,
+  });
 
   final String image;
+  final File? newImageFile;
   final VoidCallback? imageUploadBtnPress;
 
   @override
@@ -474,19 +699,73 @@ class ProfilePic extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 55,
-            backgroundImage: NetworkImage(image),
-            onBackgroundImageError: (_, __) {},
-            child: image.isEmpty ? const Icon(Icons.person, size: 50) : null,
+            backgroundColor: AppColors.primarySurface,
+            // ⭐️ Sử dụng 'child' thay vì 'backgroundImage' để xử lý lỗi tốt hơn
+            child: ClipOval(
+              child: SizedBox(
+                width: 110, // 55 * 2
+                height: 110,
+                child: _buildImage(), // Gọi hàm helper để hiển thị ảnh
+              ),
+            ),
           ),
           InkWell(
             onTap: imageUploadBtnPress,
-            child: const CircleAvatar(
+            child: CircleAvatar(
               radius: 18,
-              backgroundColor: AppColors.primaryBlue,
-              child: Icon(Icons.edit, color: Colors.white, size: 18),
+              backgroundColor: AppColors.primary,
+              child: const Icon(Icons.edit, color: Colors.white, size: 18),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ⭐️ Helper build ảnh cho Ảnh đại diện
+  Widget _buildImage() {
+    // 1. Ưu tiên file mới
+    if (newImageFile != null) {
+      return Image.file(
+        newImageFile!,
+        fit: BoxFit.cover,
+      );
+    }
+    // 2. Ảnh cũ từ network
+    if (image.isNotEmpty) {
+      return Image.network(
+        image,
+        fit: BoxFit.cover,
+        // 3. Xử lý lỗi (hiển thị placeholder)
+        errorBuilder: (context, error, stackTrace) {
+          return _buildAvatarPlaceholder();
+        },
+        // Hiển thị loading
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                      loadingProgress.expectedTotalBytes!
+                  : null,
+            ),
+          );
+        },
+      );
+    }
+    // 4. Không có ảnh nào -> Placeholder
+    return _buildAvatarPlaceholder();
+  }
+
+  // Placeholder cho ảnh đại diện
+  Widget _buildAvatarPlaceholder() {
+    return Container(
+      color: AppColors.primarySurface,
+      child: Icon(
+        Icons.person,
+        size: 50,
+        color: AppColors.primary,
       ),
     );
   }
