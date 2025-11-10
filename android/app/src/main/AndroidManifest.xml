@@ -2,9 +2,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <application
-        android:label="khoa_luan_tot_ngiep_gia_su_nguoi_hoc"
+        android:label="TutorConnect"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/icon_main"
         android:networkSecurityConfig="@xml/network_security_config"
         android:usesCleartextTraffic="true">
         <activity

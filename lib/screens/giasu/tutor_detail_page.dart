@@ -136,19 +136,19 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
                 // Hàng đầu tiên: Liên hệ và Đề nghị dạy
                 Row(
                   children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          _showContactDialog(tutor);
-                        },
-                        icon: const Icon(Icons.message),
-                        label: const Text('Liên hệ ngay'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
+                    // Expanded(
+                    //   child: ElevatedButton.icon(
+                    //     onPressed: () {
+                    //       _showContactDialog(tutor);
+                    //     },
+                    //     icon: const Icon(Icons.message),
+                    //     label: const Text('Liên hệ ngay'),
+                    //     style: ElevatedButton.styleFrom(
+                    //       padding: const EdgeInsets.symmetric(vertical: 12),
+                    //     ),
+                    //   ),
+                    // ),
+                    // const SizedBox(width: 12),
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed:
@@ -162,11 +162,13 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
                         label:
                             _isProcessingInvite
                                 ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : const Text('Đề nghị dạy'),
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : const Text('Mời dạy'),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
@@ -184,7 +186,8 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => DanhGiaListScreen(tutor: tutor),
+                              builder:
+                                  (context) => DanhGiaListScreen(tutor: tutor),
                             ),
                           );
                         },
@@ -326,37 +329,37 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
     }
   }
 
-  void _showContactDialog(Tutor tutor) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Liên hệ gia sư'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Gia sư: ${tutor.name}'),
-                const SizedBox(height: 8),
-                Text('Email: ${tutor.taiKhoan.email}'),
-                Text('SĐT: ${tutor.taiKhoan.soDienThoai}'),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Đóng'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Gọi ngay'),
-              ),
-            ],
-          ),
-    );
-  }
+  // void _showContactDialog(Tutor tutor) {
+  //   showDialog(
+  //     context: context,
+  //     builder:
+  //         (context) => AlertDialog(
+  //           title: const Text('Liên hệ gia sư'),
+  //           content: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text('Gia sư: ${tutor.name}'),
+  //               const SizedBox(height: 8),
+  //               Text('Email: ${tutor.taiKhoan.email}'),
+  //               Text('SĐT: ${tutor.taiKhoan.soDienThoai}'),
+  //             ],
+  //           ),
+  //           actions: [
+  //             TextButton(
+  //               onPressed: () => Navigator.pop(context),
+  //               child: const Text('Đóng'),
+  //             ),
+  //             ElevatedButton(
+  //               onPressed: () {
+  //                 Navigator.pop(context);
+  //               },
+  //               child: const Text('Gọi ngay'),
+  //             ),
+  //           ],
+  //         ),
+  //   );
+  // }
 
   void _showOfferDialog(Tutor tutor) {
     final authState = context.read<AuthBloc>().state;
@@ -374,7 +377,10 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
     _loadClassesAndPrompt(authState, tutor);
   }
 
-  Future<void> _loadClassesAndPrompt(AuthAuthenticated auth, Tutor tutor) async {
+  Future<void> _loadClassesAndPrompt(
+    AuthAuthenticated auth,
+    Tutor tutor,
+  ) async {
     setState(() {
       _isProcessingInvite = true;
     });
@@ -400,15 +406,14 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
       return;
     }
 
-    final availableClasses = response.data!
-        .where((lop) {
+    final availableClasses =
+        response.data!.where((lop) {
           final status = (lop.trangThai ?? '').toUpperCase();
           return status == 'TIMGIASU' || status == 'CHODUYET';
-        })
-        .toList();
+        }).toList();
 
     if (availableClasses.isEmpty) {
-      _showSnack('Bạn chưa có lớp nào đang tìm gia sư để gửi đề nghị.', true);
+      _showSnack('Bạn chưa có lớp nào đang tìm gia sư để mời gia sư.', true);
       return;
     }
 
@@ -456,7 +461,7 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Gửi đề nghị dạy học',
+                              'Gửi lời mời dạy',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -475,7 +480,7 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  
+
                   // Chọn lớp học
                   Text(
                     'Chọn lớp học',
@@ -501,8 +506,8 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
                         ),
                         prefixIcon: Icon(Icons.class_, size: 20),
                       ),
-                      items: availableClasses
-                          .map((lop) {
+                      items:
+                          availableClasses.map((lop) {
                             final title =
                                 lop.tieuDeLop.trim().isEmpty
                                     ? 'Chưa đặt tên'
@@ -514,8 +519,7 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             );
-                          })
-                          .toList(),
+                          }).toList(),
                       onChanged: (value) {
                         if (value != null) {
                           setModalState(() {
@@ -525,9 +529,9 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
                       },
                     ),
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // Ghi chú
                   Text(
                     'Ghi chú (tùy chọn)',
@@ -549,7 +553,8 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
                       maxLength: 500,
                       decoration: InputDecoration(
                         border: InputBorder.none,
-                        hintText: 'Mô tả yêu cầu, thời gian mong muốn, hoặc câu hỏi cho gia sư...',
+                        hintText:
+                            'Mô tả yêu cầu, thời gian mong muốn, hoặc câu hỏi cho gia sư...',
                         hintStyle: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[400],
@@ -563,9 +568,9 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
                       style: const TextStyle(fontSize: 14),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // Action buttons
                   Row(
                     children: [
@@ -600,7 +605,7 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
                           },
                           icon: const Icon(Icons.send, size: 18),
                           label: const Text(
-                            'Gửi đề nghị',
+                            'Gửi lời mời dạy',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
@@ -640,12 +645,7 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
       return;
     }
 
-    await _sendInvite(
-      tutor: tutor,
-      lopId: lopId,
-      ghiChu: note,
-      auth: auth,
-    );
+    await _sendInvite(tutor: tutor, lopId: lopId, ghiChu: note, auth: auth);
   }
 
   Future<void> _sendInvite({
@@ -675,12 +675,12 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
     });
 
     if (response.isSuccess) {
-      _showSnack('Đã gửi đề nghị tới gia sư.', false);
+      _showSnack('Đã gửi lời mời dạy tới gia sư.', false);
     } else {
       _showSnack(
         response.message.isNotEmpty
             ? response.message
-            : 'Không thể gửi đề nghị, vui lòng thử lại.',
+            : 'Không thể gửi lời mời dạy, vui lòng thử lại.',
         true,
       );
     }
@@ -702,7 +702,10 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
     final authState = context.read<AuthBloc>().state;
 
     if (authState is! AuthAuthenticated || authState.user.nguoiHocID == null) {
-      _showSnack('Vui lòng đăng nhập bằng tài khoản người học để đánh giá', true);
+      _showSnack(
+        'Vui lòng đăng nhập bằng tài khoản người học để đánh giá',
+        true,
+      );
       return;
     }
 
@@ -714,18 +717,16 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
     );
 
     // Kiểm tra xem học viên có được phép đánh giá không
-    context.read<DanhGiaBloc>().add(KiemTraDaDanhGia(
-      giaSuId: tutor.giaSuID,
-    ));
+    context.read<DanhGiaBloc>().add(KiemTraDaDanhGia(giaSuId: tutor.giaSuID));
 
     // Đợi kết quả kiểm tra
     await Future.delayed(const Duration(milliseconds: 800));
-    
+
     if (!mounted) return;
-    
+
     final danhGiaBloc = context.read<DanhGiaBloc>();
     final state = danhGiaBloc.state;
-    
+
     // Đóng loading dialog
     Navigator.pop(context);
 
@@ -750,224 +751,265 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
     // Nếu đã đánh giá rồi, hiển thị cảnh báo
     if (checkResult.daDanhGia && checkResult.danhGia != null) {
       final danhGiaCu = checkResult.danhGia!;
-      
+
       // Nếu đã sửa rồi, không cho sửa nữa
       if (checkResult.daSua) {
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.red[100],
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.block, color: Colors.red[700], size: 24),
+          builder:
+              (context) => AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Không thể chỉnh sửa',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                ),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Đánh giá hiện tại:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
+                title: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red[100],
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(height: 8),
-                      Row(
+                      child: Icon(
+                        Icons.block,
+                        color: Colors.red[700],
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Không thể chỉnh sửa',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ),
+                  ],
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            danhGiaCu.diemSo.toStringAsFixed(1),
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                          const Text(
+                            'Đánh giá hiện tại:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.star, color: Colors.amber, size: 20),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Text(
+                                danhGiaCu.diemSo.toStringAsFixed(1),
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                                size: 20,
+                              ),
+                            ],
+                          ),
+                          if (danhGiaCu.binhLuan != null &&
+                              danhGiaCu.binhLuan!.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              danhGiaCu.binhLuan!,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ],
                         ],
                       ),
-                      if (danhGiaCu.binhLuan != null && danhGiaCu.binhLuan!.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          danhGiaCu.binhLuan!,
-                          style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.red[50],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red[200]!, width: 1),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.info_outline, color: Colors.red[700], size: 20),
-                      const SizedBox(width: 8),
-                      const Expanded(
-                        child: Text(
-                          'Bạn đã chỉnh sửa đánh giá này rồi. Mỗi học viên chỉ được sửa đánh giá 1 lần duy nhất và không thể thay đổi nữa.',
-                          style: TextStyle(fontSize: 13, height: 1.4),
-                        ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red[200]!, width: 1),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.red[700],
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text(
+                              'Bạn đã chỉnh sửa đánh giá này rồi. Mỗi học viên chỉ được sửa đánh giá 1 lần duy nhất và không thể thay đổi nữa.',
+                              style: TextStyle(fontSize: 13, height: 1.4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            actions: [
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Đóng'),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Đóng'),
+                  ),
+                ],
               ),
-            ],
-          ),
         );
         return;
       }
-      
+
       // Nếu chưa sửa, cho phép sửa 1 lần
       final confirmed = await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.orange[100],
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.edit_note, color: Colors.orange[700], size: 24),
+        builder:
+            (context) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Chỉnh sửa đánh giá',
-                  style: TextStyle(fontSize: 18),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Đánh giá hiện tại:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[100],
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(height: 8),
-                    Row(
+                    child: Icon(
+                      Icons.edit_note,
+                      color: Colors.orange[700],
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Chỉnh sửa đánh giá',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          danhGiaCu.diemSo.toStringAsFixed(1),
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                        const Text(
+                          'Đánh giá hiện tại:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.star, color: Colors.amber, size: 20),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Text(
+                              danhGiaCu.diemSo.toStringAsFixed(1),
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.star,
+                              color: Colors.amber,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                        if (danhGiaCu.binhLuan != null &&
+                            danhGiaCu.binhLuan!.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            danhGiaCu.binhLuan!,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
-                    if (danhGiaCu.binhLuan != null && danhGiaCu.binhLuan!.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        danhGiaCu.binhLuan!,
-                        style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.orange[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange[200]!, width: 1),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.warning_amber, color: Colors.orange[700], size: 20),
-                    const SizedBox(width: 8),
-                    const Expanded(
-                      child: Text(
-                        'LƯU Ý: Bạn chỉ có thể chỉnh sửa đánh giá này 1 LẦN DUY NHẤT. Sau khi sửa, bạn sẽ không thể thay đổi nữa.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          height: 1.4,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange[200]!, width: 1),
                     ),
-                  ],
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.warning_amber,
+                          color: Colors.orange[700],
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'LƯU Ý: Bạn chỉ có thể chỉnh sửa đánh giá này 1 LẦN DUY NHẤT. Sau khi sửa, bạn sẽ không thể thay đổi nữa.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              height: 1.4,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Hủy'),
                 ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Hủy'),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(context, true),
+                  icon: const Icon(Icons.edit, size: 18),
+                  label: const Text('Tôi hiểu, tiếp tục sửa'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            ElevatedButton.icon(
-              onPressed: () => Navigator.pop(context, true),
-              icon: const Icon(Icons.edit, size: 18),
-              label: const Text('Tôi hiểu, tiếp tục sửa'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              ),
-            ),
-          ],
-        ),
       );
 
       if (confirmed != true) return;
@@ -977,23 +1019,24 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
     final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => DanhGiaGiaSuDialog(
-        tutor: tutor,
-        initialRating: checkResult.danhGia?.diemSo.toDouble(),
-        initialComment: checkResult.danhGia?.binhLuan,
-      ),
+      builder:
+          (context) => DanhGiaGiaSuDialog(
+            tutor: tutor,
+            initialRating: checkResult.danhGia?.diemSo.toDouble(),
+            initialComment: checkResult.danhGia?.binhLuan,
+          ),
     );
 
     // Reload dữ liệu nếu đánh giá thành công
     if (result == true && mounted) {
       // Reload tutor detail
       context.read<TutorBloc>().add(LoadTutorByIdEvent(tutor.giaSuID));
-      
+
       // Reload toàn bộ danh sách gia sư
       context.read<TutorBloc>().add(LoadAllTutorsEvent());
-      
+
       _showSnack('Cảm ơn bạn đã đánh giá!', false);
-      
+
       // Quay về trang trước sau 1 giây
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {

@@ -20,16 +20,18 @@ class TutorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap ??
+      onTap:
+          onTap ??
           () {
             context.read<TutorBloc>().add(LoadTutorByIdEvent(tutor.giaSuID));
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => BlocProvider.value(
-                  value: context.read<TutorBloc>(),
-                  child: TutorDetailPage(tutorId: tutor.giaSuID),
-                ),
+                builder:
+                    (context) => BlocProvider.value(
+                      value: context.read<TutorBloc>(),
+                      child: TutorDetailPage(tutorId: tutor.giaSuID),
+                    ),
               ),
             );
           },
@@ -38,18 +40,20 @@ class TutorCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.grey.withValues(alpha:0.3)), // Viền nhẹ hơn
+          border: Border.all(
+            color: AppColors.grey.withValues(alpha: 0.3),
+          ), // Viền nhẹ hơn
           // ĐÃ LOẠI BỎ BÓNG ĐỔ MẠNH
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+            // mainAxisSize: MainAxisSize.min,
             children: [
               AspectRatio(aspectRatio: 1, child: _buildTutorImage()),
               Padding(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -68,19 +72,23 @@ class TutorCard extends StatelessWidget {
                       tutor.bangCap ?? 'Chưa cập nhật',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 2),
                     Row(
                       children: [
-                        const Icon(Icons.star_rate_rounded, size: 14, color: Colors.amber),
+                        const Icon(
+                          Icons.star_rate_rounded,
+                          size: 14,
+                          color: Colors.amber,
+                        ),
                         const SizedBox(width: 2),
                         Text(
                           tutor.diemSo.toStringAsFixed(1),
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         if (tutor.tongSoDanhGia > 0) ...[
                           const SizedBox(width: 2),
@@ -98,13 +106,16 @@ class TutorCard extends StatelessWidget {
                             onTap: onOfferTap,
                             borderRadius: BorderRadius.circular(4),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.lightBlue,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: const Text(
-                                'Đề nghị dạy',
+                                'Mời dạy',
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
@@ -129,7 +140,11 @@ class TutorCard extends StatelessWidget {
     if (tutor.anhDaiDien == null || tutor.anhDaiDien!.isEmpty) {
       return Container(
         color: AppColors.lightGrey,
-        child: const Icon(Icons.person_outline, size: 40, color: AppColors.grey),
+        child: const Icon(
+          Icons.person_outline,
+          size: 40,
+          color: AppColors.grey,
+        ),
       );
     }
 
@@ -143,10 +158,15 @@ class TutorCard extends StatelessWidget {
           child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         );
       },
-      errorBuilder: (context, error, stackTrace) => Container(
-        color: AppColors.lightGrey,
-        child: const Icon(Icons.person_outline, size: 40, color: AppColors.grey),
-      ),
+      errorBuilder:
+          (context, error, stackTrace) => Container(
+            color: AppColors.lightGrey,
+            child: const Icon(
+              Icons.person_outline,
+              size: 40,
+              color: AppColors.grey,
+            ),
+          ),
     );
   }
 }
