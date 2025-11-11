@@ -1,3 +1,5 @@
+// file: danhgia_repository.dart (ĐÃ SỬA)
+
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_service.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/danhgia.dart';
@@ -22,7 +24,8 @@ class DanhGiaRepository {
     return await _apiService.post(
       endpoint,
       data: data,
-      fromJsonT: (json) => DanhGia.fromJson(json['data'] ?? json),
+      // SỬA: 'data' (trước đây là 'json') bây giờ là đối tượng DanhGia đã được mở gói
+      fromJsonT: (data) => DanhGia.fromJson(data),
     );
   }
 
@@ -34,7 +37,9 @@ class DanhGiaRepository {
 
     return await _apiService.get(
       endpoint,
-      fromJsonT: (json) => DanhGiaResponse.fromJson(json),
+      // SỬA: 'data' (trước đây là 'json') bây giờ là đối tượng data
+      // mà DanhGiaResponse.fromJson mong đợi
+      fromJsonT: (data) => DanhGiaResponse.fromJson(data),
     );
   }
 
@@ -46,7 +51,8 @@ class DanhGiaRepository {
 
     return await _apiService.get(
       endpoint,
-      fromJsonT: (json) => KiemTraDanhGiaResponse.fromJson(json),
+      // SỬA: Tương tự như trên, 'data' là đối tượng data đã mở gói
+      fromJsonT: (data) => KiemTraDanhGiaResponse.fromJson(data),
     );
   }
 
@@ -56,6 +62,7 @@ class DanhGiaRepository {
   }) async {
     final endpoint = '/danhgia/$danhGiaId';
 
+    // Hàm delete không cần fromJsonT nên không cần sửa
     return await _apiService.delete(endpoint);
   }
 }

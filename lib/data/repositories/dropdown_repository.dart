@@ -1,5 +1,9 @@
+// FILE: dropdown_repository.dart (ĐÃ SỬA VÀ TỐI ƯU)
+
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_config.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_service.dart';
+// SỬA: Thêm import này
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart'; 
 
 class DropdownItem {
   final int id;
@@ -25,19 +29,20 @@ class DropdownItem {
 
 class DropdownRepository {
   final ApiService _apiService = ApiService();
+
   Future<List<DropdownItem>> _fetchDropdownList(String endpoint) async {
-    final response = await _apiService.get<Map<String, dynamic>>(
+    // SỬA: Thay đổi kiểu <Map<String, dynamic>> -> <List<DropdownItem>>
+    final response = await _apiService.get<List<DropdownItem>>(
       endpoint,
-      fromJsonT: (json) => json,
+      // SỬA: Cung cấp logic parse
+      fromJsonT: (data) => (data as List)
+          .map((item) => DropdownItem.fromJson(item as Map<String, dynamic>))
+          .toList(),
     );
 
-    if (response.isSuccess &&
-        response.data != null &&
-        response.data!['data'] is List) {
-      final List<dynamic> dataList = response.data!['data'];
-      return dataList
-          .map((item) => DropdownItem.fromJson(item as Map<String, dynamic>))
-          .toList();
+    // SỬA: Logic kiểm tra đơn giản hơn
+    if (response.isSuccess && response.data != null) {
+      return response.data!;
     } else {
       throw Exception(
         'Không thể tải dữ liệu cho: ${ApiConfig.baseUrl}$endpoint (Lỗi: ${response.message})',

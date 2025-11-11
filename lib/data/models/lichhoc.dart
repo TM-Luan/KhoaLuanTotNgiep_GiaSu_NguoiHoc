@@ -1,3 +1,5 @@
+// file: lichhoc.dart (PHIÊN BẢN ĐÃ SỬA)
+
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
 
 class LichHoc {
@@ -92,7 +94,11 @@ class LichHoc {
       duongDan: json['DuongDan']?.toString(),
       isLapLai: parseBool(json['IsLapLai']),
       lichHocGocID: parseNullableInt(json['LichHocGocID']),
-      lopHoc: parseLopHoc(json['lop_hoc_yeu_cau']),
+      
+      // SỬA LỖI: Ưu tiên parse 'Lop' (từ Resource), 
+      // nếu không có thì dùng 'lop_hoc_yeu_cau' (dự phòng)
+      lopHoc: parseLopHoc(json['Lop'] ?? json['lop_hoc_yeu_cau']),
+      
       lichHocCon: parseLichHocCon(json['lich_hoc_con']),
     );
   }
@@ -117,14 +123,14 @@ class LichHoc {
 
 class LichHocTheoThangResponse {
   final Map<String, List<LichHoc>> lichHocTheoNgay;
-  final ThongKeThang? thongKeThang; // <-- SỬA 1: Thêm dấu ? (nullable)
+  final ThongKeThang? thongKeThang;
   final List<LopHoc> lopHocTrongThang;
   final int thang;
   final int nam;
 
   LichHocTheoThangResponse({
     required this.lichHocTheoNgay,
-    this.thongKeThang, // <-- SỬA 2: Xóa 'required'
+    this.thongKeThang,
     required this.lopHocTrongThang,
     required this.thang,
     required this.nam,
@@ -150,20 +156,29 @@ class LichHocTheoThangResponse {
         }
       });
 
-      // SỬA 3: Xử lý thong_ke_thang an toàn (có thể null)
+      // Xử lý thong_ke_thang an toàn (có thể null)
       final thongKeData = json['thong_ke_thang'] as Map<String, dynamic>?;
       final thongKeThang =
           thongKeData != null ? ThongKeThang.fromJson(thongKeData) : null;
 
       // Xử lý lop_hoc_trong_thang an toàn
-      final lopHocData = json['lop_hoc_trong_thang'] as List<dynamic>? ?? [];
+      // SỬA: Key có thể là 'lop_hoc_trong_thang' (từ API cũ) 
+      // hoặc 'lop_hoc' (từ API /lop/{id}/lich-hoc-theo-thang)
+      final dynamic lopHocDataRaw = json['lop_hoc_trong_thang'] ?? json['lop_hoc'];
       final lopHocTrongThang = <LopHoc>[];
 
-      for (var item in lopHocData) {
-        {
-          final lopHoc = LopHoc.fromJson(item);
-          lopHocTrongThang.add(lopHoc);
+      // Xử lý cả 2 trường hợp: List (từ getLichHocTheoThang) 
+      // hoặc Map (từ getLichHocTheoLopVaThang)
+      if (lopHocDataRaw is List<dynamic>) {
+         for (var item in lopHocDataRaw) {
+          {
+            final lopHoc = LopHoc.fromJson(item);
+            lopHocTrongThang.add(lopHoc);
+          }
         }
+      } else if (lopHocDataRaw is Map<String, dynamic>) {
+        // Đây là trường hợp API getLichHocTheoLopVaThang
+        lopHocTrongThang.add(LopHoc.fromJson(lopHocDataRaw));
       }
 
       // Xử lý thang và nam an toàn
@@ -177,7 +192,7 @@ class LichHocTheoThangResponse {
       final nam = safeParseMonthYear(json['nam']);
       return LichHocTheoThangResponse(
         lichHocTheoNgay: lichHocTheoNgay,
-        thongKeThang: thongKeThang, // <-- SỬA 4: Gán giá trị (có thể null)
+        thongKeThang: thongKeThang,
         lopHocTrongThang: lopHocTrongThang,
         thang: thang,
         nam: nam,
@@ -186,7 +201,7 @@ class LichHocTheoThangResponse {
       // Trả về response rỗng để tránh crash
       return LichHocTheoThangResponse(
         lichHocTheoNgay: {},
-        thongKeThang: null, // <-- SỬA 5: Trả về null trong catch
+        thongKeThang: null,
         lopHocTrongThang: [],
         thang: DateTime.now().month,
         nam: DateTime.now().year,
@@ -198,15 +213,15 @@ class LichHocTheoThangResponse {
   Map<String, dynamic> toDebugMap() {
     return {
       'soNgayCoLich': lichHocTheoNgay.length,
-      'tongSoBuoi': thongKeThang?.tongSoBuoi ?? 0, // <-- SỬA 6: Thêm check null
+      'tongSoBuoi': thongKeThang?.tongSoBuoi ?? 0,
       'soLopTrongThang': lopHocTrongThang.length,
       'thang': thang,
       'nam': nam,
       'chiTietThongKe': {
-        'sapToi': thongKeThang?.sapToi ?? 0, // <-- SỬA 7: Thêm check null
-        'dangDay': thongKeThang?.dangDay ?? 0, // <-- SỬA 8: Thêm check null
-        'daHoc': thongKeThang?.daHoc ?? 0, // <-- SỬA 9: Thêm check null
-        'huy': thongKeThang?.huy ?? 0, // <-- SỬA 10: Thêm check null
+        'sapToi': thongKeThang?.sapToi ?? 0,
+        'dangDay': thongKeThang?.dangDay ?? 0,
+        'daHoc': thongKeThang?.daHoc ?? 0,
+        'huy': thongKeThang?.huy ?? 0,
       },
     };
   }

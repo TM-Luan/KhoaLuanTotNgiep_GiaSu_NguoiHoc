@@ -1,5 +1,5 @@
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_service.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_service.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/giasu.dart';
 
 class TutorRepository {
@@ -9,9 +9,11 @@ class TutorRepository {
   Future<ApiResponse<List<Tutor>>> getAllTutors() async {
     return await _apiService.get<List<Tutor>>(
       '/giasu',
-      fromJsonT: (json) {
-        if (json['data'] is List) {
-          return (json['data'] as List)
+      // SỬA: 'data' (trước đây là 'json') bây giờ là List [ ... ]
+      // vì ApiService đã mở gói { 'data': [...] }
+      fromJsonT: (data) {
+        if (data is List) {
+          return (data)
               .map((item) => Tutor.fromJson(item))
               .toList();
         }
@@ -24,9 +26,11 @@ class TutorRepository {
   Future<ApiResponse<Tutor>> getTutorById(int id) async {
     return await _apiService.get<Tutor>(
       '/giasu/$id',
-      fromJsonT: (json) {
-        if (json['data'] != null) {
-          return Tutor.fromJson(json['data']);
+      // SỬA: 'data' (trước đây là 'json') bây giờ là đối tượng Tutor { ... }
+      // vì ApiService đã mở gói { 'data': {...} }
+      fromJsonT: (data) {
+        if (data != null) {
+          return Tutor.fromJson(data);
         }
         throw Exception('Data not found');
       },
@@ -37,12 +41,11 @@ class TutorRepository {
   Future<ApiResponse<Map<String, dynamic>>> getTutorClasses(int giaSuId) async {
     return await _apiService.get<Map<String, dynamic>>(
       '/giasu/$giaSuId/lop',
-      fromJsonT: (json) {
-        final Map<String, dynamic> root = Map<String, dynamic>.from(json);
-        final Map<String, dynamic> map =
-            root.containsKey('data') && root['data'] is Map<String, dynamic>
-                ? Map<String, dynamic>.from(root['data'] as Map)
-                : root;
+      // SỬA: 'data' (trước đây là 'json') bây giờ là Map { 'dang_day': [], 'de_nghi': [] }
+      // vì ApiService đã mở gói { 'data': { 'dang_day': [], 'de_nghi': [] } }
+      // Chúng ta không cần kiểm tra 'root.containsKey('data')' nữa
+      fromJsonT: (data) {
+        final Map<String, dynamic> map = Map<String, dynamic>.from(data);
         return {
           'dang_day': (map['dang_day'] as List<dynamic>? ?? []),
           'de_nghi': (map['de_nghi'] as List<dynamic>? ?? []),

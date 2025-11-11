@@ -1,3 +1,5 @@
+// FILE: yeu_cau_nhan_lop_repository.dart (ĐÃ SỬA VÀ TỐI ƯU)
+
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_service.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/yeu_cau_nhan_lop.dart';
@@ -5,74 +7,46 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/yeu_cau_nhan_lo
 class YeuCauNhanLopRepository {
   final ApiService _apiService = ApiService();
 
-  ApiResponse<List<YeuCauNhanLop>> _mapListResponse(
-    ApiResponse<Map<String, dynamic>> response,
-  ) {
-    if (response.isSuccess && response.data != null) {
-      final dynamic raw = response.data!['data'];
-      if (raw is List) {
-        final list =
-            raw
-                .whereType<Map<String, dynamic>>()
-                .map(YeuCauNhanLop.fromJson)
-                .toList();
+  // SỬA: Bỏ hoàn toàn hàm _mapListResponse vì không cần nữa
 
-        return ApiResponse<List<YeuCauNhanLop>>(
-          success: true,
-          message: response.message,
-          data: list,
-          statusCode: response.statusCode,
-        );
-      }
-
-      return ApiResponse<List<YeuCauNhanLop>>(
-        success: false,
-        message: 'Dữ liệu trả về không đúng định dạng.',
-        error: response.error,
-        statusCode: response.statusCode,
-      );
-    }
-
-    return ApiResponse<List<YeuCauNhanLop>>(
-      success: false,
-      message: response.message,
-      error: response.error,
-      statusCode: response.statusCode,
-    );
-  }
-
+  /// Lấy danh sách đã gửi
   Future<ApiResponse<List<YeuCauNhanLop>>> getDanhSachDaGui({
     required int nguoiGuiTaiKhoanId,
   }) async {
-    final response = await _apiService.get<Map<String, dynamic>>(
+    // SỬA: Gọi thẳng ApiService với fromJsonT
+    return await _apiService.get(
       '/yeucau/dagui?NguoiGuiTaiKhoanID=$nguoiGuiTaiKhoanId',
-      fromJsonT: (json) => json,
+      fromJsonT: (data) =>
+          (data as List).map((item) => YeuCauNhanLop.fromJson(item)).toList(),
     );
-
-    return _mapListResponse(response);
   }
 
+  /// Lấy danh sách nhận được
   Future<ApiResponse<List<YeuCauNhanLop>>> getDanhSachNhanDuoc({
     required int giaSuId,
   }) async {
-    final response = await _apiService.get<Map<String, dynamic>>(
+    // SỬA: Gọi thẳng ApiService với fromJsonT
+    return await _apiService.get(
       '/yeucau/nhanduoc?GiaSuID=$giaSuId',
-      fromJsonT: (json) => json,
+      fromJsonT: (data) =>
+          (data as List).map((item) => YeuCauNhanLop.fromJson(item)).toList(),
     );
-
-    return _mapListResponse(response);
   }
 
+  /// Lấy đề nghị theo lớp
   Future<ApiResponse<List<YeuCauNhanLop>>> getDeNghiTheoLop(
     int lopYeuCauId,
   ) async {
-    final response = await _apiService.get<Map<String, dynamic>>(
+    // SỬA: Gọi thẳng ApiService với fromJsonT
+    return await _apiService.get(
       '/lophocyeucau/$lopYeuCauId/de-nghi',
-      fromJsonT: (json) => json,
+      fromJsonT: (data) =>
+          (data as List).map((item) => YeuCauNhanLop.fromJson(item)).toList(),
     );
-
-    return _mapListResponse(response);
   }
+
+  // === CÁC HÀM POST, PUT, DELETE GIỮ NGUYÊN ===
+  // (Vì chúng không dùng fromJsonT nên không bị ảnh hưởng)
 
   Future<ApiResponse<dynamic>> giaSuGuiYeuCau({
     required int lopId,
@@ -135,7 +109,8 @@ class YeuCauNhanLopRepository {
     return _apiService.put('/yeucau/$yeuCauId/tuchoi');
   }
 
-  // Lấy danh sách lớp của gia sư (bao gồm cả đang dạy và đề nghị)
+  // === HÀM getLopCuaGiaSu GIỮ NGUYÊN ===
+  // (Hàm này đã được viết an toàn, logic cũ vẫn chạy đúng với ApiService mới)
   Future<ApiResponse<Map<String, dynamic>>> getLopCuaGiaSu(int giaSuId) async {
     final response = await _apiService.get<Map<String, dynamic>>(
       '/giasu/$giaSuId/lop',
@@ -143,14 +118,10 @@ class YeuCauNhanLopRepository {
     );
 
     if (response.isSuccess && response.data != null) {
-      // API trả về structure: { success: true, message: "...", data: { lopDangDay: [...], lopDeNghi: [...] } }
       final data = response.data!;
-
-      // Kiểm tra xem có field 'data' không, nếu có thì lấy, nếu không thì dùng trực tiếp
-      final actualData =
-          data.containsKey('data')
-              ? data['data'] as Map<String, dynamic>
-              : data;
+      final actualData = data.containsKey('data')
+          ? data['data'] as Map<String, dynamic>
+          : data;
 
       return ApiResponse<Map<String, dynamic>>(
         success: true,

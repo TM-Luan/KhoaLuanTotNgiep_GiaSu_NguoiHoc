@@ -1,3 +1,5 @@
+// file: lich_hoc_repository.dart (PHIÊN BẢN ĐÃ SỬA)
+
 import 'package:intl/intl.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_service.dart';
@@ -23,9 +25,9 @@ class LichHocRepository {
 
     return await _apiService.get(
       endpoint,
-      fromJsonT: (json) {
-        // API trả về mảng data: ["2025-11-05", "2025-11-06"]
-        final List<dynamic> dataList = json['data'] as List;
+      // SỬA 1: 'data' bây giờ là List, không còn là Map
+      fromJsonT: (data) {
+        final List<dynamic> dataList = data as List;
         return dataList.map((e) => e.toString()).toSet();
       },
     );
@@ -43,16 +45,13 @@ class LichHocRepository {
 
     return await _apiService.get(
       endpoint,
-      fromJsonT: (json) {
-        // API trả về mảng data: [LichHoc, LichHoc, ...]
-        final List<dynamic> dataList = json['data'] as List;
+      // SỬA 2: 'data' bây giờ là List
+      fromJsonT: (data) {
+        final List<dynamic> dataList = data as List;
         return dataList.map((item) => LichHoc.fromJson(item)).toList();
       },
     );
   }
-
-
-  // XÓA HÀM CŨ: getLichHocTheoThangNguoiHoc
 
   // [MỚI] Lấy tóm tắt (dấu chấm) cho lịch Người Học
   Future<ApiResponse<Set<String>>> getLichHocSummaryNguoiHoc({
@@ -71,8 +70,9 @@ class LichHocRepository {
 
     return await _apiService.get(
       endpoint,
-      fromJsonT: (json) {
-        final List<dynamic> dataList = json['data'] as List;
+      // SỬA 3: 'data' bây giờ là List
+      fromJsonT: (data) {
+        final List<dynamic> dataList = data as List;
         return dataList.map((e) => e.toString()).toSet();
       },
     );
@@ -90,8 +90,9 @@ class LichHocRepository {
 
     return await _apiService.get(
       endpoint,
-      fromJsonT: (json) {
-        final List<dynamic> dataList = json['data'] as List;
+      // SỬA 4: 'data' bây giờ là List
+      fromJsonT: (data) {
+        final List<dynamic> dataList = data as List;
         return dataList.map((item) => LichHoc.fromJson(item)).toList();
       },
     );
@@ -114,8 +115,8 @@ class LichHocRepository {
 
     return await _apiService.get(
       endpoint,
-      fromJsonT:
-          (json) => LichHocTheoThangResponse.fromJson(json['data'] ?? json),
+      // SỬA 5: 'data' bây giờ là Map data
+      fromJsonT: (data) => LichHocTheoThangResponse.fromJson(data),
     );
   }
 
@@ -144,8 +145,9 @@ class LichHocRepository {
     return await _apiService.post(
       endpoint,
       data: data,
-      fromJsonT: (json) {
-        final dataList = json['data'] as List;
+      // SỬA 6: 'data' bây giờ là List
+      fromJsonT: (data) {
+        final dataList = data as List;
         return dataList.map((item) => LichHoc.fromJson(item)).toList();
       },
     );
@@ -171,7 +173,8 @@ class LichHocRepository {
     return await _apiService.put(
       endpoint,
       data: body,
-      fromJsonT: (json) => LichHoc.fromJson(json['data'] ?? json),
+      // SỬA 7: 'data' bây giờ là Map của LichHoc
+      fromJsonT: (data) => LichHoc.fromJson(data),
     );
   }
 

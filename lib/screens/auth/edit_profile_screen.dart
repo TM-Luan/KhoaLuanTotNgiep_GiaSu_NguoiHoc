@@ -1,9 +1,9 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart'; // <-- Đã thêm
+import 'package:intl/intl.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile.dart';
@@ -22,7 +22,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _repo = AuthRepository();
   final ImagePicker _picker = ImagePicker();
 
-  // ⭐️ Thêm 2 trình định dạng ngày
+  // 2 trình định dạng ngày
   final DateFormat _displayFormat = DateFormat('dd/MM/yyyy');
   final DateFormat _apiFormat = DateFormat('yyyy-MM-dd');
 
@@ -32,7 +32,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _phoneController;
   late TextEditingController _addressController;
   late TextEditingController
-  _birthController; // Sẽ được kiểm soát bởi _displayFormat
+      _birthController; // Sẽ được kiểm soát bởi _displayFormat
 
   // Thông tin Gia Sư
   late TextEditingController _degreeController;
@@ -82,17 +82,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _selectedGender = null;
     }
 
-    // ⭐️ Sửa lỗi format ngày ở đây
+    // Xử lý format ngày
     _birthController = TextEditingController(); // Khởi tạo rỗng
     if (widget.user.ngaySinh != null && widget.user.ngaySinh!.isNotEmpty) {
       try {
         // Vẫn parse ngày từ server (chuẩn YYYY-MM-DD)
         _selectedDate = DateTime.tryParse(widget.user.ngaySinh!);
         if (_selectedDate != null) {
-          // Nhưng hiển thị ra bằng format "dd/MM/yyyy" cho đẹp
+          // Nhưng hiển thị ra bằng format "dd/MM/yyyy"
           _birthController.text = _displayFormat.format(_selectedDate!);
         } else {
-          // Nếu server trả về định dạng lạ, hiển thị tạm
           _birthController.text = widget.user.ngaySinh!;
         }
       } catch (e) {
@@ -109,7 +108,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
-      // Phần "làm đẹp" (Theme) của bạn đã TỐT, giữ nguyên
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -130,7 +128,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
-        // ⭐️ HIỂN THỊ NGÀY ĐÃ CHỌN THEO FORMAT "dd/MM/yyyy"
         _birthController.text = _displayFormat.format(picked);
       });
     }
@@ -163,7 +160,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       diaChi: _addressController.text.trim(),
       gioiTinh: _selectedGender,
 
-      // ⭐️ GỬI NGÀY ĐÚNG CHUẨN API (YYYY-MM-DD)
+      // GỬI NGÀY ĐÚNG CHUẨN API (YYYY-MM-DD)
       ngaySinh:
           _selectedDate != null ? _apiFormat.format(_selectedDate!) : null,
 
@@ -193,7 +190,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       anhCCCDMatTruoc: widget.user.anhCCCDMatTruoc,
       anhCCCDMatSau: widget.user.anhCCCDMatSau,
       anhBangCap: widget.user.anhBangCap,
-      vaiTro: widget.user.vaiTro,
+      vaiTro: widget.user.vaiTro, // Dòng này quan trọng khi gửi đi
       trangThai: widget.user.trangThai,
       giaSuID: widget.user.giaSuID,
       nguoiHocID: widget.user.nguoiHocID,
@@ -212,7 +209,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             backgroundColor: res.success ? AppColors.success : AppColors.error,
           ),
         );
-        if (res.success) Navigator.pop(context, res.data);
+
+        // === ⭐️ BẮT ĐẦU SỬA LỖI ⭐️ ===
+        if (res.success) {
+          UserProfile? returnedProfile = res.data;
+          if (returnedProfile != null) {
+            // Gán lại vai trò từ widget.user (profile gốc)
+            // vì response từ server có thể không chứa trường 'VaiTro'
+            returnedProfile.vaiTro = widget.user.vaiTro;
+          }
+          // Pop profile đã được "vá" (patch)
+          Navigator.pop(context, returnedProfile);
+        }
+        // === ⭐️ KẾT THÚC SỬA LỖI ⭐️ ===
       }
     } catch (e) {
       setState(() => _isLoading = false);
@@ -401,21 +410,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     child:
                         _isLoading
                             ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                color: AppColors.textLight,
-                                strokeWidth: 2,
-                              ),
-                            )
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: AppColors.textLight,
+                                  strokeWidth: 2,
+                                ),
+                              )
                             : Text(
-                              "Lưu thay đổi",
-                              style: TextStyle(
-                                color: AppColors.textLight,
-                                fontSize: AppTypography.body1,
-                                fontWeight: FontWeight.w600,
+                                "Lưu thay đổi",
+                                style: TextStyle(
+                                  color: AppColors.textLight,
+                                  fontSize: AppTypography.body1,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
                   ),
                 ],
               ),
@@ -468,14 +477,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     if (newImageFile != null)
                       Image.file(
                         newImageFile,
-                        fit: BoxFit.contain, // <--- SỬA THÀNH CONTAIN
+                        fit: BoxFit.contain,
                       )
                     // 2. Nếu không, hiển thị link ảnh cũ
                     else if (currentImageUrl != null &&
                         currentImageUrl.isNotEmpty)
                       Image.network(
                         currentImageUrl,
-                        fit: BoxFit.contain, // <--- SỬA THÀNH CONTAIN
+                        fit: BoxFit.contain,
                         errorBuilder:
                             (context, error, stackTrace) =>
                                 _buildImagePlaceholder(),
@@ -768,14 +777,14 @@ class EditProfilePic extends StatelessWidget {
     if (newImageFile != null) {
       return Image.file(
         newImageFile!,
-        fit: BoxFit.contain, // <--- SỬA THÀNH CONTAIN
+        fit: BoxFit.cover, // Sửa lại: Ảnh đại diện nên là 'cover'
       );
     }
     // 2. Ảnh cũ từ network
     if (image.isNotEmpty) {
       return Image.network(
         image,
-        fit: BoxFit.cover, // <--- SỬA THÀNH CONTAIN
+        fit: BoxFit.cover, // Sửa lại: Ảnh đại diện nên là 'cover'
         // Xử lý lỗi (hiển thị placeholder)
         errorBuilder: (context, error, stackTrace) {
           return _buildAvatarPlaceholder();
