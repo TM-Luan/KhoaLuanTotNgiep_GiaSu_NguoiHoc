@@ -19,9 +19,7 @@ class ChiTietLichHocDialog extends StatelessWidget {
     final isOnline = (lichHoc.duongDan ?? '').isNotEmpty;
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -35,10 +33,7 @@ class ChiTietLichHocDialog extends StatelessWidget {
                 children: [
                   const Text(
                     'Chi tiết lịch học',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -69,13 +64,13 @@ class ChiTietLichHocDialog extends StatelessWidget {
               if (isGiaSu && lichHoc.lopHoc?.tenNguoiHoc != null)
                 _buildInfoRow(
                   icon: Icons.person,
-                  title: 'Học sinh',
+                  title: 'Tên người học',
                   content: lichHoc.lopHoc?.tenNguoiHoc ?? '',
                 ),
               if (!isGiaSu && lichHoc.lopHoc?.tenGiaSu != null)
                 _buildInfoRow(
                   icon: Icons.person_outline,
-                  title: 'Gia sư',
+                  title: 'Tên gia sư',
                   content: lichHoc.lopHoc?.tenGiaSu ?? '',
                 ),
 
@@ -112,14 +107,13 @@ class ChiTietLichHocDialog extends StatelessWidget {
                 contentColor: isOnline ? Colors.green : Colors.blue,
               ),
 
-              if (lichHoc.isLapLai)
-                _buildInfoRow(
-                  icon: Icons.repeat,
-                  title: 'Lịch lặp lại',
-                  content: 'Có',
-                  contentColor: Colors.orange,
-                ),
-
+              // if (lichHoc.isLapLai)
+              //   _buildInfoRow(
+              //     icon: Icons.repeat,
+              //     title: 'Lịch lặp lại',
+              //     content: 'Có',
+              //     contentColor: Colors.orange,
+              //   ),
               if (isOnline && lichHoc.duongDan != null)
                 _buildInfoRow(
                   icon: Icons.link,
@@ -173,10 +167,7 @@ class ChiTietLichHocDialog extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -260,8 +251,7 @@ class CapNhatTrangThaiDialog extends StatefulWidget {
   });
 
   @override
-  State<CapNhatTrangThaiDialog> createState() =>
-      _CapNhatTrangThaiDialogState();
+  State<CapNhatTrangThaiDialog> createState() => _CapNhatTrangThaiDialogState();
 }
 
 class _CapNhatTrangThaiDialogState extends State<CapNhatTrangThaiDialog> {
@@ -297,9 +287,7 @@ class _CapNhatTrangThaiDialogState extends State<CapNhatTrangThaiDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -314,10 +302,7 @@ class _CapNhatTrangThaiDialogState extends State<CapNhatTrangThaiDialog> {
                 const Expanded(
                   child: Text(
                     'Cập nhật trạng thái',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
                 IconButton(
@@ -354,10 +339,7 @@ class _CapNhatTrangThaiDialogState extends State<CapNhatTrangThaiDialog> {
             // Danh sách trạng thái
             const Text(
               'Chọn trạng thái mới:',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
 
@@ -403,7 +385,9 @@ class _CapNhatTrangThaiDialogState extends State<CapNhatTrangThaiDialog> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight:
-                                isSelected ? FontWeight.bold : FontWeight.normal,
+                                isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                             color:
                                 isSelected
                                     ? _statusColors[entry.key]
@@ -500,9 +484,7 @@ class _XoaLichHocDialogState extends State<XoaLichHocDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -526,10 +508,7 @@ class _XoaLichHocDialogState extends State<XoaLichHocDialog> {
             // Tiêu đề
             const Text(
               'Xác nhận xóa',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
 

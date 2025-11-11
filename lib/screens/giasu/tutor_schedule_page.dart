@@ -137,14 +137,14 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Mã LH: ${lichHoc.lichHocID}',
+                      'Mã Lịch học: ${lichHoc.lichHocID}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.blue,
                       ),
                     ),
                     Text(
-                      'Lớp: ${lichHoc.lopYeuCauID}',
+                      'Mã Lớp: ${lichHoc.lopYeuCauID}',
                       style: const TextStyle(fontSize: 12, color: Colors.green),
                     ),
                     if (lichHoc.lopHoc?.tenMon != null)
@@ -217,12 +217,11 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
               'Ngày: ${_formatDate(lichHoc.ngayHoc)}',
             ),
 
-            if (lichHoc.isLapLai) _buildInfoRow(Icons.repeat, 'Lịch lặp lại'),
-
+            //if (lichHoc.isLapLai) _buildInfoRow(Icons.repeat, 'Lịch lặp lại'),
             if (lichHoc.lopHoc?.tenNguoiHoc != null)
               _buildInfoRow(
                 Icons.person,
-                'Học sinh: ${lichHoc.lopHoc!.tenNguoiHoc}',
+                'Tên người học: ${lichHoc.lopHoc!.tenNguoiHoc}',
               ),
 
             if (isOnline)
@@ -238,10 +237,11 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                     onPressed: () {
                       showDialog(
                         context: context,
-                        builder: (context) => ChiTietLichHocDialog(
-                          lichHoc: lichHoc,
-                          isGiaSu: true,
-                        ),
+                        builder:
+                            (context) => ChiTietLichHocDialog(
+                              lichHoc: lichHoc,
+                              isGiaSu: true,
+                            ),
                       );
                     },
                     icon: const Icon(Icons.visibility, size: 16),
@@ -290,17 +290,18 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                         onPressed: () {
                           showDialog(
                             context: context,
-                            builder: (context) => CapNhatTrangThaiDialog(
-                              lichHoc: lichHoc,
-                              onUpdate: (trangThai) {
-                                context.read<LichHocBloc>().add(
-                                  UpdateLichHoc(
-                                    lichHocId: lichHoc.lichHocID,
-                                    trangThai: trangThai,
-                                  ),
-                                );
-                              },
-                            ),
+                            builder:
+                                (context) => CapNhatTrangThaiDialog(
+                                  lichHoc: lichHoc,
+                                  onUpdate: (trangThai) {
+                                    context.read<LichHocBloc>().add(
+                                      UpdateLichHoc(
+                                        lichHocId: lichHoc.lichHocID,
+                                        trangThai: trangThai,
+                                      ),
+                                    );
+                                  },
+                                ),
                           );
                         },
                         icon: const Icon(Icons.update, size: 16),
@@ -321,17 +322,18 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                         onPressed: () {
                           showDialog(
                             context: context,
-                            builder: (context) => XoaLichHocDialog(
-                              lichHoc: lichHoc,
-                              onDelete: (xoaCaChuoi) {
-                                context.read<LichHocBloc>().add(
-                                  DeleteLichHoc(
-                                    lichHocId: lichHoc.lichHocID,
-                                    xoaCaChuoi: xoaCaChuoi,
-                                  ),
-                                );
-                              },
-                            ),
+                            builder:
+                                (context) => XoaLichHocDialog(
+                                  lichHoc: lichHoc,
+                                  onDelete: (xoaCaChuoi) {
+                                    context.read<LichHocBloc>().add(
+                                      DeleteLichHoc(
+                                        lichHocId: lichHoc.lichHocID,
+                                        xoaCaChuoi: xoaCaChuoi,
+                                      ),
+                                    );
+                                  },
+                                ),
                           );
                         },
                         icon: const Icon(Icons.delete, size: 16),
