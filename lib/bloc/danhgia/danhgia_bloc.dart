@@ -1,5 +1,5 @@
 import 'package:bloc/bloc.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/danhgia.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/danhgia_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/danhgia_repository.dart';
 
 part 'danhgia_event.dart';

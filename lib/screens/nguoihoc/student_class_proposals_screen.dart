@@ -5,9 +5,12 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/yeu_cau_nhan_lop.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/yeu_cau_nhan_lop_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_detail_page.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notification_service.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/untils/format_vnd.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_info_row.dart';
 
 class StudentClassProposalsScreen extends StatefulWidget {
   final int lopHocId;
@@ -22,6 +25,7 @@ class StudentClassProposalsScreen extends StatefulWidget {
 class _StudentClassProposalsScreenState
     extends State<StudentClassProposalsScreen> {
   late final YeuCauNhanLopRepository _yeuCauRepo;
+  //late final TutorRepository _giasuRepo;
   int? _taiKhoanId;
 
   bool _isLoading = true;
@@ -255,13 +259,63 @@ class _StudentClassProposalsScreenState
               ],
             ),
             const SizedBox(height: 8),
-            Text('Gia sư: ${yeuCau.giaSuHoTen ?? 'Chưa có thông tin'}'),
-            Text('Học phí: ${yeuCau.lopHoc.hocPhi}'),
+            InfoRow(
+              icon: Icons.person,
+              label: 'Gia sư',
+              value: yeuCau.giaSuHoTen ?? 'Chưa có thông tin',
+            ),
+            InfoRow(
+              icon: Icons.attach_money,
+              label: 'Học phí',
+              value: formatCurrency(yeuCau.lopHoc.hocPhi),
+            ),
             if (yeuCau.ghiChu?.isNotEmpty ?? false) ...[
               const SizedBox(height: 8),
-              Text('Ghi chú: ${yeuCau.ghiChu}'),
+              InfoRow(
+                icon: Icons.note,
+                label: 'Ghi chú',
+                value: yeuCau.ghiChu ?? 'Không có ghi chú',
+              ),
             ],
-            
+
+            // ---------- BẠN HÃY DÁN KHỐI CODE NÚT BẤM VÀO ĐÂY ----------
+            // Chỉ hiển thị nút nếu có thông tin gia sư
+            if (yeuCau.giaSuID != null)
+              Padding(
+                // Thêm padding để nút không quá sát
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Align(
+                  alignment: Alignment.centerLeft, // Đặt nút ở bên trái
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.person_search_outlined, size: 18),
+                    label: const Text('Xem chi tiết gia sư'),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      tapTargetSize:
+                          MaterialTapTargetSize.shrinkWrap, // Giảm vùng bấm
+                      backgroundColor: Colors.blue.withOpacity(
+                        0.05,
+                      ), // Thêm màu nền nhẹ
+                    ),
+                    onPressed: () {
+                      // Điều hướng đến trang chi tiết gia sư
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) =>
+                                  TutorDetailPage(tutorId: yeuCau.giaSuID!),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+            // ------------------ KẾT THÚC KHỐI CODE ------------------
             const SizedBox(height: 12),
             if (isPending)
               Align(
@@ -344,91 +398,91 @@ class _StudentClassProposalsScreenState
           child: const Text('Hủy', style: TextStyle(color: Colors.red)),
         ),
         const SizedBox(width: 8),
-        ElevatedButton(
-          onPressed: () async {
-            if (_taiKhoanId == null) {
-              _showSnack(
-                'Không tìm thấy thông tin tài khoản để chỉnh sửa.',
-                true,
-              );
-              return;
-            }
+        // ElevatedButton(
+        //   onPressed: () async {
+        //     if (_taiKhoanId == null) {
+        //       _showSnack(
+        //         'Không tìm thấy thông tin tài khoản để chỉnh sửa.',
+        //         true,
+        //       );
+        //       return;
+        //     }
 
-            final note = await _promptUpdateNote(initial: yeuCau.ghiChu ?? '');
-            if (note == null) {
-              return;
-            }
+        //     final note = await _promptUpdateNote(initial: yeuCau.ghiChu ?? '');
+        //     if (note == null) {
+        //       return;
+        //     }
 
-            await _performAction(
-              yeuCauId: yeuCau.yeuCauID,
-              action:
-                  () => _yeuCauRepo.capNhatYeuCau(
-                    yeuCauId: yeuCau.yeuCauID,
-                    nguoiGuiTaiKhoanId: _taiKhoanId!,
-                    ghiChu: note.isEmpty ? null : note,
-                  ),
-              successMessage: 'Đã cập nhật ghi chú đề nghị.',
-              actionType: 'update',
-            );
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blueGrey,
-            foregroundColor: Colors.white,
-          ),
-          child: const Text('Chỉnh sửa'),
-        ),
+        //     await _performAction(
+        //       yeuCauId: yeuCau.yeuCauID,
+        //       action:
+        //           () => _yeuCauRepo.capNhatYeuCau(
+        //             yeuCauId: yeuCau.yeuCauID,
+        //             nguoiGuiTaiKhoanId: _taiKhoanId!,
+        //             ghiChu: note.isEmpty ? null : note,
+        //           ),
+        //       successMessage: 'Đã cập nhật ghi chú đề nghị.',
+        //       actionType: 'update',
+        //     );
+        //   },
+        //   style: ElevatedButton.styleFrom(
+        //     backgroundColor: Colors.blueGrey,
+        //     foregroundColor: Colors.white,
+        //   ),
+        //   child: const Text('Chỉnh sửa'),
+        // ),
       ],
     );
   }
 
-  Future<String?> _promptUpdateNote({required String initial}) async {
-    final controller = TextEditingController(text: initial);
-    final formKey = GlobalKey<FormState>();
+  // Future<String?> _promptUpdateNote({required String initial}) async {
+  //   final controller = TextEditingController(text: initial);
+  //   final formKey = GlobalKey<FormState>();
 
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Chỉnh sửa ghi chú'),
-          content: Form(
-            key: formKey,
-            child: TextFormField(
-              controller: controller,
-              maxLines: 4,
-              maxLength: 500,
-              decoration: const InputDecoration(
-                hintText: 'Nhập ghi chú mới (không bắt buộc)',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if ((value ?? '').length > 500) {
-                  return 'Ghi chú tối đa 500 ký tự';
-                }
-                return null;
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Hủy'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (formKey.currentState?.validate() ?? false) {
-                  Navigator.pop(context, controller.text.trim());
-                }
-              },
-              child: const Text('Lưu'),
-            ),
-          ],
-        );
-      },
-    );
+  //   final result = await showDialog<String>(
+  //     context: context,
+  //     builder: (context) {
+  //       return AlertDialog(
+  //         title: const Text('Chỉnh sửa ghi chú'),
+  //         content: Form(
+  //           key: formKey,
+  //           child: TextFormField(
+  //             controller: controller,
+  //             maxLines: 4,
+  //             maxLength: 500,
+  //             decoration: const InputDecoration(
+  //               hintText: 'Nhập ghi chú mới (không bắt buộc)',
+  //               border: OutlineInputBorder(),
+  //             ),
+  //             validator: (value) {
+  //               if ((value ?? '').length > 500) {
+  //                 return 'Ghi chú tối đa 500 ký tự';
+  //               }
+  //               return null;
+  //             },
+  //           ),
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () => Navigator.pop(context),
+  //             child: const Text('Hủy'),
+  //           ),
+  //           ElevatedButton(
+  //             onPressed: () {
+  //               if (formKey.currentState?.validate() ?? false) {
+  //                 Navigator.pop(context, controller.text.trim());
+  //               }
+  //             },
+  //             child: const Text('Lưu'),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
 
-    controller.dispose();
-    return result;
-  }
+  //   controller.dispose();
+  //   return result;
+  // }
 
   void _showSnack(String message, bool isError) {
     if (!mounted) return;

@@ -2,7 +2,7 @@
 
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_service.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/danhgia.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/danhgia_model.dart';
 
 class DanhGiaRepository {
   final ApiService _apiService = ApiService();

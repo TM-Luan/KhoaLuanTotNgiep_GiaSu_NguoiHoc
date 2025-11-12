@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/models/class_filter.dart';
+import '../data/models/class_filter_model.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_spacing.dart';
 

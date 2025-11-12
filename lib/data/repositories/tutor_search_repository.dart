@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/giasu.dart';
-import '../models/tutor_filter.dart';
+import '../models/giasu_model.dart';
+import '../models/tutor_filter_model.dart';
 import '../../api/api_response.dart';
 import '../../api/api_config.dart';
 

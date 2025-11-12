@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/add_class_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/class_detail.dart';
@@ -43,7 +43,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
         .proposalUpdateStream
         .listen((event) {
           // Refresh data khi có proposal được chấp nhận/từ chối
-          
+
           _fetchClasses();
         });
 
@@ -81,8 +81,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
               tatCaLopCuaToi
                   .where(
                     (lop) =>
-                        lop.trangThai == 'TimGiaSu' ||
-                        lop.trangThai == 'ChoDuyet',
+                        lop.trangThai == 'TimGiaSu', // Chỉ còn trạng thái này
                   )
                   .toList();
 
@@ -190,9 +189,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
           // Đây là logic bạn đã viết cho nút (+) cũ
           final isAdded = await Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const AddClassPage(),
-            ),
+            MaterialPageRoute(builder: (context) => const AddClassPage()),
           );
           // Khi AddClassPage pop về và trả về true → tự động reload
           if (isAdded == true) {
@@ -352,7 +349,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                         ),
                       ),
                     ),
-                    
+
                     Container(
                       margin: const EdgeInsets.only(left: 8), // Thêm margin
                       padding: const EdgeInsets.symmetric(
@@ -479,7 +476,9 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
               barrierDismissible: false,
               builder: (context) {
                 return Dialog(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   insetPadding: const EdgeInsets.symmetric(horizontal: 40),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
@@ -496,8 +495,11 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.warning_amber_rounded,
-                            color: Colors.red.shade400, size: 60),
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: Colors.red.shade400,
+                          size: 60,
+                        ),
                         const SizedBox(height: 16),
                         const Text(
                           'Đóng lớp này?',
@@ -526,7 +528,9 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 12),
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
                               ),
                               icon: const Icon(Icons.close),
                               label: const Text('Hủy'),
@@ -538,12 +542,17 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                                 // Dùng context gốc của màn hình chính
                                 final rootContext = this.context;
 
-                                final response = await _lopHocRepo.deleteLopHoc(lopHoc.maLop);
+                                final response = await _lopHocRepo.deleteLopHoc(
+                                  lopHoc.maLop,
+                                );
 
-                                if (!mounted) return; // đảm bảo widget chưa bị dispose
+                                if (!mounted)
+                                  return; // đảm bảo widget chưa bị dispose
 
                                 if (response.success) {
-                                  ScaffoldMessenger.of(rootContext).showSnackBar(
+                                  ScaffoldMessenger.of(
+                                    rootContext,
+                                  ).showSnackBar(
                                     const SnackBar(
                                       content: Text('Đã đóng lớp thành công!'),
                                       backgroundColor: Colors.green,
@@ -551,7 +560,9 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                                   );
                                   _fetchClasses();
                                 } else {
-                                  ScaffoldMessenger.of(rootContext).showSnackBar(
+                                  ScaffoldMessenger.of(
+                                    rootContext,
+                                  ).showSnackBar(
                                     SnackBar(
                                       content: Text('Lỗi: ${response.message}'),
                                       backgroundColor: Colors.red,
@@ -566,7 +577,9 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 12),
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
                               ),
                               icon: const Icon(Icons.delete_outline),
                               label: const Text('Đóng lớp'),
@@ -594,9 +607,10 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
             () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => ComplaintFormScreen(
-                    lopId: lopHoc.maLop, // Truyền ID lớp học
-                  ),
+                  builder:
+                      (context) => ComplaintFormScreen(
+                        lopId: lopHoc.maLop, // Truyền ID lớp học
+                      ),
                 ),
               );
             },
@@ -605,8 +619,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
           const SizedBox(width: 8),
 
           // Nút xem lịch cũ
-          styledButton('Xem lịch', () {
-          }),
+          styledButton('Xem lịch', () {}),
         ],
       );
     }

@@ -1,6 +1,6 @@
 // file: lichhoc.dart (PHIÊN BẢN ĐÃ SỬA)
 
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc_model.dart';
 
 class LichHoc {
   final int lichHocID;

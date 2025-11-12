@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/untils/format_vnd.dart';
 
@@ -78,13 +78,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
           'icon': Icons.search,
           'bgColor': Colors.orange.withValues(alpha: 0.15),
         };
-      case 'ChoDuyet':
-        return {
-          'text': 'Chờ duyệt',
-          'color': Colors.blue,
-          'icon': Icons.pending_outlined,
-          'bgColor': Colors.blue.withValues(alpha: 0.15),
-        };
+
       default:
         return {
           'text': 'Không xác định',
@@ -253,16 +247,27 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
             'Hình thức',
             _lopHoc!.hinhThuc ?? 'N/A',
           ),
+
           _buildDetailRow(
             Icons.schedule,
-            'Thời lượng',
-            _lopHoc!.thoiLuong ?? 'N/A',
+            'Thời lượng / buổi', // Sửa text
+            _lopHoc!.thoiLuong != null
+                ? '${_lopHoc!.thoiLuong} phút/buổi'
+                : 'N/A',
+          ),
+
+          // SỬA: Thay thế 'Thời gian học' bằng 2 trường mới
+          _buildDetailRow(
+            Icons.calendar_today_outlined, // Icon mới
+            'Số buổi / tuần',
+            _lopHoc!.soBuoiTuan?.toString() ?? 'Chưa cập nhật',
           ),
           _buildDetailRow(
-            Icons.calendar_today,
-            'Thời gian học',
-            _lopHoc!.thoiGianHoc ?? 'N/A',
+            Icons.access_time_outlined, // Icon mới
+            'Lịch học mong muốn',
+            _lopHoc!.lichHocMongMuon ?? 'Chưa cập nhật',
           ),
+
           _buildDetailRow(
             Icons.school,
             'Đối tượng',
@@ -315,7 +320,11 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
               const SizedBox(height: 2),
               SizedBox(
                 width: MediaQuery.of(context).size.width - 80,
-                child: Text(value, style: const TextStyle(fontSize: 16)),
+                // SỬA: Thêm kiểm tra 'isEmpty'
+                child: Text(
+                  (value.isEmpty) ? 'Chưa cập nhật' : value,
+                  style: const TextStyle(fontSize: 16),
+                ),
               ),
             ],
           ),

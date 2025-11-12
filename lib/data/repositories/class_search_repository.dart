@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/lophoc.dart';
-import '../models/class_filter.dart';
+import '../models/lophoc_model.dart';
+import '../models/class_filter_model.dart';
 import '../../api/api_response.dart';
 import '../../api/api_config.dart';
 
