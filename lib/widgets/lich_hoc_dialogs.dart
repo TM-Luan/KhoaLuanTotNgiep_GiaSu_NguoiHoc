@@ -1,470 +1,213 @@
+// file: widgets/lich_hoc_dialogs.dart (THIẾT KẾ LẠI DIALOG)
+
 import 'package:flutter/material.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc_model.dart';
-import 'package:intl/intl.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 
-/// Dialog hiển thị chi tiết lịch học
-class ChiTietLichHocDialog extends StatelessWidget {
+// -------------------------------------------------------------------
+// [SỬA] Dialog Sửa Link / Hủy Lớp (Thiết kế đẹp hơn)
+// -------------------------------------------------------------------
+class SuaLichHocDialog extends StatefulWidget {
   final LichHoc lichHoc;
-  final bool isGiaSu; // true = Gia sư, false = Người học
+  final Function(String? trangThai, String? duongDan) onUpdate;
 
-  const ChiTietLichHocDialog({
-    super.key,
-    required this.lichHoc,
-    required this.isGiaSu,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isOnline = (lichHoc.duongDan ?? '').isNotEmpty;
-
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Chi tiết lịch học',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const Divider(),
-              const SizedBox(height: 16),
-
-              // Thông tin cơ bản
-              _buildInfoRow(
-                icon: Icons.tag,
-                title: 'Mã lịch học',
-                content: '#${lichHoc.lichHocID}',
-              ),
-              _buildInfoRow(
-                icon: Icons.school,
-                title: 'Mã lớp học',
-                content: '#${lichHoc.lopYeuCauID}',
-              ),
-              if (lichHoc.lopHoc?.tenMon != null)
-                _buildInfoRow(
-                  icon: Icons.book,
-                  title: 'Môn học',
-                  content: lichHoc.lopHoc!.tenMon!,
-                ),
-              if (isGiaSu && lichHoc.lopHoc?.tenNguoiHoc != null)
-                _buildInfoRow(
-                  icon: Icons.person,
-                  title: 'Tên người học',
-                  content: lichHoc.lopHoc?.tenNguoiHoc ?? '',
-                ),
-              if (!isGiaSu && lichHoc.lopHoc?.tenGiaSu != null)
-                _buildInfoRow(
-                  icon: Icons.person_outline,
-                  title: 'Tên gia sư',
-                  content: lichHoc.lopHoc?.tenGiaSu ?? '',
-                ),
-
-              const Divider(height: 24),
-
-              // Thời gian
-              _buildInfoRow(
-                icon: Icons.calendar_today,
-                title: 'Ngày học',
-                content: _formatDate(lichHoc.ngayHoc),
-              ),
-              _buildInfoRow(
-                icon: Icons.access_time,
-                title: 'Thời gian',
-                content:
-                    '${_formatTime(lichHoc.thoiGianBatDau)} - ${_formatTime(lichHoc.thoiGianKetThuc)}',
-              ),
-
-              const Divider(height: 24),
-
-              // Trạng thái
-              _buildInfoRow(
-                icon: Icons.info_outline,
-                title: 'Trạng thái',
-                content: _getStatusText(lichHoc.trangThai),
-                contentColor: _getStatusColor(lichHoc.trangThai),
-              ),
-
-              // Hình thức
-              _buildInfoRow(
-                icon: isOnline ? Icons.videocam : Icons.home,
-                title: 'Hình thức',
-                content: isOnline ? 'Học Online' : 'Học Offline',
-                contentColor: isOnline ? Colors.green : Colors.blue,
-              ),
-
-              // if (lichHoc.isLapLai)
-              //   _buildInfoRow(
-              //     icon: Icons.repeat,
-              //     title: 'Lịch lặp lại',
-              //     content: 'Có',
-              //     contentColor: Colors.orange,
-              //   ),
-              if (isOnline && lichHoc.duongDan != null)
-                _buildInfoRow(
-                  icon: Icons.link,
-                  title: 'Link học',
-                  content: lichHoc.duongDan!,
-                  isLink: true,
-                ),
-
-              const SizedBox(height: 24),
-
-              // Nút đóng
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('Đóng'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String title,
-    required String content,
-    Color? contentColor,
-    bool isLink = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 20, color: Colors.grey[600]),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  content,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: contentColor ?? Colors.black87,
-                    decoration: isLink ? TextDecoration.underline : null,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatTime(String time) {
-    try {
-      final timeParts = time.split(':');
-      if (timeParts.length >= 2) {
-        return '${timeParts[0]}:${timeParts[1]}';
-      }
-      return time;
-    } catch (e) {
-      return time;
-    }
-  }
-
-  String _formatDate(String date) {
-    try {
-      final dateTime = DateTime.parse(date.split(' ')[0]);
-      return DateFormat('EEEE, dd/MM/yyyy', 'vi_VN').format(dateTime);
-    } catch (e) {
-      return date;
-    }
-  }
-
-  Color _getStatusColor(String trangThai) {
-    switch (trangThai) {
-      case 'DaHoc':
-        return Colors.green;
-      case 'DangDay':
-        return Colors.orange;
-      case 'SapToi':
-        return Colors.blue;
-      case 'Huy':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _getStatusText(String trangThai) {
-    switch (trangThai) {
-      case 'DaHoc':
-        return 'Đã hoàn thành';
-      case 'DangDay':
-        return 'Đang diễn ra';
-      case 'SapToi':
-        return 'Sắp diễn ra';
-      case 'Huy':
-        return 'Đã hủy';
-      default:
-        return trangThai;
-    }
-  }
-}
-
-/// Dialog cập nhật trạng thái lịch học
-class CapNhatTrangThaiDialog extends StatefulWidget {
-  final LichHoc lichHoc;
-  final Function(String trangThai) onUpdate;
-
-  const CapNhatTrangThaiDialog({
+  const SuaLichHocDialog({
     super.key,
     required this.lichHoc,
     required this.onUpdate,
   });
 
   @override
-  State<CapNhatTrangThaiDialog> createState() => _CapNhatTrangThaiDialogState();
+  State<SuaLichHocDialog> createState() => _SuaLichHocDialogState();
 }
 
-class _CapNhatTrangThaiDialogState extends State<CapNhatTrangThaiDialog> {
-  late String _selectedStatus;
-
-  final Map<String, String> _statusOptions = {
-    'SapToi': 'Sắp tới',
-    'DangDay': 'Đang dạy',
-    'DaHoc': 'Đã học',
-    'Huy': 'Hủy',
-  };
-
-  final Map<String, IconData> _statusIcons = {
-    'SapToi': Icons.schedule,
-    'DangDay': Icons.school,
-    'DaHoc': Icons.check_circle,
-    'Huy': Icons.cancel,
-  };
-
-  final Map<String, Color> _statusColors = {
-    'SapToi': Colors.blue,
-    'DangDay': Colors.orange,
-    'DaHoc': Colors.green,
-    'Huy': Colors.red,
-  };
+class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
+  late final TextEditingController _linkController;
+  String? _selectedStatus;
+  bool _isOnline = false;
 
   @override
   void initState() {
     super.initState();
+    // Lớp Online là lớp có duongDan != null (kể cả khi link đang rỗng)
+    _isOnline = widget.lichHoc.duongDan != null;
+
+    _linkController = TextEditingController(
+      text: widget.lichHoc.duongDan ?? '',
+    );
     _selectedStatus = widget.lichHoc.trangThai;
   }
 
   @override
+  void dispose() {
+    _linkController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              children: [
-                Icon(Icons.edit, color: AppColors.primary),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Cập nhật trạng thái',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    return AlertDialog(
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Cập nhật buổi học',
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          Text(
+            'ID: ${widget.lichHoc.lichHocID}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Chỉ hiển thị ô nhập link nếu là lớp ONLINE
+              if (_isOnline) ...[
+                Text(
+                  'Link học Online',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _linkController,
+                  decoration: const InputDecoration(
+                    labelText: 'Link (Zoom, Meet...)',
+                    hintText: 'https://...',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.link),
+                  ),
+                  keyboardType: TextInputType.url,
                 ),
+                const Divider(height: 32),
               ],
-            ),
-            const Divider(),
-            const SizedBox(height: 16),
 
-            // Thông tin lịch học
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
+              // Dropdown để chọn HỦY LỚP
+              Text(
+                'Trạng thái',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
-              child: Column(
-                children: [
-                  Text(
-                    'Lịch học #${widget.lichHoc.lichHocID}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '${_formatTime(widget.lichHoc.thoiGianBatDau)} - ${_formatTime(widget.lichHoc.thoiGianKetThuc)}',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Danh sách trạng thái
-            const Text(
-              'Chọn trạng thái mới:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 12),
-
-            ..._statusOptions.entries.map((entry) {
-              final isSelected = _selectedStatus == entry.key;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: InkWell(
-                  onTap: () {
-                    setState(() {
-                      _selectedStatus = entry.key;
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color:
-                          isSelected
-                              ? _statusColors[entry.key]!.withOpacity(0.1)
-                              : Colors.transparent,
-                      border: Border.all(
-                        color:
-                            isSelected
-                                ? _statusColors[entry.key]!
-                                : Colors.grey[300]!,
-                        width: isSelected ? 2 : 1,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: _selectedStatus,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.flag_outlined),
+                ),
+                items: [
+                  // Tùy chọn 1: Giữ nguyên trạng thái hiện tại
+                  DropdownMenuItem(
+                    value: widget.lichHoc.trangThai,
                     child: Row(
                       children: [
                         Icon(
-                          _statusIcons[entry.key],
-                          color:
-                              isSelected
-                                  ? _statusColors[entry.key]
-                                  : Colors.grey[600],
+                          Icons.check_circle_outline,
+                          color: Colors.green.shade700,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 10),
                         Text(
-                          entry.value,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight:
-                                isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                            color:
-                                isSelected
-                                    ? _statusColors[entry.key]
-                                    : Colors.black87,
-                          ),
+                          'Hiện tại (${_getStatusText(widget.lichHoc.trangThai)})',
                         ),
-                        const Spacer(),
-                        if (isSelected)
-                          Icon(
-                            Icons.check_circle,
-                            color: _statusColors[entry.key],
-                          ),
                       ],
                     ),
                   ),
-                ),
-              );
-            }).toList(),
-
-            const SizedBox(height: 24),
-
-            // Nút hành động
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                  // Tùy chọn 2: Hủy lớp
+                  const DropdownMenuItem(
+                    value: 'Hủy',
+                    child: Row(
+                      children: [
+                        Icon(Icons.cancel_outlined, color: Colors.red),
+                        SizedBox(width: 10),
+                        Text(
+                          'Hủy buổi học này',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ],
                     ),
-                    child: const Text('Hủy'),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      widget.onUpdate(_selectedStatus);
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('Cập nhật'),
-                  ),
-                ),
-              ],
-            ),
-          ],
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _selectedStatus = value;
+                  });
+                },
+              ),
+            ],
+          ),
         ),
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Đóng'),
+        ),
+        ElevatedButton.icon(
+          onPressed: _handleUpdate,
+          icon: const Icon(Icons.save_outlined),
+          label: const Text('Lưu cập nhật'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+          ),
+        ),
+      ],
     );
   }
 
-  String _formatTime(String time) {
-    try {
-      final timeParts = time.split(':');
-      if (timeParts.length >= 2) {
-        return '${timeParts[0]}:${timeParts[1]}';
+  void _handleUpdate() {
+    String? trangThaiMoi;
+    if (_selectedStatus != widget.lichHoc.trangThai) {
+      trangThaiMoi = _selectedStatus;
+    }
+
+    String? duongDanMoi;
+    if (_isOnline) {
+      final textMoi = _linkController.text.trim();
+      final textCu = widget.lichHoc.duongDan ?? '';
+      if (textMoi != textCu) {
+        duongDanMoi = textMoi;
       }
-      return time;
-    } catch (e) {
-      return time;
+    }
+
+    // Chỉ gọi callback nếu có thay đổi
+    if (trangThaiMoi != null || duongDanMoi != null) {
+      widget.onUpdate(trangThaiMoi, duongDanMoi);
+    }
+    Navigator.pop(context);
+  }
+
+  // Helper để hiển thị tên trạng thái
+  String _getStatusText(String trangThai) {
+    switch (trangThai) {
+      // case 'DaHoc':
+      //   return 'Đã Học';
+      // case 'DangDay':
+      //   return 'Đang Dạy';
+      case 'SapToi':
+        return 'Sắp Tới';
+      case 'Huy':
+        return 'Đã Hủy';
+      default:
+        return trangThai;
     }
   }
 }
 
-/// Dialog xóa lịch học
-class XoaLichHocDialog extends StatefulWidget {
+// -------------------------------------------------------------------
+// [MẪU] Dialog Xóa Lịch Học (Giữ nguyên)
+// -------------------------------------------------------------------
+class XoaLichHocDialog extends StatelessWidget {
   final LichHoc lichHoc;
   final Function(bool xoaCaChuoi) onDelete;
 
@@ -475,162 +218,163 @@ class XoaLichHocDialog extends StatefulWidget {
   });
 
   @override
-  State<XoaLichHocDialog> createState() => _XoaLichHocDialogState();
+  Widget build(BuildContext context) {
+    bool xoaCaChuoi = false;
+
+    return AlertDialog(
+      title: const Text('Xác nhận xóa'),
+      content: StatefulBuilder(
+        builder: (context, setDialogState) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Bạn có chắc muốn xóa buổi học (ID: ${lichHoc.lichHocID}) không?',
+              ),
+              if (lichHoc.isLapLai)
+                CheckboxListTile(
+                  title: const Text('Xóa toàn bộ lịch của lớp này'),
+                  value: xoaCaChuoi,
+                  onChanged: (value) {
+                    setDialogState(() {
+                      xoaCaChuoi = value ?? false;
+                    });
+                  },
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                ),
+            ],
+          );
+        },
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Không'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            onDelete(xoaCaChuoi);
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Xác nhận Xóa'),
+        ),
+      ],
+    );
+  }
 }
 
-class _XoaLichHocDialogState extends State<XoaLichHocDialog> {
-  bool _xoaCaChuoi = false;
+// -------------------------------------------------------------------
+// [MẪU] Dialog Chi Tiết Lịch Học (Giữ nguyên)
+// -------------------------------------------------------------------
+class ChiTietLichHocDialog extends StatelessWidget {
+  final LichHoc lichHoc;
+  final bool isGiaSu;
+
+  const ChiTietLichHocDialog({
+    super.key,
+    required this.lichHoc,
+    required this.isGiaSu,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
+    return AlertDialog(
+      title: const Text('Chi tiết buổi học'),
+      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icon cảnh báo
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.red[50],
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.warning_amber_rounded,
-                color: Colors.red,
-                size: 48,
-              ),
+            _buildDetailRow('Mã lịch học:', '${lichHoc.lichHocID}'),
+            _buildDetailRow('Môn học:', lichHoc.lopHoc?.tenMon ?? 'N/A'),
+            _buildDetailRow(
+              isGiaSu ? 'Học sinh:' : 'Gia sư:',
+              isGiaSu
+                  ? (lichHoc.lopHoc?.tenNguoiHoc ?? 'N/A')
+                  : (lichHoc.lopHoc?.tenGiaSu ?? 'N/A'),
             ),
-            const SizedBox(height: 20),
-
-            // Tiêu đề
-            const Text(
-              'Xác nhận xóa',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            _buildDetailRow('Trạng thái:', lichHoc.trangThai),
+            _buildDetailRow('Ngày:', lichHoc.ngayHoc),
+            _buildDetailRow(
+              'Thời gian:',
+              '${lichHoc.thoiGianBatDau} - ${lichHoc.thoiGianKetThuc}',
             ),
-            const SizedBox(height: 12),
+            if (lichHoc.duongDan != null)
+              _buildDetailRow('Link:', lichHoc.duongDan!),
+            if (lichHoc.lopHoc?.diaChi != null &&
+                lichHoc.lopHoc!.diaChi!.isNotEmpty)
+              _buildDetailRow('Địa chỉ:', lichHoc.lopHoc!.diaChi!),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Đóng'),
+        ),
+      ],
+    );
+  }
 
-            // Thông tin lịch học
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    'Lịch học #${widget.lichHoc.lichHocID}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${_formatTime(widget.lichHoc.thoiGianBatDau)} - ${_formatTime(widget.lichHoc.thoiGianKetThuc)}',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                  Text(
-                    _formatDate(widget.lichHoc.ngayHoc),
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                ],
-              ),
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(color: Colors.black, fontSize: 14),
+          children: [
+            TextSpan(
+              text: '$label ',
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 20),
-
-            // Tùy chọn xóa (nếu là lịch lặp lại)
-            if (widget.lichHoc.isLapLai)
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.orange),
-                  borderRadius: BorderRadius.circular(8),
-                  color: Colors.orange[50],
-                ),
-                child: Column(
-                  children: [
-                    CheckboxListTile(
-                      value: _xoaCaChuoi,
-                      onChanged: (value) {
-                        setState(() {
-                          _xoaCaChuoi = value ?? false;
-                        });
-                      },
-                      title: const Text(
-                        'Xóa cả chuỗi lịch lặp lại',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: const Text(
-                        'Tất cả các buổi học trong chuỗi sẽ bị xóa',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      activeColor: Colors.orange,
-                    ),
-                  ],
-                ),
-              ),
-
-            const SizedBox(height: 24),
-
-            // Nút hành động
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('Hủy'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      widget.onDelete(_xoaCaChuoi);
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('Xóa'),
-                  ),
-                ),
-              ],
-            ),
+            TextSpan(text: value),
           ],
         ),
       ),
     );
   }
+}
 
-  String _formatTime(String time) {
-    try {
-      final timeParts = time.split(':');
-      if (timeParts.length >= 2) {
-        return '${timeParts[0]}:${timeParts[1]}';
-      }
-      return time;
-    } catch (e) {
-      return time;
-    }
-  }
+// -------------------------------------------------------------------
+// [CŨ] Dialog Cập Nhật Trạng Thái (Có thể xóa nếu không dùng)
+// -------------------------------------------------------------------
+class CapNhatTrangThaiDialog extends StatelessWidget {
+  final LichHoc lichHoc;
+  final Function(String trangThai) onUpdate;
 
-  String _formatDate(String date) {
-    try {
-      final dateTime = DateTime.parse(date.split(' ')[0]);
-      return DateFormat('dd/MM/yyyy').format(dateTime);
-    } catch (e) {
-      return date;
-    }
+  const CapNhatTrangThaiDialog({
+    super.key,
+    required this.lichHoc,
+    required this.onUpdate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Cập nhật lịch dạy'),
+      content: const Text('Bạn có muốn hủy buổi học này không?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Không'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            onUpdate('Hủy');
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Xác nhận Hủy'),
+        ),
+      ],
+    );
   }
 }

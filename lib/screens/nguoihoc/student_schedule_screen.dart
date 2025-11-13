@@ -6,6 +6,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/lich_hoc_dialogs.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LearnerSchedulePage extends StatefulWidget {
   const LearnerSchedulePage({super.key});
@@ -217,8 +218,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
               'Ngày: ${_formatDate(lichHoc.ngayHoc)}',
             ),
 
-            if (lichHoc.isLapLai) _buildInfoRow(Icons.repeat, 'Lịch lặp lại'),
-
+            //if (lichHoc.isLapLai) _buildInfoRow(Icons.repeat, 'Lịch lặp lại'),
             if (lichHoc.lopHoc?.tenGiaSu != null)
               _buildInfoRow(
                 Icons.person,
@@ -239,10 +239,11 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
                     onPressed: () {
                       showDialog(
                         context: context,
-                        builder: (context) => ChiTietLichHocDialog(
-                          lichHoc: lichHoc,
-                          isGiaSu: false,
-                        ),
+                        builder:
+                            (context) => ChiTietLichHocDialog(
+                              lichHoc: lichHoc,
+                              isGiaSu: false,
+                            ),
                       );
                     },
                     icon: const Icon(Icons.visibility, size: 16),
@@ -263,7 +264,7 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        _joinZoomMeeting(lichHoc);
+                        _joinMeeting(lichHoc);
                       },
                       icon: const Icon(Icons.video_call, size: 16),
                       label: const Text('Tham gia'),
@@ -355,20 +356,25 @@ class _LearnerSchedulePageState extends State<LearnerSchedulePage> {
   }
 
   // Hàm xử lý tham gia Zoom
-  void _joinZoomMeeting(LichHoc lichHoc) {
+  Future<void> _launchLink(String urlString) async {
+    final Uri url = Uri.parse(urlString);
+
+    // Cố gắng mở link bằng ứng dụng bên ngoài (như app Zoom hoặc trình duyệt)
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      // Nếu không mở được, hiển thị thông báo lỗi
+      if (mounted) {
+        // Luôn kiểm tra 'mounted' trước khi dùng context trong hàm async
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể mở link: $urlString')),
+        );
+      }
+    }
+  }
+
+  // Đây là hàm gốc của bạn, đã được cập nhật
+  void _joinMeeting(LichHoc lichHoc) {
     if (lichHoc.duongDan != null && lichHoc.duongDan!.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Link Zoom: ${lichHoc.duongDan}'),
-          duration: const Duration(seconds: 5),
-          action: SnackBarAction(
-            label: 'Copy',
-            onPressed: () {
-              // Có thể thêm logic copy vào clipboard
-            },
-          ),
-        ),
-      );
+      _launchLink(lichHoc.duongDan!);
     }
   }
 

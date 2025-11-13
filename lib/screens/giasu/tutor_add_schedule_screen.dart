@@ -366,44 +366,44 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Trạng thái *',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      value: _trangThai,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 16,
-                        ),
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'SapToi',
-                          child: Text('Sắp tới'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'DangDay',
-                          child: Text('Đang dạy'),
-                        ),
-                        DropdownMenuItem(value: 'DaHoc', child: Text('Đã học')),
-                        DropdownMenuItem(value: 'Huy', child: Text('Đã hủy')),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _trangThai = value!;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
+                    // const Text(
+                    //   'Trạng thái *',
+                    //   style: TextStyle(
+                    //     fontWeight: FontWeight.bold,
+                    //     fontSize: 16,
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 8),
+                    // DropdownButtonFormField<String>(
+                    //   value: _trangThai,
+                    //   decoration: InputDecoration(
+                    //     border: OutlineInputBorder(
+                    //       borderRadius: BorderRadius.circular(8),
+                    //     ),
+                    //     contentPadding: const EdgeInsets.symmetric(
+                    //       horizontal: 12,
+                    //       vertical: 16,
+                    //     ),
+                    //   ),
+                    //   items: const [
+                    //     DropdownMenuItem(
+                    //       value: 'SapToi',
+                    //       child: Text('Sắp tới'),
+                    //     ),
+                    //     DropdownMenuItem(
+                    //       value: 'DangDay',
+                    //       child: Text('Đang dạy'),
+                    //     ),
+                    //     DropdownMenuItem(value: 'DaHoc', child: Text('Đã học')),
+                    //     DropdownMenuItem(value: 'Huy', child: Text('Đã hủy')),
+                    //   ],
+                    //   onChanged: (value) {
+                    //     setState(() {
+                    //       _trangThai = value!;
+                    //     });
+                    //   },
+                    // ),
+                    // const SizedBox(height: 16),
                   ],
                 ),
 

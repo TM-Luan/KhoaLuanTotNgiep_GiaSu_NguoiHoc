@@ -1,3 +1,4 @@
+// file: lich_hoc_event.dart
 part of 'lich_hoc_bloc.dart';
 
 abstract class LichHocEvent {}
@@ -57,20 +58,14 @@ class CreateLichHoc extends LichHocEvent {
   });
 }
 
-// Cập nhật lịch học
+// [SỬA] Cập nhật lịch học (Chỉ cho phép cập nhật trạng thái và đường dẫn)
 class UpdateLichHoc extends LichHocEvent {
   final int lichHocId;
-  final String? thoiGianBatDau;
-  final String? thoiGianKetThuc;
-  final String? ngayHoc;
   final String? duongDan;
   final String? trangThai;
 
   UpdateLichHoc({
     required this.lichHocId,
-    this.thoiGianBatDau,
-    this.thoiGianKetThuc,
-    this.ngayHoc,
     this.duongDan,
     this.trangThai,
   });

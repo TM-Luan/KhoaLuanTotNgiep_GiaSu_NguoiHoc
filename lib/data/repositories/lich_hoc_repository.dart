@@ -1,4 +1,4 @@
-// file: lich_hoc_repository.dart (PHIÊN BẢN ĐÃ SỬA)
+// file: lich_hoc_repository.dart
 
 import 'package:intl/intl.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
@@ -25,7 +25,6 @@ class LichHocRepository {
 
     return await _apiService.get(
       endpoint,
-      // SỬA 1: 'data' bây giờ là List, không còn là Map
       fromJsonT: (data) {
         final List<dynamic> dataList = data as List;
         return dataList.map((e) => e.toString()).toSet();
@@ -45,7 +44,6 @@ class LichHocRepository {
 
     return await _apiService.get(
       endpoint,
-      // SỬA 2: 'data' bây giờ là List
       fromJsonT: (data) {
         final List<dynamic> dataList = data as List;
         return dataList.map((item) => LichHoc.fromJson(item)).toList();
@@ -70,7 +68,6 @@ class LichHocRepository {
 
     return await _apiService.get(
       endpoint,
-      // SỬA 3: 'data' bây giờ là List
       fromJsonT: (data) {
         final List<dynamic> dataList = data as List;
         return dataList.map((e) => e.toString()).toSet();
@@ -90,7 +87,6 @@ class LichHocRepository {
 
     return await _apiService.get(
       endpoint,
-      // SỬA 4: 'data' bây giờ là List
       fromJsonT: (data) {
         final List<dynamic> dataList = data as List;
         return dataList.map((item) => LichHoc.fromJson(item)).toList();
@@ -115,7 +111,6 @@ class LichHocRepository {
 
     return await _apiService.get(
       endpoint,
-      // SỬA 5: 'data' bây giờ là Map data
       fromJsonT: (data) => LichHocTheoThangResponse.fromJson(data),
     );
   }
@@ -145,7 +140,6 @@ class LichHocRepository {
     return await _apiService.post(
       endpoint,
       data: data,
-      // SỬA 6: 'data' bây giờ là List
       fromJsonT: (data) {
         final dataList = data as List;
         return dataList.map((item) => LichHoc.fromJson(item)).toList();
@@ -153,27 +147,22 @@ class LichHocRepository {
     );
   }
 
+  // [SỬA] Cập nhật lịch học (Chỉ gửi các trường được phép)
   Future<ApiResponse<LichHoc>> capNhatLichHoc({
     required int lichHocId,
-    String? thoiGianBatDau,
-    String? thoiGianKetThuc,
-    String? ngayHoc,
     String? duongDan,
     String? trangThai,
   }) async {
     final endpoint = '/lich-hoc/$lichHocId';
 
     final body = <String, dynamic>{};
-    if (thoiGianBatDau != null) body['ThoiGianBatDau'] = thoiGianBatDau;
-    if (thoiGianKetThuc != null) body['ThoiGianKetThuc'] = thoiGianKetThuc;
-    if (ngayHoc != null) body['NgayHoc'] = ngayHoc;
+    // Chỉ gửi 2 trường này
     if (duongDan != null) body['DuongDan'] = duongDan;
     if (trangThai != null) body['TrangThai'] = trangThai;
 
     return await _apiService.put(
       endpoint,
       data: body,
-      // SỬA 7: 'data' bây giờ là Map của LichHoc
       fromJsonT: (data) => LichHoc.fromJson(data),
     );
   }

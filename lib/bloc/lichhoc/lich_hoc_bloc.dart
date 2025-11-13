@@ -1,3 +1,5 @@
+// file: lich_hoc_bloc.dart (SỬA LỖI KẸT STATE)
+
 import 'package:bloc/bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lich_hoc_repository.dart';
@@ -8,47 +10,41 @@ part 'lich_hoc_state.dart';
 
 class LichHocBloc extends Bloc<LichHocEvent, LichHocState> {
   final LichHocRepository lichHocRepository;
+
+  // [SỬA 1] Thêm biến cache để lưu state Loaded cuối cùng
+  LichHocCalendarLoaded? _lastLoadedState;
+
   LichHocBloc(this.lichHocRepository) : super(LichHocInitial()) {
-    // Handler mới cho Lịch chung
     on<LoadLichHocCalendar>(_onLoadLichHocCalendar);
     on<ChangeLichHocNgay>(_onChangeLichHocNgay);
-
-    // Handler cũ (đã sửa) cho Lịch theo lớp
     on<GetLichHocTheoLopVaThang>(_onGetLichHocTheoLopVaThang);
-
-    // Handler cho các hành động khác
     on<CreateLichHoc>(_onCreateLichHoc);
     on<UpdateLichHoc>(_onUpdateLichHoc);
     on<DeleteLichHoc>(_onDeleteLichHoc);
   }
 
-  // [MỚI] Handler khi tải cả tháng (summary + 1 ngày chi tiết)
   Future<void> _onLoadLichHocCalendar(
     LoadLichHocCalendar event,
     Emitter<LichHocState> emit,
   ) async {
     emit(LichHocLoading());
     try {
-      // Gọi 2 API song song
-      final summaryFuture =
-          event.isGiaSu
-              ? lichHocRepository.getLichHocSummaryGiaSu(
-                thang: event.thang,
-                nam: event.nam,
-              )
-              : lichHocRepository.getLichHocSummaryNguoiHoc(
-                thang: event.thang,
-                nam: event.nam,
-              );
+      final summaryFuture = event.isGiaSu
+          ? lichHocRepository.getLichHocSummaryGiaSu(
+              thang: event.thang,
+              nam: event.nam,
+            )
+          : lichHocRepository.getLichHocSummaryNguoiHoc(
+              thang: event.thang,
+              nam: event.nam,
+            );
 
-      final detailFuture =
-          event.isGiaSu
-              ? lichHocRepository.getLichHocTheoNgayGiaSu(ngay: event.ngayChon)
-              : lichHocRepository.getLichHocTheoNgayNguoiHoc(
-                ngay: event.ngayChon,
-              );
+      final detailFuture = event.isGiaSu
+          ? lichHocRepository.getLichHocTheoNgayGiaSu(ngay: event.ngayChon)
+          : lichHocRepository.getLichHocTheoNgayNguoiHoc(
+              ngay: event.ngayChon,
+            );
 
-      // Chờ cả 2 hoàn thành
       final List<ApiResponse> responses = await Future.wait([
         summaryFuture,
         detailFuture,
@@ -58,120 +54,132 @@ class LichHocBloc extends Bloc<LichHocEvent, LichHocState> {
       final detailResponse = responses[1] as ApiResponse<List<LichHoc>>;
 
       if (summaryResponse.isSuccess && detailResponse.isSuccess) {
-        emit(
-          LichHocCalendarLoaded(
-            ngayCoLich: summaryResponse.data ?? {},
-            lichHocNgayChon: detailResponse.data ?? [],
-            thangHienTai: DateTime(event.nam, event.thang),
-            ngayChon: event.ngayChon,
-          ),
+        // [SỬA 2] Lưu state mới vào cache
+        final newState = LichHocCalendarLoaded(
+          ngayCoLich: summaryResponse.data ?? {},
+          lichHocNgayChon: detailResponse.data ?? [],
+          thangHienTai: DateTime(event.nam, event.thang),
+          ngayChon: event.ngayChon,
         );
+        emit(newState);
+        _lastLoadedState = newState; // Cập nhật cache
       } else {
-        // Xử lý lỗi
-        final errorMessage =
-            !summaryResponse.isSuccess
-                ? summaryResponse.message
-                : detailResponse.message;
+        final errorMessage = !summaryResponse.isSuccess
+            ? summaryResponse.message
+            : detailResponse.message;
         emit(LichHocError(errorMessage));
       }
     } catch (e) {
-      emit(LichHocError('Lỗi tải lịch học: ${e.toString()}'));
+      emit(LichHocError('Lỗi tải lịch học (calendar): ${e.toString()}'));
     }
   }
 
-  // [MỚI] Handler khi chỉ thay đổi ngày
   Future<void> _onChangeLichHocNgay(
     ChangeLichHocNgay event,
     Emitter<LichHocState> emit,
   ) async {
-    final currentState = state;
-    if (currentState is LichHocCalendarLoaded) {
-      // Giữ nguyên summary cũ, chỉ tải lại detail
-      emit(
-        currentState.copyWith(
-          isLoadingDetails: true, // Hiển thị loading cho danh sách
-          ngayChon: event.ngayChon,
-        ),
+    // [SỬA 3] Lấy state từ cache, thay vì state hiện tại (có thể đang là Updated)
+    final currentState = _lastLoadedState;
+
+    if (currentState != null) {
+      // Emit state loading (chỉ loading phần list)
+      final loadingState = currentState.copyWith(
+        isLoadingDetails: true,
+        ngayChon: event.ngayChon,
       );
+      emit(loadingState);
+      _lastLoadedState = loadingState; // Cập nhật cache
 
       try {
-        final detailResponse =
-            event.isGiaSu
-                ? await lichHocRepository.getLichHocTheoNgayGiaSu(
-                  ngay: event.ngayChon,
-                )
-                : await lichHocRepository.getLichHocTheoNgayNguoiHoc(
-                  ngay: event.ngayChon,
-                );
+        final detailResponse = event.isGiaSu
+            ? await lichHocRepository.getLichHocTheoNgayGiaSu(
+                ngay: event.ngayChon,
+              )
+            : await lichHocRepository.getLichHocTheoNgayNguoiHoc(
+                ngay: event.ngayChon,
+              );
 
         if (detailResponse.isSuccess) {
-          emit(
-            currentState.copyWith(
-              lichHocNgayChon: detailResponse.data ?? [],
-              ngayChon: event.ngayChon,
-              isLoadingDetails: false,
-            ),
+          // [SỬA 4] Cập nhật cache với data mới
+          final newState = currentState.copyWith(
+            lichHocNgayChon: detailResponse.data ?? [],
+            ngayChon: event.ngayChon,
+            isLoadingDetails: false,
           );
+          emit(newState);
+          _lastLoadedState = newState; // Cập nhật cache
         } else {
+          // Khi lỗi, trả về state lỗi VÀ tắt loading
+          final errorState = currentState.copyWith(isLoadingDetails: false);
+          emit(errorState);
+          _lastLoadedState = errorState; // Cập nhật cache
           emit(LichHocError(detailResponse.message));
-          // Rollback về state cũ nếu lỗi
-          emit(currentState.copyWith(isLoadingDetails: false));
         }
       } catch (e) {
-        emit(LichHocError('Lỗi tải lịch học: ${e.toString()}'));
-        emit(currentState.copyWith(isLoadingDetails: false));
+        // Khi crash, trả về state lỗi VÀ tắt loading
+        final errorState = currentState.copyWith(isLoadingDetails: false);
+        emit(errorState);
+        _lastLoadedState = errorState; // Cập nhật cache
+        emit(LichHocError('Lỗi tải chi tiết ngày: ${e.toString()}'));
       }
+    } else {
+      // Trường hợp hiếm gặp: _lastLoadedState bị null
+      emit(LichHocError('Trạng thái lịch học bị mất. Vui lòng tải lại.'));
     }
   }
 
-  // [SỬA] Handler này bây giờ sẽ emit State mới
+  // --- Các hàm Create, Update, Delete đã có try/catch (Giữ nguyên) ---
+
   Future<void> _onGetLichHocTheoLopVaThang(
     GetLichHocTheoLopVaThang event,
     Emitter<LichHocState> emit,
   ) async {
     emit(LichHocLoading());
+    try {
+      final ApiResponse<LichHocTheoThangResponse> response =
+          await lichHocRepository.getLichHocTheoLopVaThang(
+        lopYeuCauId: event.lopYeuCauId,
+        thang: event.thang,
+        nam: event.nam,
+      );
 
-    final ApiResponse<LichHocTheoThangResponse> response =
-        await lichHocRepository.getLichHocTheoLopVaThang(
-          lopYeuCauId: event.lopYeuCauId,
-          thang: event.thang,
-          nam: event.nam,
+      if (response.isSuccess && response.data != null) {
+        emit(
+          LichHocLopLoaded(response.data!),
         );
-
-    if (response.isSuccess && response.data != null) {
-      // SỬA DÒNG NÀY:
-      emit(
-        LichHocLopLoaded(response.data!),
-      ); // <-- Dùng state 'LichHocLopLoaded' mới
-    } else {
-      emit(LichHocError(response.message));
+      } else {
+        emit(LichHocError(response.message));
+      }
+    } catch (e) {
+      emit(LichHocError('Lỗi tải lịch học theo lớp: ${e.toString()}'));
     }
   }
-
-  // === Các handler khác giữ nguyên ===
 
   Future<void> _onCreateLichHoc(
     CreateLichHoc event,
     Emitter<LichHocState> emit,
   ) async {
     emit(LichHocLoading());
+    try {
+      final ApiResponse<List<LichHoc>> response =
+          await lichHocRepository.taoLichHocLapLai(
+        lopYeuCauId: event.lopYeuCauId,
+        thoiGianBatDau: event.thoiGianBatDau,
+        thoiGianKetThuc: event.thoiGianKetThuc,
+        ngayHoc: event.ngayHoc,
+        lapLai: event.lapLai,
+        soTuanLap: event.soTuanLap,
+        duongDan: event.duongDan,
+        trangThai: event.trangThai,
+      );
 
-    final ApiResponse<List<LichHoc>> response = await lichHocRepository
-        .taoLichHocLapLai(
-          lopYeuCauId: event.lopYeuCauId,
-          thoiGianBatDau: event.thoiGianBatDau,
-          thoiGianKetThuc: event.thoiGianKetThuc,
-          ngayHoc: event.ngayHoc,
-          lapLai: event.lapLai,
-          soTuanLap: event.soTuanLap,
-          duongDan: event.duongDan,
-          trangThai: event.trangThai,
-        );
-
-    if (response.isSuccess && response.data != null) {
-      emit(LichHocCreated(response.data!));
-    } else {
-      emit(LichHocError(response.message));
+      if (response.isSuccess && response.data != null) {
+        emit(LichHocCreated(response.data!));
+      } else {
+        emit(LichHocError(response.message));
+      }
+    } catch (e) {
+      emit(LichHocError('Lỗi tạo lịch học: ${e.toString()}'));
     }
   }
 
@@ -179,22 +187,25 @@ class LichHocBloc extends Bloc<LichHocEvent, LichHocState> {
     UpdateLichHoc event,
     Emitter<LichHocState> emit,
   ) async {
-    emit(LichHocLoading());
+    // Không emit Loading
+    try {
+      final ApiResponse<LichHoc> response =
+          await lichHocRepository.capNhatLichHoc(
+        lichHocId: event.lichHocId,
+        duongDan: event.duongDan,
+        trangThai: event.trangThai,
+      );
 
-    final ApiResponse<LichHoc> response = await lichHocRepository
-        .capNhatLichHoc(
-          lichHocId: event.lichHocId,
-          thoiGianBatDau: event.thoiGianBatDau,
-          thoiGianKetThuc: event.thoiGianKetThuc,
-          ngayHoc: event.ngayHoc,
-          duongDan: event.duongDan,
-          trangThai: event.trangThai,
-        );
-
-    if (response.isSuccess && response.data != null) {
-      emit(LichHocUpdated(response.data!));
-    } else {
-      emit(LichHocError(response.message));
+      if (response.isSuccess && response.data != null) {
+        // [SỬA 5] Chỉ emit Updated.
+        // BLoC sẽ không bị kẹt state nữa vì _onChangeLichHocNgay (do listener gọi)
+        // sẽ dùng _lastLoadedState.
+        emit(LichHocUpdated(response.data!));
+      } else {
+        emit(LichHocError(response.message));
+      }
+    } catch (e) {
+      emit(LichHocError('Lỗi cập nhật lịch học: ${e.toString()}'));
     }
   }
 
@@ -203,16 +214,19 @@ class LichHocBloc extends Bloc<LichHocEvent, LichHocState> {
     Emitter<LichHocState> emit,
   ) async {
     emit(LichHocLoading());
+    try {
+      final ApiResponse<dynamic> response = await lichHocRepository.xoaLichHoc(
+        lichHocId: event.lichHocId,
+        xoaCaChuoi: event.xoaCaChuoi,
+      );
 
-    final ApiResponse<dynamic> response = await lichHocRepository.xoaLichHoc(
-      lichHocId: event.lichHocId,
-      xoaCaChuoi: event.xoaCaChuoi,
-    );
-
-    if (response.isSuccess) {
-      emit(LichHocDeleted(response.message));
-    } else {
-      emit(LichHocError(response.message));
+      if (response.isSuccess) {
+        emit(LichHocDeleted(response.message));
+      } else {
+        emit(LichHocError(response.message));
+      }
+    } catch (e) {
+      emit(LichHocError('Lỗi xóa lịch học: ${e.toString()}'));
     }
   }
 }
