@@ -7,7 +7,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/danhgia/danhgia_bloc.d
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/giasu_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/danhgia_repository.dart';
-import 'package:intl/date_symbol_data_local.dart'; // <-- 1. THÊM IMPORT NÀY
+import 'package:intl/date_symbol_data_local.dart'; 
 
 Future<void> main() async {
   // <-- 2. THÊM 'async' VÀ 'Future<void>'

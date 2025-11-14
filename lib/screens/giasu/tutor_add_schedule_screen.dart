@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lich_hoc_repository.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc_model.dart';
 
 class TaoLichHocPage extends StatefulWidget {
   final int lopYeuCauId;
@@ -34,7 +37,7 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
   TimeOfDay _thoiGianKetThuc = TimeOfDay.fromDateTime(
     DateTime.now().add(const Duration(hours: 1)),
   );
-  String _trangThai = 'SapToi';
+  final String _trangThai = 'SapToi';
   bool _lapLai = false;
   int _soTuanLap = 4;
   String? _duongDan;
@@ -78,6 +81,26 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
       initialDate: _ngayHoc,
       firstDate: DateTime.now(),
       lastDate: DateTime(2026),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: AppColors.textLight,
+              onSurface: AppColors.textPrimary,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+            ),
+            dialogTheme: DialogTheme(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (picked != null && picked != _ngayHoc) {
@@ -92,6 +115,26 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: _thoiGianBatDau,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: AppColors.textLight,
+              onSurface: AppColors.textPrimary,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+            ),
+            dialogTheme: DialogTheme(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (picked != null) {
@@ -110,6 +153,26 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: _thoiGianKetThuc,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: AppColors.textLight,
+              onSurface: AppColors.textPrimary,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+            ),
+            dialogTheme: DialogTheme(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (picked != null) {
@@ -152,8 +215,112 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
     return true;
   }
 
-  void _taoLichHoc() {
+  // Kiểm tra xem hai khoảng thời gian có trùng nhau không
+  bool _isTimeOverlap(
+    TimeOfDay start1,
+    TimeOfDay end1,
+    TimeOfDay start2,
+    TimeOfDay end2,
+  ) {
+    final start1Minutes = start1.hour * 60 + start1.minute;
+    final end1Minutes = end1.hour * 60 + end1.minute;
+    final start2Minutes = start2.hour * 60 + start2.minute;
+    final end2Minutes = end2.hour * 60 + end2.minute;
+
+    // Hai khoảng thời gian trùng nhau nếu: start1 < end2 && start2 < end1
+    return start1Minutes < end2Minutes && start2Minutes < end1Minutes;
+  }
+
+  // Parse thời gian từ string "HH:mm:ss" hoặc "HH:mm" thành TimeOfDay
+  TimeOfDay _parseTime(String timeStr) {
+    final parts = timeStr.split(':');
+    final hour = int.parse(parts[0]);
+    final minute = int.parse(parts[1]);
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
+  // Kiểm tra trùng lịch với lịch học hiện có của gia sư
+  Future<bool> _checkTrungLich() async {
+    try {
+      final repository = LichHocRepository();
+
+      // Tính toán các ngày sẽ tạo lịch
+      final List<DateTime> ngayCanKiemTra = [];
+      if (_lapLai) {
+        // Nếu lặp lại, kiểm tra tất cả các ngày sẽ tạo
+        for (int i = 0; i < _soTuanLap; i++) {
+          ngayCanKiemTra.add(_ngayHoc.add(Duration(days: i * 7)));
+        }
+      } else {
+        // Nếu không lặp lại, chỉ kiểm tra 1 ngày
+        ngayCanKiemTra.add(_ngayHoc);
+      }
+
+      // Lấy lịch học của gia sư cho từng ngày cần kiểm tra
+      for (final ngay in ngayCanKiemTra) {
+        final response = await repository.getLichHocTheoNgayGiaSu(ngay: ngay);
+
+        if (response.isSuccess && response.data != null) {
+          final List<LichHoc> existingSchedules = response.data!;
+
+          // Kiểm tra từng lịch học hiện có
+          for (final existingSchedule in existingSchedules) {
+            // Bỏ qua lịch học đã hủy
+            if (existingSchedule.trangThai == 'Huy') {
+              continue;
+            }
+
+            // Parse thời gian từ lịch học hiện có
+            final existingStart = _parseTime(existingSchedule.thoiGianBatDau);
+            final existingEnd = _parseTime(existingSchedule.thoiGianKetThuc);
+
+            // Kiểm tra trùng thời gian
+            if (_isTimeOverlap(
+              _thoiGianBatDau,
+              _thoiGianKetThuc,
+              existingStart,
+              existingEnd,
+            )) {
+              // Tìm tên lớp để hiển thị thông báo
+              final tenLopTrung =
+                  existingSchedule.lopHoc?.tieuDeLop ??
+                  'Lớp #${existingSchedule.lopYeuCauID}';
+              final ngayTrung = DateFormat('dd/MM/yyyy').format(ngay);
+              final thoiGianTrung =
+                  '${_formatTimeOfDay(existingStart)} - ${_formatTimeOfDay(existingEnd)}';
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Trùng lịch! Bạn đã có lịch học với $tenLopTrung vào ngày $ngayTrung lúc $thoiGianTrung',
+                  ),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 5),
+                ),
+              );
+              return false; // Có trùng lịch
+            }
+          }
+        }
+      }
+
+      return true; // Không trùng lịch
+    } catch (e) {
+      // Nếu có lỗi khi kiểm tra, vẫn cho phép tạo (để tránh block user)
+      // Có thể log lỗi để debug
+      debugPrint('Lỗi khi kiểm tra trùng lịch: $e');
+      return true;
+    }
+  }
+
+  Future<void> _taoLichHoc() async {
     if (!_validateForm()) return;
+
+    // Kiểm tra trùng lịch trước khi tạo
+    final khongTrungLich = await _checkTrungLich();
+    if (!khongTrungLich) {
+      return; // Dừng nếu trùng lịch
+    }
 
     // Format thời gian thành HH:mm:ss
     final thoiGianBatDau = '${_formatTimeOfDay(_thoiGianBatDau)}:00';

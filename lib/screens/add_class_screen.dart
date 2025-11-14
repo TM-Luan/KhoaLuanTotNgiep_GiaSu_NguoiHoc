@@ -31,26 +31,28 @@ class _AddClassPageState extends State<AddClassPage> {
   final _soLuongController = TextEditingController(text: '1');
   final _moTaController = TextEditingController();
 
-  // SỬA: Thêm 2 controller mới
-  final _soBuoiTuanController = TextEditingController();
+  // SỬA: Xóa _soBuoiTuanController, giữ _lichHocMongMuonController
+  // final _soBuoiTuanController = TextEditingController(); // BỊ XÓA
   final _lichHocMongMuonController = TextEditingController();
 
   int? _selectedMonID;
   int? _selectedKhoiLopID;
   int? _selectedDoiTuongID;
-  // SỬA: Xóa logic cũ
-  // int? _selectedThoiGianDayID;
   String? _selectedHinhThuc;
   int? _selectedThoiLuong;
+
+  // SỬA: Thêm biến mới cho dropdown số buổi
+  int? _selectedSoBuoiTuan;
 
   List<DropdownItem> _monHocList = [];
   List<DropdownItem> _khoiLopList = [];
   List<DropdownItem> _doiTuongList = [];
-  // SỬA: Xóa logic cũ
-  // List<DropdownItem> _thoiGianDayList = [];
 
   final List<String> _hinhThucOptions = ['Online', 'Offline'];
   final List<int> _thoiLuongOptions = [60, 90, 120];
+
+  // SỬA: Thêm danh sách tùy chọn số buổi
+  final List<int> _soBuoiOptions = [1, 2, 3];
 
   @override
   void initState() {
@@ -60,13 +62,13 @@ class _AddClassPageState extends State<AddClassPage> {
     });
   }
 
-  // SỬA: Thêm dispose cho controller mới
+  // SỬA: Xóa dispose của _soBuoiTuanController
   @override
   void dispose() {
     _hocPhiController.dispose();
     _soLuongController.dispose();
     _moTaController.dispose();
-    _soBuoiTuanController.dispose();
+    // _soBuoiTuanController.dispose(); // BỊ XÓA
     _lichHocMongMuonController.dispose();
     super.dispose();
   }
@@ -82,7 +84,6 @@ class _AddClassPageState extends State<AddClassPage> {
 
   Future<void> _loadDropdownData() async {
     try {
-      // SỬA: Xóa getThoiGianDayList()
       final responses = await Future.wait([
         _dropdownRepo.getMonHocList(),
         _dropdownRepo.getKhoiLopList(),
@@ -93,7 +94,6 @@ class _AddClassPageState extends State<AddClassPage> {
         _monHocList = responses[0];
         _khoiLopList = responses[1];
         _doiTuongList = responses[2];
-        // _thoiGianDayList = responses[3]; // Xóa
         _isDropdownLoading = false;
       });
     } catch (e) {
@@ -112,15 +112,15 @@ class _AddClassPageState extends State<AddClassPage> {
         _selectedMonID = lop.monId;
         _selectedKhoiLopID = lop.khoiLopId;
         _selectedDoiTuongID = lop.doiTuongID;
-        // _selectedThoiGianDayID = lop.thoiGianDayID; // Xóa
         _selectedHinhThuc = lop.hinhThuc;
         _selectedThoiLuong = lop.thoiLuong;
         _hocPhiController.text = lop.hocPhi;
         _soLuongController.text = lop.soLuong?.toString() ?? '1';
         _moTaController.text = lop.moTaChiTiet ?? '';
 
-        // SỬA: Thêm 2 dòng
-        _soBuoiTuanController.text = lop.soBuoiTuan?.toString() ?? '';
+        // SỬA: Cập nhật logic load
+        // _soBuoiTuanController.text = lop.soBuoiTuan?.toString() ?? ''; // BỊ XÓA
+        _selectedSoBuoiTuan = lop.soBuoiTuan; // THAY THẾ
         _lichHocMongMuonController.text = lop.lichHocMongMuon ?? '';
       });
     }
@@ -145,21 +145,16 @@ class _AddClassPageState extends State<AddClassPage> {
         'SoLuong': int.tryParse(_soLuongController.text) ?? 1,
         'MoTa': _moTaController.text,
 
-        // SỬA: Thay thế ThoiGianDayID
-        'SoBuoiTuan':
-            _soBuoiTuanController.text.isEmpty
-                ? null
-                : int.tryParse(_soBuoiTuanController.text),
-        'LichHocMongMuon':
-            _lichHocMongMuonController.text.isEmpty
-                ? null
-                : _lichHocMongMuonController.text,
+        // SỬA: Cập nhật logic gửi đi
+        'SoBuoiTuan': _selectedSoBuoiTuan, // THAY THẾ
+        'LichHocMongMuon': _lichHocMongMuonController.text.isEmpty
+            ? null
+            : _lichHocMongMuonController.text,
       };
 
-      ApiResponse<LopHoc> res =
-          isEditMode
-              ? await _lopHocRepo.updateLopHoc(widget.classId!, data)
-              : await _lopHocRepo.createLopHoc(data);
+      ApiResponse<LopHoc> res = isEditMode
+          ? await _lopHocRepo.updateLopHoc(widget.classId!, data)
+          : await _lopHocRepo.createLopHoc(data);
 
       if (!mounted) return;
       if (res.isSuccess) {
@@ -206,23 +201,22 @@ class _AddClassPageState extends State<AddClassPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body:
-          _isDropdownLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _dropdownError != null
+      body: _isDropdownLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _dropdownError != null
               ? Center(child: Text(_dropdownError!))
               : _isSubmitting
-              ? const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Đang xử lý...'),
-                  ],
-                ),
-              )
-              : _buildForm(),
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Đang xử lý...'),
+                        ],
+                      ),
+                    )
+                  : _buildForm(),
     );
   }
 
@@ -272,12 +266,6 @@ class _AddClassPageState extends State<AddClassPage> {
                   onChanged: (v) => setState(() => _selectedDoiTuongID = v),
                   icon: Icons.school_outlined,
                 ),
-
-                // SỬA: Xóa dropdown Thời Gian Dạy
-                // _buildDropdownField(
-                //   _selectedThoiGianDayID,
-                // ...
-                // ),
                 _buildStringDropdownField(
                   _selectedHinhThuc,
                   'Chọn Hình Thức',
@@ -291,7 +279,6 @@ class _AddClassPageState extends State<AddClassPage> {
                   icon: Icons.attach_money,
                   keyboardType: TextInputType.number, // Thêm
                 ),
-
                 _buildIntDropdownField(
                   _selectedThoiLuong,
                   'Chọn Thời Lượng / Buổi', // Sửa
@@ -300,13 +287,13 @@ class _AddClassPageState extends State<AddClassPage> {
                   icon: Icons.schedule_outlined,
                 ),
 
-                // SỬA: Thêm 2 trường text mới
-                _buildTextField(
-                  controller: _soBuoiTuanController,
-                  label: 'Số buổi / tuần (vd:1, 2, hoặc 3)',
+                // SỬA: Thay thế _buildTextField bằng _buildSoBuoiDropdownField
+                _buildSoBuoiDropdownField(
+                  _selectedSoBuoiTuan,
+                  'Chọn Số Buổi / Tuần',
+                  _soBuoiOptions,
+                  onChanged: (v) => setState(() => _selectedSoBuoiTuan = v),
                   icon: Icons.calendar_today_outlined,
-                  keyboardType: TextInputType.number,
-                  isOptional: true, // Không bắt buộc
                 ),
                 _buildTextField(
                   controller: _lichHocMongMuonController,
@@ -357,13 +344,12 @@ class _AddClassPageState extends State<AddClassPage> {
           fillColor: Colors.blue.shade50,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        items:
-            items
-                .map(
-                  (item) =>
-                      DropdownMenuItem(value: item.id, child: Text(item.ten)),
-                )
-                .toList(),
+        items: items
+            .map(
+              (item) =>
+                  DropdownMenuItem(value: item.id, child: Text(item.ten)),
+            )
+            .toList(),
         onChanged: onChanged,
         validator: (v) => v == null ? 'Vui lòng chọn' : null,
       ),
@@ -388,10 +374,9 @@ class _AddClassPageState extends State<AddClassPage> {
           fillColor: Colors.blue.shade50,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        items:
-            items
-                .map((item) => DropdownMenuItem(value: item, child: Text(item)))
-                .toList(),
+        items: items
+            .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+            .toList(),
         onChanged: onChanged,
         validator: (v) => v == null ? 'Vui lòng chọn' : null,
       ),
@@ -416,17 +401,51 @@ class _AddClassPageState extends State<AddClassPage> {
           fillColor: Colors.blue.shade50,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        items:
-            items
-                .map(
-                  (item) => DropdownMenuItem(
-                    value: item,
-                    child: Text('$item phút/buổi'),
-                  ),
-                )
-                .toList(),
+        items: items
+            .map(
+              (item) => DropdownMenuItem(
+                value: item,
+                child: Text('$item phút/buổi'),
+              ),
+            )
+            .toList(),
         onChanged: onChanged,
         validator: (v) => v == null ? 'Vui lòng chọn' : null,
+      ),
+    );
+  }
+
+  // SỬA: Thêm Widget mới cho Dropdown Số Buổi
+  Widget _buildSoBuoiDropdownField(
+    int? value,
+    String hint,
+    List<int> items, {
+    required ValueChanged<int?> onChanged,
+    required IconData icon,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: DropdownButtonFormField<int>(
+        value: value,
+        decoration: InputDecoration(
+          labelText: hint,
+          prefixIcon: Icon(icon, color: Colors.blueAccent),
+          filled: true,
+          fillColor: Colors.blue.shade50,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        items: items
+            .map(
+              (item) => DropdownMenuItem(
+                value: item,
+                // Hiển thị theo yêu cầu "X buổi/tuần"
+                child: Text('$item buổi/tuần'),
+              ),
+            )
+            .toList(),
+        onChanged: onChanged,
+        // Đặt là optional (không bắt buộc)
+        validator: (v) => null,
       ),
     );
   }
@@ -446,10 +465,9 @@ class _AddClassPageState extends State<AddClassPage> {
         controller: controller,
         maxLines: maxLines,
         keyboardType: keyboardType,
-        inputFormatters:
-            keyboardType == TextInputType.number
-                ? [FilteringTextInputFormatter.digitsOnly]
-                : [],
+        inputFormatters: keyboardType == TextInputType.number
+            ? [FilteringTextInputFormatter.digitsOnly]
+            : [],
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon, color: Colors.blueAccent),

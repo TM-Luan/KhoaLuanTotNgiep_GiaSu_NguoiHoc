@@ -2,8 +2,6 @@
 
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_config.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_service.dart';
-// SỬA: Thêm import này
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart'; 
 
 class DropdownItem {
   final int id;

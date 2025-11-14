@@ -35,8 +35,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _birthController; // Sẽ được kiểm soát bởi _displayFormat
 
   // Thông tin Gia Sư
-  late TextEditingController _degreeController;
-  late TextEditingController _experienceController;
+  late TextEditingController _degreeController; // Sẽ dùng cho "Tự nhập"
+  // late TextEditingController _experienceController; // Đã được thay bằng _selectedExperience
   late TextEditingController _truongDaoTaoController;
   late TextEditingController _chuyenNganhController;
   late TextEditingController _thanhTichController;
@@ -53,6 +53,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final List<String> _genderOptions = ['Nam', 'Nữ', 'Khác'];
   String? _selectedGender;
 
+  // === ⭐️ BIẾN MỚI CHO DROPDOWN ⭐️ ===
+  final List<String> _degreeOptions = [
+    'Bằng tốt nghiệp THCS và THPT',
+    'Bằng tốt nghiệp trung cấp và cao đẳng',
+    'Bằng cử nhân',
+    'Bằng thạc sĩ',
+    'Bằng tiến sĩ',
+    'Khác (Tự nhập)', // Tùy chọn đặc biệt
+  ];
+  String? _selectedDegree;
+  bool _isCustomDegree = false; // Cờ để hiển thị/ẩn trường tự nhập
+
+  final List<String> _experienceOptions = [
+    'Chưa có kinh nghiệm',
+    '1 năm',
+    '2 năm',
+    '3 năm',
+    '4 năm',
+    '5 năm',
+  ];
+  String? _selectedExperience;
+  // === ⭐️ KẾT THÚC BIẾN MỚI ⭐️ ===
+
   @override
   void initState() {
     super.initState();
@@ -63,10 +86,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
     _addressController = TextEditingController(text: widget.user.diaChi ?? '');
 
+    // _degreeController VẪN được khởi tạo với giá trị cũ (cho trường hợp tự nhập)
     _degreeController = TextEditingController(text: widget.user.bangCap ?? '');
-    _experienceController = TextEditingController(
-      text: widget.user.kinhNghiem ?? '',
-    );
+    // _experienceController đã bị xóa
     _truongDaoTaoController = TextEditingController(
       text: widget.user.truongDaoTao ?? '',
     );
@@ -81,6 +103,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (_selectedGender != null && !_genderOptions.contains(_selectedGender)) {
       _selectedGender = null;
     }
+
+    // === ⭐️ XỬ LÝ LOGIC INIT MỚI ⭐️ ===
+    final currentDegree = widget.user.bangCap;
+    if (currentDegree != null && _degreeOptions.contains(currentDegree)) {
+      _selectedDegree = currentDegree;
+      _isCustomDegree = false;
+    } else if (currentDegree != null && currentDegree.isNotEmpty) {
+      _selectedDegree = 'Khác (Tự nhập)';
+      _isCustomDegree = true;
+      // _degreeController đã được gán giá trị ở trên, nên giữ nguyên
+    } else {
+      _selectedDegree = null;
+      _isCustomDegree = false;
+    }
+
+    final currentExperience = widget.user.kinhNghiem;
+    if (currentExperience != null &&
+        _experienceOptions.contains(currentExperience)) {
+      _selectedExperience = currentExperience;
+    } else {
+      _selectedExperience =
+          null; // Nếu giá trị cũ không khớp, để trống (hoặc chọn 'Chưa có kinh nghiệm' làm mặc định)
+    }
+    // === ⭐️ KẾT THÚC LOGIC INIT MỚI ⭐️ ===
 
     // Xử lý format ngày
     _birthController = TextEditingController(); // Khởi tạo rỗng
@@ -151,6 +197,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
+    // === ⭐️ XỬ LÝ DỮ LIỆU MỚI TRƯỚC KHI GỬI ⭐️ ===
+    String? finalDegree;
+    if (_isGiaSu) {
+      if (_selectedDegree == 'Khác (Tự nhập)') {
+        finalDegree = _degreeController.text.trim();
+      } else {
+        finalDegree = _selectedDegree;
+      }
+    } else {
+      finalDegree = widget.user.bangCap;
+    }
+
+    String? finalExperience =
+        _isGiaSu ? _selectedExperience : widget.user.kinhNghiem;
+    // === ⭐️ KẾT THÚC XỬ LÝ DỮ LIỆU MỚI ⭐️ ===
+
     final updatedUser = UserProfile(
       // Thông tin Text
       taiKhoanID: widget.user.taiKhoanID,
@@ -165,17 +227,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           _selectedDate != null ? _apiFormat.format(_selectedDate!) : null,
 
       // Thông tin Text (Gia sư)
-      bangCap: _isGiaSu ? _degreeController.text.trim() : widget.user.bangCap,
-      kinhNghiem:
-          _isGiaSu ? _experienceController.text.trim() : widget.user.kinhNghiem,
-      truongDaoTao:
-          _isGiaSu
-              ? _truongDaoTaoController.text.trim()
-              : widget.user.truongDaoTao,
-      chuyenNganh:
-          _isGiaSu
-              ? _chuyenNganhController.text.trim()
-              : widget.user.chuyenNganh,
+      bangCap: finalDegree, // SỬA Ở ĐÂY
+      kinhNghiem: finalExperience, // SỬA Ở ĐÂY
+      truongDaoTao: _isGiaSu
+          ? _truongDaoTaoController.text.trim()
+          : widget.user.truongDaoTao,
+      chuyenNganh: _isGiaSu
+          ? _chuyenNganhController.text.trim()
+          : widget.user.chuyenNganh,
       thanhTich:
           _isGiaSu ? _thanhTichController.text.trim() : widget.user.thanhTich,
 
@@ -259,12 +318,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               EditProfilePic(
                 image: widget.user.anhDaiDien ?? '', // Link ảnh cũ
                 newImageFile: _newAnhDaiDienFile, // File ảnh mới chọn
-                imageUploadBtnPress:
-                    () => _pickImage((file) {
-                      if (file != null) {
-                        setState(() => _newAnhDaiDienFile = file);
-                      }
-                    }),
+                imageUploadBtnPress: () => _pickImage((file) {
+                  if (file != null) {
+                    setState(() => _newAnhDaiDienFile = file);
+                  }
+                }),
               ),
               const Divider(),
 
@@ -298,12 +356,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                _buildField(
-                  "Bằng cấp",
-                  _degreeController,
-                  maxLines: 2,
-                  isRequired: false,
-                ),
+
+                // === ⭐️ THAY ĐỔI TRƯỜNG BẰNG CẤP ⭐️ ===
+                _buildDegreeDropdown(), // Widget Dropdown mới
+                if (_isCustomDegree) // Chỉ hiển thị nếu chọn "Khác"
+                  _buildField(
+                    "Nhập bằng cấp khác *",
+                    _degreeController,
+                    maxLines: 2,
+                    isRequired:
+                        true, // Bắt buộc nhập nếu đã chọn "Khác"
+                  ),
+                // === ⭐️ KẾT THÚC THAY ĐỔI ⭐️ ===
+
                 _buildField(
                   "Trường đào tạo",
                   _truongDaoTaoController,
@@ -316,12 +381,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   maxLines: 2,
                   isRequired: false,
                 ),
-                _buildField(
-                  "Kinh nghiệm",
-                  _experienceController,
-                  maxLines: 3,
-                  isRequired: false,
-                ),
+
+                // === ⭐️ THAY ĐỔI TRƯỜNG KINH NGHIỆM ⭐️ ===
+                _buildExperienceDropdown(), // Widget Dropdown mới
+                // === ⭐️ KẾT THÚC THAY ĐỔI ⭐️ ===
+
                 _buildField(
                   "Thành tích",
                   _thanhTichController,
@@ -347,36 +411,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   title: "Ảnh CCCD mặt trước",
                   currentImageUrl: widget.user.anhCCCDMatTruoc,
                   newImageFile: _newAnhCCCDMatTruocFile,
-                  onPickImage:
-                      () => _pickImage((file) {
-                        if (file != null) {
-                          setState(() => _newAnhCCCDMatTruocFile = file);
-                        }
-                      }),
+                  onPickImage: () => _pickImage((file) {
+                    if (file != null) {
+                      setState(() => _newAnhCCCDMatTruocFile = file);
+                    }
+                  }),
                 ),
                 // Ảnh CCCD mặt sau
                 _buildImageUploadField(
                   title: "Ảnh CCCD mặt sau",
                   currentImageUrl: widget.user.anhCCCDMatSau,
                   newImageFile: _newAnhCCCDMatSauFile,
-                  onPickImage:
-                      () => _pickImage((file) {
-                        if (file != null) {
-                          setState(() => _newAnhCCCDMatSauFile = file);
-                        }
-                      }),
+                  onPickImage: () => _pickImage((file) {
+                    if (file != null) {
+                      setState(() => _newAnhCCCDMatSauFile = file);
+                    }
+                  }),
                 ),
                 // Ảnh bằng cấp
                 _buildImageUploadField(
                   title: "Ảnh bằng cấp",
                   currentImageUrl: widget.user.anhBangCap,
                   newImageFile: _newAnhBangCapFile,
-                  onPickImage:
-                      () => _pickImage((file) {
-                        if (file != null) {
-                          setState(() => _newAnhBangCapFile = file);
-                        }
-                      }),
+                  onPickImage: () => _pickImage((file) {
+                    if (file != null) {
+                      setState(() => _newAnhBangCapFile = file);
+                    }
+                  }),
                 ),
               ],
 
@@ -407,24 +468,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                       minimumSize: const Size(140, 48),
                     ),
-                    child:
-                        _isLoading
-                            ? SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  color: AppColors.textLight,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(
-                                "Lưu thay đổi",
-                                style: TextStyle(
-                                  color: AppColors.textLight,
-                                  fontSize: AppTypography.body1,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                    child: _isLoading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: AppColors.textLight,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            "Lưu thay đổi",
+                            style: TextStyle(
+                              color: AppColors.textLight,
+                              fontSize: AppTypography.body1,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
                 ],
               ),
@@ -485,9 +545,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       Image.network(
                         currentImageUrl,
                         fit: BoxFit.contain,
-                        errorBuilder:
-                            (context, error, stackTrace) =>
-                                _buildImagePlaceholder(),
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildImagePlaceholder(),
                       )
                     // 3. Nếu không có cả 2, hiển thị placeholder
                     else
@@ -633,26 +692,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
           ),
         ),
-        items:
-            _genderOptions.map((String gender) {
-              return DropdownMenuItem<String>(
-                value: gender,
-                child: Text(
-                  gender,
-                  style: TextStyle(
-                    fontSize: AppTypography.body1,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              );
-            }).toList(),
+        items: _genderOptions.map((String gender) {
+          return DropdownMenuItem<String>(
+            value: gender,
+            child: Text(
+              gender,
+              style: TextStyle(
+                fontSize: AppTypography.body1,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          );
+        }).toList(),
         onChanged: (String? newValue) {
           setState(() {
             _selectedGender = newValue;
           });
         },
         validator: (value) {
-          return null;
+          return null; // Giới tính không bắt buộc
         },
       ),
     );
@@ -703,11 +761,147 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         ),
         validator: (value) {
+          return null; // Ngày sinh không bắt buộc
+        },
+      ),
+    );
+  }
+
+  // === ⭐️ WIDGET MỚI CHO BẰNG CẤP ⭐️ ===
+  Widget _buildDegreeDropdown() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: DropdownButtonFormField<String>(
+        value: _selectedDegree,
+        style: TextStyle(
+          fontSize: AppTypography.body1,
+          color: AppColors.textPrimary,
+        ),
+        decoration: InputDecoration(
+          labelText: "Bằng cấp",
+          labelStyle: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: AppTypography.body2,
+          ),
+          filled: true,
+          fillColor: AppColors.primarySurface,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.lg,
+          ),
+          border: OutlineInputBorder(
+            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(
+              AppSpacing.cardBorderRadius * 4,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: AppColors.primary, width: 2),
+            borderRadius: BorderRadius.circular(
+              AppSpacing.cardBorderRadius * 4,
+            ),
+          ),
+        ),
+        items: _degreeOptions.map((String degree) {
+          return DropdownMenuItem<String>(
+            value: degree,
+            child: Text(
+              degree,
+              style: TextStyle(
+                fontSize: AppTypography.body1,
+                color: AppColors.textPrimary,
+              ),
+              overflow: TextOverflow.ellipsis, // Chống tràn
+            ),
+          );
+        }).toList(),
+        onChanged: (String? newValue) {
+          setState(() {
+            _selectedDegree = newValue;
+            if (newValue == 'Khác (Tự nhập)') {
+              _isCustomDegree = true;
+              // Không xóa _degreeController.text vội,
+              // vì có thể người dùng đang edit lại giá trị cũ
+            } else {
+              _isCustomDegree = false;
+              _degreeController.clear(); // Xóa text tự nhập nếu đổi ý
+            }
+          });
+        },
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Vui lòng chọn bằng cấp'; // Có thể đặt là optional
+          }
+          return null;
+        },
+        isExpanded: true, // Cho phép text dài hiển thị
+      ),
+    );
+  }
+  // === ⭐️ KẾT THÚC WIDGET MỚI ⭐️ ===
+
+  // === ⭐️ WIDGET MỚI CHO KINH NGHIỆM ⭐️ ===
+  Widget _buildExperienceDropdown() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: DropdownButtonFormField<String>(
+        value: _selectedExperience,
+        style: TextStyle(
+          fontSize: AppTypography.body1,
+          color: AppColors.textPrimary,
+        ),
+        decoration: InputDecoration(
+          labelText: "Kinh nghiệm",
+          labelStyle: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: AppTypography.body2,
+          ),
+          filled: true,
+          fillColor: AppColors.primarySurface,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.lg,
+          ),
+          border: OutlineInputBorder(
+            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(
+              AppSpacing.cardBorderRadius * 4,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: AppColors.primary, width: 2),
+            borderRadius: BorderRadius.circular(
+              AppSpacing.cardBorderRadius * 4,
+            ),
+          ),
+        ),
+        items: _experienceOptions.map((String exp) {
+          return DropdownMenuItem<String>(
+            value: exp,
+            child: Text(
+              exp,
+              style: TextStyle(
+                fontSize: AppTypography.body1,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          );
+        }).toList(),
+        onChanged: (String? newValue) {
+          setState(() {
+            _selectedExperience = newValue;
+          });
+        },
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Vui lòng chọn kinh nghiệm'; // Có thể đặt là optional
+          }
           return null;
         },
       ),
     );
   }
+  // === ⭐️ KẾT THÚC WIDGET MỚI ⭐️ ===
 
   @override
   void dispose() {
@@ -718,7 +912,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _birthController.dispose();
 
     _degreeController.dispose();
-    _experienceController.dispose();
+    // _experienceController.dispose(); // ĐÃ XÓA
     _truongDaoTaoController.dispose();
     _chuyenNganhController.dispose();
     _thanhTichController.dispose();
@@ -794,11 +988,10 @@ class EditProfilePic extends StatelessWidget {
           if (loadingProgress == null) return child;
           return Center(
             child: CircularProgressIndicator(
-              value:
-                  loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
-                      : null,
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                      loadingProgress.expectedTotalBytes!
+                  : null,
             ),
           );
         },
