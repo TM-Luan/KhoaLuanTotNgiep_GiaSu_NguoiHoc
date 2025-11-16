@@ -1,3 +1,5 @@
+// file: tutor_my_classes_screen.dart
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -393,7 +395,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                         ElevatedButton.icon(
                           onPressed: () => _navigateToAddSchedule(context, lop),
                           icon: const Icon(Icons.schedule, size: 16),
-                          label: const Text('Quản lý Lịch'),
+                          label: const Text('Tạo Lịch'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green.shade600,
                             foregroundColor: Colors.white,
@@ -417,7 +419,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                             Icons.delete_sweep_outlined,
                             size: 16,
                           ),
-                          label: const Text('Xóa Hết Lịch'),
+                          label: const Text('Hủy Lịch'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red.shade600,
                             foregroundColor: Colors.white,
@@ -966,20 +968,20 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Xác nhận xóa lịch'),
+          title: const Text('Xác nhận hủy lịch'),
           // [KHÔI PHỤC] Xóa hiển thị lop.lichHocCount
           content: Text(
-            'Bạn có chắc chắn muốn xóa TẤT CẢ lịch học đã tạo cho lớp "${lop.tieuDeLop}" không? \n\nHành động này không thể hoàn tác.',
+            'Bạn có chắc chắn hủy lịch học đã tạo cho lớp "${lop.tieuDeLop}" không? \n\nHành động này không thể hoàn tác.',
           ),
           actions: [
             TextButton(
-              child: const Text('Hủy'),
+              child: const Text('Thoát'),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
             ),
             ElevatedButton(
-              child: const Text('Xác nhận Xóa'),
+              child: const Text('Xác nhận hủy'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,

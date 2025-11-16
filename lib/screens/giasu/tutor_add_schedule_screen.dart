@@ -1,4 +1,4 @@
-// file: tutor_add_schedule_screen.dart (PHIÊN BẢN SỬA ĐA KHUNG GIỜ)
+// file: tutor_add_schedule_screen.dart (CHO PHÉP TRỐNG LINK)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,11 +7,9 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_bloc.
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc_model.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc_model.dart';
 
-// [MỚI] Model để quản lý state của UI
 class BuoiHocUI {
-  int ngayThu; // 0=CN, 1=T2, ...
+  int ngayThu; 
   TimeOfDay thoiGianBatDau;
 
   BuoiHocUI({required this.ngayThu, required this.thoiGianBatDau});
@@ -28,21 +26,19 @@ class TaoLichHocPage extends StatefulWidget {
 class _TaoLichHocPageState extends State<TaoLichHocPage> {
   final _formKey = GlobalKey<FormState>();
 
-  // Form controllers
   late TextEditingController _ngayBatDauController;
   late TextEditingController _duongDanController;
 
-  // Form values
   DateTime _ngayBatDau = DateTime.now();
   int _soTuan = 4;
-  
-  // State chính: Danh sách các buổi học (ngày + giờ)
+
   final List<BuoiHocUI> _cacBuoiHoc = [];
-  
-  final List<String> _weekdayNames = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+
+  final List<String> _weekdayNames = [
+    'Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7',
+  ];
   final TimeOfDay _defaultTime = const TimeOfDay(hour: 19, minute: 0);
 
-  // Thông tin lớp học (chỉ để hiển thị)
   String _lichHocMongMuonText = "Chưa rõ";
   int _soBuoiTuan = 0;
   int _soBuoiTuanLimit = 0;
@@ -106,7 +102,7 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
 
   void _themBuoiHoc() {
     if (_cacBuoiHoc.length >= _soBuoiTuanLimit) {
-       ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Lớp học này chỉ có $_soBuoiTuanLimit buổi/tuần.'),
           backgroundColor: Colors.orange,
@@ -123,18 +119,16 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
       }
     }
 
-    if (ngayThuChuaChon == -1) return; 
+    if (ngayThuChuaChon == -1) return;
 
     setState(() {
       _cacBuoiHoc.add(
-        BuoiHocUI(
-          ngayThu: ngayThuChuaChon,
-          thoiGianBatDau: _defaultTime,
-        ),
+        BuoiHocUI(ngayThu: ngayThuChuaChon, thoiGianBatDau: _defaultTime),
       );
     });
   }
 
+  // [SỬA] Cập nhật hàm validate (CHO PHÉP TRỐNG)
   bool _validateForm() {
     if (_cacBuoiHoc.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -146,19 +140,28 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
       return false;
     }
 
-    final duongDan = _duongDanController.text.trim();
-    if (widget.lopHoc.hinhThuc == 'Online' && duongDan.isNotEmpty) {
-      if (!duongDan.startsWith('http://') &&
-          !duongDan.startsWith('https://')) {
+    final duongDanNhap = _duongDanController.text.trim();
+
+    // [SỬA] Chỉ validate nếu có nhập
+    if (widget.lopHoc.hinhThuc == 'Online' && duongDanNhap.isNotEmpty) {
+      
+      // Dùng Uri.tryParse (dễ dãi) để validate
+      final uri = Uri.tryParse(duongDanNhap);
+      if (uri == null || !uri.isAbsolute || uri.host.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đường dẫn nếu có nhập, phải bắt đầu bằng http:// hoặc https://'),
+            content: Text(
+              'Đường dẫn không hợp lệ. (vd: https://google.com)',
+            ),
             backgroundColor: Colors.orange,
           ),
         );
         return false;
       }
     }
+
+    // Nếu không phải lớp Online, hoặc là lớp Online nhưng để trống,
+    // hoặc lớp Online và nhập URL hợp lệ (theo Uri.tryParse) -> thì cho qua.
     return true;
   }
 
@@ -175,7 +178,14 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
 
     final String? finalDuongDan;
     final text = _duongDanController.text.trim();
-    finalDuongDan = (widget.lopHoc.hinhThuc == 'Online' && text.isNotEmpty) ? text : null;
+    
+    // [SỬA] Nếu là Online và text không rỗng -> gán text.
+    // Nếu Offline, hoặc Online nhưng text rỗng -> gán null.
+    if (widget.lopHoc.hinhThuc == 'Online' && text.isNotEmpty) {
+      finalDuongDan = text;
+    } else {
+      finalDuongDan = null;
+    }
 
     context.read<LichHocBloc>().add(
       CreateLichHocTheoTuan(
@@ -245,7 +255,7 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
               style: TextStyle(color: Colors.grey[600]),
             ),
           ),
-          
+
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -265,7 +275,8 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
               foregroundColor: AppColors.primary,
               side: BorderSide(color: AppColors.primary),
             ),
-            onPressed: (_cacBuoiHoc.length >= _soBuoiTuanLimit) ? null : _themBuoiHoc,
+            onPressed:
+                (_cacBuoiHoc.length >= _soBuoiTuanLimit) ? null : _themBuoiHoc,
           ),
         ),
         const SizedBox(height: 16),
@@ -275,7 +286,7 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
 
   Widget _buildBuoiHocItem(BuoiHocUI buoi, int index) {
     List<int> ngayChuaChon = [];
-    for(int i=0; i<7; i++) {
+    for (int i = 0; i < 7; i++) {
       if (i == buoi.ngayThu || !_cacBuoiHoc.any((b) => b.ngayThu == i)) {
         ngayChuaChon.add(i);
       }
@@ -294,15 +305,16 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                 child: DropdownButton<int>(
                   value: buoi.ngayThu,
                   isExpanded: true,
-                  items: ngayChuaChon.map((ngay) {
-                    return DropdownMenuItem<int>(
-                      value: ngay,
-                      child: Text(
-                        _weekdayNames[ngay],
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    );
-                  }).toList(),
+                  items:
+                      ngayChuaChon.map((ngay) {
+                        return DropdownMenuItem<int>(
+                          value: ngay,
+                          child: Text(
+                            _weekdayNames[ngay],
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        );
+                      }).toList(),
                   onChanged: (newNgayThu) {
                     if (newNgayThu != null) {
                       setState(() {
@@ -313,9 +325,9 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                 ),
               ),
             ),
-            
+
             const SizedBox(width: 8),
-            
+
             Expanded(
               flex: 2,
               child: InkWell(
@@ -334,18 +346,21 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(4)
+                    borderRadius: BorderRadius.circular(4),
                   ),
                   child: Center(
                     child: Text(
                       _formatTimeOfDay(buoi.thoiGianBatDau),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-            
+
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.red),
               onPressed: () {
@@ -376,9 +391,8 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
               duration: const Duration(seconds: 3),
             ),
           );
-          // [SỬA] Trả về true khi pop
           Future.delayed(const Duration(milliseconds: 1500), () {
-            if (mounted) Navigator.pop(context, true); 
+            if (mounted) Navigator.pop(context, true);
           });
         } else if (state is LichHocError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -506,7 +520,7 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Đường dẫn (Online)',
+                        'Đường dẫn (Online)', // [SỬA] Bỏ dấu *
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -516,7 +530,8 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                       TextFormField(
                         controller: _duongDanController,
                         decoration: InputDecoration(
-                          hintText: 'https://meet.google.com/... (có thể bỏ trống)',
+                          hintText:
+                              'https://... (Có thể bỏ trống)', // [SỬA] Thêm gợi ý
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),

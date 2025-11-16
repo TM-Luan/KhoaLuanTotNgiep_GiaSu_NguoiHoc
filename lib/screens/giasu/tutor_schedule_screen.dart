@@ -1,4 +1,5 @@
-// file: tutor_schedule_page.dart (SỬA LỖI KẸT STATE)
+// file: tutor_schedule_page.dart
+
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,9 +9,6 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/lich_hoc_dialogs.dart';
-
-// ... (phần code từ class _TutorSchedulePageState đến hàm _buildEmptyState giữ nguyên)
-// ... (tôi sẽ paste lại bên dưới cho chắc chắn)
 
 class TutorSchedulePage extends StatefulWidget {
   const TutorSchedulePage({super.key});
@@ -116,7 +114,12 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
 
   // Widget hiển thị card lịch học
   Widget _buildLichHocCard(LichHoc lichHoc) {
-    final isOnline = (lichHoc.duongDan ?? '').isNotEmpty;
+    // [LOGIC MỚI]
+    // 1. Quyết định HÌNH THỨC (tag) dựa trên LỚP HỌC
+    final bool isOnlineClass = (lichHoc.lopHoc?.hinhThuc == 'Online');
+
+    // 2. Quyết định HÀNH ĐỘNG (nút "Tham gia") dựa trên CÓ LINK hay không
+    final bool hasLink = (lichHoc.duongDan ?? '').isNotEmpty;
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -181,15 +184,15 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                       ),
                       decoration: BoxDecoration(
                         color:
-                            isOnline
+                            isOnlineClass
                                 ? Colors.green.shade100
                                 : Colors.blue.shade100,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        isOnline ? 'ONLINE' : 'OFFLINE',
+                        isOnlineClass ? 'ONLINE' : 'OFFLINE',
                         style: TextStyle(
-                          color: isOnline ? Colors.green : Colors.blue,
+                          color: isOnlineClass ? Colors.green : Colors.blue,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
@@ -213,7 +216,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                 Icons.person,
                 'Tên người học: ${lichHoc.lopHoc!.tenNguoiHoc}',
               ),
-            if (isOnline)
+            if (isOnlineClass)
               _buildInfoRow(
                 Icons.link,
                 'Link: ${lichHoc.duongDan ?? "Chưa có link"}',
@@ -227,6 +230,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
             const SizedBox(height: 12),
             Row(
               children: [
+                // Nút Chi tiết
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () {
@@ -251,8 +255,46 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                     ),
                   ),
                 ),
+                if (hasLink) const SizedBox(width: 8),
+                // Nút Cập nhật
+                if (lichHoc.trangThai != 'DaHoc' && lichHoc.trangThai != 'Huy')
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder:
+                              (context) => SuaLichHocDialog(
+                                lichHoc: lichHoc,
+                                isOnlineClass: isOnlineClass,
+                                onUpdate: (trangThai, duongDan) {
+                                  context.read<LichHocBloc>().add(
+                                    UpdateLichHoc(
+                                      lichHocId: lichHoc.lichHocID,
+                                      trangThai: trangThai,
+                                      duongDan: duongDan,
+                                    ),
+                                  );
+                                },
+                              ),
+                        );
+                      },
+                      icon: const Icon(Icons.edit, size: 16),
+                      label: const Text('Cập nhật'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green.shade700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
                 const SizedBox(width: 8),
-                if (isOnline)
+
+                // Nút Tham gia
+                if (hasLink)
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
@@ -272,78 +314,6 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
                   ),
               ],
             ),
-            if (lichHoc.trangThai != 'DaHoc' && lichHoc.trangThai != 'Huy')
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder:
-                                (context) => SuaLichHocDialog(
-                                  lichHoc: lichHoc,
-                                  onUpdate: (trangThai, duongDan) {
-                                    context.read<LichHocBloc>().add(
-                                      UpdateLichHoc(
-                                        lichHocId: lichHoc.lichHocID,
-                                        trangThai: trangThai,
-                                        duongDan: duongDan,
-                                      ),
-                                    );
-                                  },
-                                ),
-                          );
-                        },
-                        icon: const Icon(Icons.edit, size: 16),
-                        label: const Text('Sửa / Hủy'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange.shade700,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder:
-                                (context) => XoaLichHocDialog(
-                                  lichHoc: lichHoc,
-                                  onDelete: (xoaCaChuoi) {
-                                    context.read<LichHocBloc>().add(
-                                      DeleteLichHoc(
-                                        lichHocId: lichHoc.lichHocID,
-                                        xoaCaChuoi: xoaCaChuoi,
-                                      ),
-                                    );
-                                  },
-                                ),
-                          );
-                        },
-                        icon: const Icon(Icons.delete, size: 16),
-                        label: const Text('Xóa'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
           ],
         ),
       ),
@@ -414,15 +384,11 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
     );
   }
 
-  // Hàm xử lý tham gia Zoom
   Future<void> _launchLink(String urlString) async {
     final Uri url = Uri.parse(urlString);
 
-    // Cố gắng mở link bằng ứng dụng bên ngoài (như app Zoom hoặc trình duyệt)
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      // Nếu không mở được, hiển thị thông báo lỗi
       if (mounted) {
-        // Luôn kiểm tra 'mounted' trước khi dùng context trong hàm async
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Không thể mở link: $urlString')),
         );
@@ -430,7 +396,6 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
     }
   }
 
-  // Đây là hàm gốc của bạn, đã được cập nhật
   void _joinMeeting(LichHoc lichHoc) {
     if (lichHoc.duongDan != null && lichHoc.duongDan!.isNotEmpty) {
       _launchLink(lichHoc.duongDan!);
@@ -627,9 +592,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
 
   @override
   Widget build(BuildContext context) {
-    // [SỬA] Thêm `buildWhen` và `listenWhen`
     return BlocConsumer<LichHocBloc, LichHocState>(
-      // ListenWhen: Chỉ lắng nghe các state "sự kiện" (lỗi, thành công)
       listenWhen: (previous, current) {
         return current is LichHocError ||
             current is LichHocUpdated ||
@@ -647,7 +610,6 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
               backgroundColor: Colors.green,
             ),
           );
-          // Tải lại chi tiết của ngày đang chọn
           _changeSelectedDate(_selectedDate);
         } else if (state is LichHocDeleted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -656,11 +618,9 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
               backgroundColor: Colors.green,
             ),
           );
-          // Tải lại toàn bộ lịch
           _loadLichHocCalendar();
         }
       },
-      // BuildWhen: Chỉ xây dựng lại UI cho các state "nội dung"
       buildWhen: (previous, current) {
         return current is LichHocLoading ||
             current is LichHocCalendarLoaded ||
