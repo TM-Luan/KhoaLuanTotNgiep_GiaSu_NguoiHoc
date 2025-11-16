@@ -179,4 +179,44 @@ class LichHocRepository {
 
     return await _apiService.delete(endpoint);
   }
+  Future<ApiResponse<dynamic>> xoaTatCaLichHocTheoLop({
+    required int lopYeuCauId,
+  }) async {
+    String endpoint = '/lop/$lopYeuCauId/xoa-tat-ca-lich';
+    
+    // Giả sử ApiService đã xử lý 'success' = true/false
+    return await _apiService.delete(endpoint); 
+  }
+// [SỬA] Tạo lịch học thông minh theo tuần (với nhiều khung giờ)
+  Future<ApiResponse<List<LichHoc>>> taoLichHocTheoTuan({
+    required int lopYeuCauId,
+    required DateTime ngayBatDau,
+    required int soTuan,
+    
+    // [SỬA] Thay đổi tham số
+    required List<Map<String, dynamic>> buoiHocMau, // Ví dụ: [{'ngay_thu': 1, 'thoi_gian_bat_dau': '19:00:00'}, ...]
+    
+    String? duongDan,
+  }) async {
+    final endpoint = '/lop/$lopYeuCauId/tao-lich-theo-tuan';
+
+    final data = {
+      'ngay_bat_dau': DateFormat('yyyy-MM-dd').format(ngayBatDau),
+      'so_tuan': soTuan,
+      'duong_dan': duongDan,
+      'trang_thai': 'SapToi',
+
+      // [SỬA] Gửi mảng buổi học mẫu
+      'buoi_hoc_mau': buoiHocMau,
+    };
+
+    return await _apiService.post(
+      endpoint,
+      data: data,
+      fromJsonT: (data) {
+        final dataList = data as List;
+        return dataList.map((item) => LichHoc.fromJson(item)).toList();
+      },
+    );
+  }
 }

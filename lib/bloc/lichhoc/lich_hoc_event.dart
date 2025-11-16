@@ -78,3 +78,24 @@ class DeleteLichHoc extends LichHocEvent {
 
   DeleteLichHoc({required this.lichHocId, this.xoaCaChuoi = false});
 }
+class DeleteAllLichHocLop extends LichHocEvent {
+  final int lopYeuCauId;
+  DeleteAllLichHocLop({required this.lopYeuCauId});
+}
+class CreateLichHocTheoTuan extends LichHocEvent {
+  final int lopYeuCauId;
+  final DateTime ngayBatDau;
+  final int soTuan;
+  final String? duongDan;
+  
+  // [SỬA] Thay đổi tham số
+  final List<Map<String, dynamic>> buoiHocMau;
+
+  CreateLichHocTheoTuan({
+    required this.lopYeuCauId,
+    required this.ngayBatDau,
+    required this.soTuan,
+    required this.buoiHocMau, // [SỬA]
+    this.duongDan,
+  });
+}

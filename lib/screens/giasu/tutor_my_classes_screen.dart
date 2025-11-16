@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor_classes/tutor_classes_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor_classes/tutor_classes_event.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor_classes/tutor_classes_state.dart';
@@ -34,12 +35,9 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
   @override
   void initState() {
     super.initState();
-
-    // Lắng nghe notification về proposal updates
     _proposalUpdateSubscription = GlobalNotificationService()
         .proposalUpdateStream
         .listen((event) {
-          // Refresh data khi có proposal được chấp nhận/từ chối
           if (_currentBloc != null) {
             _currentBloc!.add(TutorClassesRefreshRequested());
           }
@@ -205,11 +203,31 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
   }
 
   Widget _buildTabs(BuildContext context, TutorClassesLoadSuccess state) {
-    return TabBarView(
-      children: [
-        _buildLopDangDayList(context, state.lopDangDay),
-        _buildLopDeNghiList(context, state),
-      ],
+    // [KHÔI PHỤC] Chỉ lắng nghe state Xóa hoặc Lỗi
+    return BlocListener<LichHocBloc, LichHocState>(
+      listenWhen: (previous, current) {
+        return current is LichHocDeleted ||
+            current is LichHocCreated ||
+            current is LichHocError;
+      },
+      listener: (context, state) {
+        if (state is LichHocDeleted) {
+          _showSnack(context, state.message, Colors.green);
+          context.read<TutorClassesBloc>().add(TutorClassesRefreshRequested());
+        } else if (state is LichHocCreated) {
+          // Khi tạo lịch thành công (từ màn hình cũ), cũng tải lại
+          _showSnack(context, "Tạo lịch thành công", Colors.green);
+          context.read<TutorClassesBloc>().add(TutorClassesRefreshRequested());
+        } else if (state is LichHocError) {
+          _showSnack(context, state.message, Colors.red);
+        }
+      },
+      child: TabBarView(
+        children: [
+          _buildLopDangDayList(context, state.lopDangDay),
+          _buildLopDeNghiList(context, state),
+        ],
+      ),
     );
   }
 
@@ -261,7 +279,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
         itemBuilder: (context, index) {
           final lop = lopHocList[index];
 
-          // === GIỐNG HỆT CARD GIA SƯ GỬI YÊU CẦU ===
           final Color cardColor = Colors.blue.shade50;
           final Color statusColor = Colors.blue.shade100;
           final Color textColor = Colors.blue.shade700;
@@ -287,7 +304,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // --- HEADER (GIỐNG HỆT) ---
                     Row(
                       children: [
                         Container(
@@ -328,10 +344,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 12),
-
-                    // --- THÔNG TIN ---
                     InfoRow(
                       icon: Icons.person,
                       label: 'Học viên',
@@ -351,20 +364,19 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                         value: lop.diaChi!,
                       ),
                     ],
-
                     const SizedBox(height: 12),
 
-                    // --- FOOTER (GIỐNG HỆT CARD GIA SƯ GỬI) ---
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    // [KHÔI PHỤC] Hiển thị cả 3 nút
+                    Wrap(
+                      spacing: 8.0,
+                      runSpacing: 4.0,
+                      alignment: WrapAlignment.end,
                       children: [
-                        const SizedBox(width: 12),
-                        // Nút "Xem chi tiết" – giữ nguyên chức năng
                         ElevatedButton.icon(
                           onPressed:
                               () => _navigateToClassDetail(context, lop.maLop),
                           icon: const Icon(Icons.visibility, size: 16),
-                          label: const Text('Xem chi tiết'),
+                          label: const Text('Chi tiết'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue.shade600,
                             foregroundColor: Colors.white,
@@ -379,16 +391,35 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                           ),
                         ),
                         ElevatedButton.icon(
-                          onPressed:
-                              () => _navigateToAddSchedule(
-                                context,
-                                lop.maLop,
-                                lop.tieuDeLop,
-                              ),
+                          onPressed: () => _navigateToAddSchedule(context, lop),
                           icon: const Icon(Icons.schedule, size: 16),
-                          label: const Text('Tạo Lịch Dạy'),
+                          label: const Text('Quản lý Lịch'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade600,
+                            backgroundColor: Colors.green.shade600,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
+
+                        // [KHÔI PHỤC] Xóa điều kiện 'if'
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            _showDeleteAllSchedulesDialog(context, lop);
+                          },
+                          icon: const Icon(
+                            Icons.delete_sweep_outlined,
+                            size: 16,
+                          ),
+                          label: const Text('Xóa Hết Lịch'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red.shade600,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -416,8 +447,8 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
     BuildContext context,
     TutorClassesLoadSuccess state,
   ) {
+    // ... (Giữ nguyên hàm này, không thay đổi)
     final yeuCauList = state.lopDeNghi;
-
     if (yeuCauList.isEmpty) {
       return Center(
         child: Column(
@@ -437,7 +468,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
         ),
       );
     }
-
     return RefreshIndicator(
       onRefresh: () async {
         context.read<TutorClassesBloc>().add(TutorClassesRefreshRequested());
@@ -460,9 +490,8 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
     YeuCauNhanLop yeuCau,
     bool isActionLoading,
   ) {
+    // ... (Giữ nguyên hàm này, không thay đổi)
     final bool isSentByTutor = yeuCau.vaiTroNguoiGui == 'GiaSu';
-
-    // === THỐNG NHẤT MÀU SẮC: XANH DƯƠNG CHO GIA SƯ GỬI, CAM CHO HỌC VIÊN MỜI ===
     final Color cardColor =
         isSentByTutor ? Colors.blue.shade50 : Colors.orange.shade50;
     final Color statusColor =
@@ -472,7 +501,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
     final IconData statusIcon =
         isSentByTutor ? Icons.send_outlined : Icons.mail_outline;
     final String footerText = isSentByTutor ? 'Bạn đã gửi' : 'Mời bạn';
-
     return Card(
       elevation: 3,
       margin: const EdgeInsets.only(bottom: 12),
@@ -491,7 +519,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- HEADER (GIỐNG HỆT CÁC CARD KHÁC) ---
               Row(
                 children: [
                   Container(
@@ -532,10 +559,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 12),
-
-              // --- THÔNG TIN ---
               InfoRow(
                 icon: Icons.person,
                 label: 'Học viên',
@@ -555,8 +579,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                   value: yeuCau.lopHoc.diaChi!,
                 ),
               ],
-
-              // Ghi chú (nếu có)
               if (yeuCau.ghiChu?.isNotEmpty ?? false) ...[
                 const SizedBox(height: 8),
                 InfoRow(
@@ -580,10 +602,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                   ),
                 ),
               ],
-
               const SizedBox(height: 12),
-
-              // --- FOOTER: TRẠNG THÁI + NÚT HÀNH ĐỘNG ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -626,24 +645,19 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
   }
 
   Widget _buildActionButtons(BuildContext context, YeuCauNhanLop yeuCau) {
+    // ... (Giữ nguyên hàm này, không thay đổi)
     final bloc = context.read<TutorClassesBloc>();
     final bool isSentByTutor = yeuCau.vaiTroNguoiGui == 'GiaSu';
-
-    // Lấy taiKhoanId của user hiện tại để kiểm tra quyền
     final authState = context.read<AuthBloc>().state;
     int currentTaiKhoanId = 0;
     if (authState is AuthAuthenticated) {
       currentTaiKhoanId = authState.user.taiKhoanID ?? 0;
     }
-
-    // Kiểm tra xem đề nghị có phải do user hiện tại tạo không
     final bool isOwnRequest = yeuCau.nguoiGuiTaiKhoanID == currentTaiKhoanId;
-
     if (isSentByTutor) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Nút chi tiết nhỏ gọn
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(6),
@@ -681,7 +695,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
           ),
           if (isOwnRequest) ...[
             const SizedBox(width: 6),
-            // Nút sửa nhỏ gọn
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(6),
@@ -714,7 +727,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
               ),
             ),
             const SizedBox(width: 6),
-            // Nút hủy nhỏ gọn
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(6),
@@ -748,7 +760,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
               ),
             ),
           ] else ...[
-            // Nếu không phải đề nghị của user hiện tại, hiển thị thông báo
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.all(8),
@@ -765,11 +776,9 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
         ],
       );
     }
-
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Nút chi tiết nhỏ gọn
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(6),
@@ -803,7 +812,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
           ),
         ),
         const SizedBox(width: 6),
-        // Nút từ chối nhỏ gọn
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(6),
@@ -833,7 +841,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
           ),
         ),
         const SizedBox(width: 6),
-        // Nút xác nhận nhỏ gọn
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(6),
@@ -872,9 +879,9 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
     BuildContext context,
     YeuCauNhanLop yeuCau,
   ) async {
+    // ... (Giữ nguyên hàm này, không thay đổi)
     final controller = TextEditingController(text: yeuCau.ghiChu ?? '');
     final formKey = GlobalKey<FormState>();
-
     final result = await showDialog<String>(
       context: context,
       builder: (context) {
@@ -915,7 +922,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
         );
       },
     );
-
     if (result != null) {
       context.read<TutorClassesBloc>().add(
         TutorClassRequestUpdated(
@@ -944,20 +950,48 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
     );
   }
 
-  void _navigateToAddSchedule(
-    BuildContext context,
-    int lopHocId,
-    String tenlop,
-  ) {
+  // [KHÔI PHỤC] Xóa async/await
+  void _navigateToAddSchedule(BuildContext context, LopHoc lop) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder:
-            (context) => TaoLichHocPage(
-              lopYeuCauId: lopHocId,
-              tenLop: tenlop, // Bạn cần implement hàm này
+      MaterialPageRoute(builder: (context) => TaoLichHocPage(lopHoc: lop)),
+    );
+    // [ĐÃ XÓA] Xóa logic .then() hoặc await
+  }
+
+  void _showDeleteAllSchedulesDialog(BuildContext context, LopHoc lop) {
+    final lichHocBloc = context.read<LichHocBloc>();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Xác nhận xóa lịch'),
+          // [KHÔI PHỤC] Xóa hiển thị lop.lichHocCount
+          content: Text(
+            'Bạn có chắc chắn muốn xóa TẤT CẢ lịch học đã tạo cho lớp "${lop.tieuDeLop}" không? \n\nHành động này không thể hoàn tác.',
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Hủy'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
             ),
-      ),
+            ElevatedButton(
+              child: const Text('Xác nhận Xóa'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                lichHocBloc.add(DeleteAllLichHocLop(lopYeuCauId: lop.maLop));
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
