@@ -1,6 +1,7 @@
 // file: widgets/lich_hoc_dialogs.dart (CHO PHÉP TRỐNG LINK)
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 
@@ -8,7 +9,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 class SuaLichHocDialog extends StatefulWidget {
   final LichHoc lichHoc;
   final Function(String trangThai, String? duongDan) onUpdate;
-  final bool isOnlineClass; 
+  final bool isOnlineClass;
 
   const SuaLichHocDialog({
     super.key,
@@ -30,14 +31,13 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
   void initState() {
     super.initState();
     _selectedTrangThai = widget.lichHoc.trangThai;
-    _duongDanController =
-        TextEditingController(text: widget.lichHoc.duongDan ?? '');
+    _duongDanController = TextEditingController(
+      text: widget.lichHoc.duongDan ?? '',
+    );
 
-    
     if (_selectedTrangThai == 'Huy') {
       _cacTrangThai.removeWhere((item) => item['value'] != 'Huy');
-    }
-    else if (_selectedTrangThai == 'DaHoc') {
+    } else if (_selectedTrangThai == 'DaHoc') {
       _cacTrangThai.removeWhere((item) => item['value'] != 'DaHoc');
     }
   }
@@ -58,13 +58,13 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
   // [SỬA] Cập nhật hàm validate (CHO PHÉP TRỐNG)
   String? _validateDuongDan(String? value) {
     // Dùng widget.isOnlineClass
-    if (!widget.isOnlineClass) return null; 
+    if (!widget.isOnlineClass) return null;
 
     final text = value?.trim() ?? "";
-    
+
     // [SỬA] Nếu text rỗng -> Hợp lệ (cho phép trống)
     if (text.isEmpty) {
-        return null;
+      return null;
     }
 
     // [SỬA] Nếu text không rỗng, dùng Uri.tryParse (dễ dãi)
@@ -72,7 +72,7 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
     if (uri == null || !uri.isAbsolute || uri.host.isEmpty) {
       return 'Link không hợp lệ. (vd: https://google.com)';
     }
-    
+
     return null; // Hợp lệ
   }
 
@@ -80,7 +80,6 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
   void _handleUpdate() {
     // Chỉ chạy khi form hợp lệ
     if (_formKey.currentState!.validate()) {
-      
       String? finalDuongDan;
       final text = _duongDanController.text.trim();
 
@@ -92,10 +91,7 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
         finalDuongDan = null;
       }
 
-      widget.onUpdate(
-        _selectedTrangThai,
-        finalDuongDan,
-      );
+      widget.onUpdate(_selectedTrangThai, finalDuongDan);
       Navigator.pop(context);
     }
   }
@@ -124,36 +120,41 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
               DropdownButtonFormField<String>(
                 value: _selectedTrangThai,
                 isExpanded: true,
-                items: _cacTrangThai.map((item) {
-                  return DropdownMenuItem<String>(
-                    value: item['value'],
-                    child: Text(
-                      item['text'],
-                      style: TextStyle(
-                        color: item['value'] == 'Huy' ? Colors.red : null,
-                      ),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (widget.lichHoc.trangThai == 'DaHoc' || widget.lichHoc.trangThai == 'Huy')
-                    ? null // Vô hiệu hóa nếu đã học hoặc đã hủy
-                    : (value) {
-                        if (value != null) {
-                          setState(() {
-                            _selectedTrangThai = value;
-                          });
-                        }
-                      },
+                items:
+                    _cacTrangThai.map((item) {
+                      return DropdownMenuItem<String>(
+                        value: item['value'],
+                        child: Text(
+                          item['text'],
+                          style: TextStyle(
+                            color: item['value'] == 'Huy' ? Colors.red : null,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                onChanged:
+                    (widget.lichHoc.trangThai == 'DaHoc' ||
+                            widget.lichHoc.trangThai == 'Huy')
+                        ? null // Vô hiệu hóa nếu đã học hoặc đã hủy
+                        : (value) {
+                          if (value != null) {
+                            setState(() {
+                              _selectedTrangThai = value;
+                            });
+                          }
+                        },
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                  filled: (widget.lichHoc.trangThai == 'DaHoc' || widget.lichHoc.trangThai == 'Huy'),
+                  filled:
+                      (widget.lichHoc.trangThai == 'DaHoc' ||
+                          widget.lichHoc.trangThai == 'Huy'),
                   fillColor: Colors.grey[200],
                 ),
               ),
-              
+
               if (widget.isOnlineClass) ...[
                 const SizedBox(height: 16),
                 const Text(
@@ -195,51 +196,82 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
   }
 }
 
-// (Các dialog ChiTiet và Xoa giữ nguyên)
-
 class ChiTietLichHocDialog extends StatelessWidget {
   final LichHoc lichHoc;
   final bool isGiaSu;
-  const ChiTietLichHocDialog({super.key, required this.lichHoc, required this.isGiaSu});
+
+  const ChiTietLichHocDialog({
+    super.key,
+    required this.lichHoc,
+    required this.isGiaSu,
+  });
+
+  String _formatDate(String rawDate) {
+    try {
+      final date = DateTime.parse(rawDate);
+      return DateFormat('dd/MM/yyyy').format(date);
+    } catch (_) {
+      return rawDate;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Chi tiết buổi học ${lichHoc.lichHocID}'),
-      content: const Text('Nội dung chi tiết...'),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text(
+        'Chi tiết buổi học',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTile('Mã lịch học', '${lichHoc.lichHocID}'),
+            _buildTile('Môn học', lichHoc.lopHoc?.tenMon ?? 'N/A'),
+            _buildTile(
+              isGiaSu ? 'Học sinh' : 'Gia sư',
+              isGiaSu
+                  ? (lichHoc.lopHoc?.tenNguoiHoc ?? 'N/A')
+                  : (lichHoc.lopHoc?.tenGiaSu ?? 'N/A'),
+            ),
+            _buildTile('Ngày', _formatDate(lichHoc.ngayHoc)),
+            _buildTile(
+              'Thời gian',
+              '${lichHoc.thoiGianBatDau} - ${lichHoc.thoiGianKetThuc}',
+            ),
+            if (lichHoc.duongDan != null) _buildTile('Link', lichHoc.duongDan!),
+            if (lichHoc.lopHoc?.diaChi != null &&
+                lichHoc.lopHoc!.diaChi!.isNotEmpty)
+              _buildTile('Địa chỉ', lichHoc.lopHoc!.diaChi!),
+          ],
+        ),
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text('Đóng'),
-        )
+        ),
       ],
     );
   }
-}
 
-class XoaLichHocDialog extends StatelessWidget {
-  final LichHoc lichHoc;
-  final Function(bool xoaCaChuoi) onDelete;
-  const XoaLichHocDialog({super.key, required this.lichHoc, required this.onDelete});
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Xóa buổi học ${lichHoc.lichHocID}'),
-      content: const Text('Bạn có chắc muốn xóa?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Hủy'),
+  Widget _buildTile(String label, String value) {
+    return Column(
+      children: [
+        ListTile(
+          dense: true,
+          contentPadding: EdgeInsets.zero,
+          title: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+          subtitle: Text(
+            value,
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
+          ),
         ),
-        ElevatedButton(
-          onPressed: () {
-            onDelete(false); // Ví dụ: Xóa 1 buổi
-            Navigator.pop(context);
-          },
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-          child: const Text('Xóa'),
-        )
+        const Divider(height: 1),
       ],
     );
   }
