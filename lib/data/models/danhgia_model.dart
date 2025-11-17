@@ -1,3 +1,5 @@
+// file: danhgia_model.dart (ĐÃ SỬA LỖI)
+
 class DanhGia {
   final int danhGiaID;
   final int lopYeuCauID;
@@ -27,8 +29,8 @@ class DanhGia {
       diemSo: (json['DiemSo'] as num?)?.toDouble() ?? 0.0,
       binhLuan: json['BinhLuan'],
       ngayDanhGia: json['NgayDanhGia'] ?? '',
-      tenNguoiHoc: json['tai_khoan']?['Email'] ?? 
-                   json['lop']?['nguoi_hoc']?['HoTen'],
+      tenNguoiHoc:
+          json['tai_khoan']?['Email'] ?? json['lop']?['nguoi_hoc']?['HoTen'],
       anhDaiDien: json['lop']?['nguoi_hoc']?['AnhDaiDien'],
     );
   }
@@ -59,16 +61,17 @@ class DanhGiaResponse {
   });
 
   factory DanhGiaResponse.fromJson(Map<String, dynamic> json) {
-    final data = json['data'];
-    
+    // SỬA: Bỏ "final data = json['data'];" và dùng trực tiếp "json"
     return DanhGiaResponse(
-      danhGiaList: (data['danh_gia_list'] as List?)
+      danhGiaList:
+          (json['danh_gia_list'] as List?)
               ?.map((item) => DanhGia.fromJson(item))
               .toList() ??
           [],
-      diemTrungBinh: (data['diem_trung_binh'] as num?)?.toDouble() ?? 0.0,
-      tongSoDanhGia: data['tong_so_danh_gia'] ?? 0,
-      phanBoSao: (data['phan_bo_sao'] as Map<String, dynamic>?)?.map(
+      diemTrungBinh: (json['diem_trung_binh'] as num?)?.toDouble() ?? 0.0,
+      tongSoDanhGia: json['tong_so_danh_gia'] ?? 0,
+      phanBoSao:
+          (json['phan_bo_sao'] as Map<String, dynamic>?)?.map(
             (key, value) => MapEntry(int.parse(key), value as int),
           ) ??
           {},
@@ -94,17 +97,15 @@ class KiemTraDanhGiaResponse {
   });
 
   factory KiemTraDanhGiaResponse.fromJson(Map<String, dynamic> json) {
-    final data = json['data'];
-    
+    // SỬA: Bỏ "final data = json['data'];" và dùng trực tiếp "json"
     return KiemTraDanhGiaResponse(
-      coTheDanhGia: data['co_the_danh_gia'] ?? false,
-      daDanhGia: data['da_danh_gia'] ?? false,
-      daSua: data['da_sua'] ?? false,
-      danhGia: data['danh_gia'] != null 
-          ? DanhGia.fromJson(data['danh_gia']) 
-          : null,
-      lopHocId: data['lop_hoc_id'],
-      message: data['message'],
+      coTheDanhGia: json['co_the_danh_gia'] ?? false,
+      daDanhGia: json['da_danh_gia'] ?? false,
+      daSua: json['da_sua'] ?? false,
+      danhGia:
+          json['danh_gia'] != null ? DanhGia.fromJson(json['danh_gia']) : null,
+      lopHocId: json['lop_hoc_id'],
+      message: json['message'],
     );
   }
 }
