@@ -9,7 +9,6 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/yeu_cau_nhan_lo
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_detail_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notification_service.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/untils/format_vnd.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_info_row.dart';
 
 class StudentClassProposalsScreen extends StatefulWidget {
@@ -264,11 +263,7 @@ class _StudentClassProposalsScreenState
               label: 'Gia sư',
               value: yeuCau.giaSuHoTen ?? 'Chưa có thông tin',
             ),
-            InfoRow(
-              icon: Icons.attach_money,
-              label: 'Học phí',
-              value: formatCurrency(yeuCau.lopHoc.hocPhi),
-            ),
+
             if (yeuCau.ghiChu?.isNotEmpty ?? false) ...[
               const SizedBox(height: 8),
               InfoRow(
