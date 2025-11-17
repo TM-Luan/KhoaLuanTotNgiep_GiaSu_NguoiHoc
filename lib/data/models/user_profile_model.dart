@@ -1,6 +1,6 @@
-// user_profile.dart
+// user_profile_model.dart
 
-import 'dart:io'; // <--- THÊM DÒNG NÀY
+import 'dart:io';
 
 class UserProfile {
   int? taiKhoanID;
@@ -15,7 +15,7 @@ class UserProfile {
   String? anhDaiDien;
 
   int? nguoiHocID;
-  
+
   // Trường của Gia Sư
   int? giaSuID;
   String? bangCap;
@@ -26,6 +26,10 @@ class UserProfile {
   String? truongDaoTao;
   String? chuyenNganh;
   String? thanhTich;
+
+  // ⭐️ THAY ĐỔI: Từ List<DropdownItem> sang int? và String?
+  int? monID;
+  String? tenMon; // Để hiển thị ở ProfileScreen
 
   // ⭐️ THÊM: Các trường File để lưu ảnh TẠM THỜI từ gallery/camera
   File? newAnhDaiDienFile;
@@ -54,6 +58,11 @@ class UserProfile {
     this.truongDaoTao,
     this.chuyenNganh,
     this.thanhTich,
+
+    // ⭐️ THAY ĐỔI: Thêm vào constructor
+    this.monID,
+    this.tenMon,
+
     // ⭐️ THÊM vào constructor
     this.newAnhDaiDienFile,
     this.newAnhCCCDMatTruocFile,
@@ -73,10 +82,8 @@ class UserProfile {
       gioiTinh: json['GioiTinh'],
       ngaySinh: json['NgaySinh'],
       anhDaiDien: json['AnhDaiDien'],
-      
       nguoiHocID: json['NguoiHocID'],
       giaSuID: json['GiaSuID'],
-
       bangCap: json['BangCap'],
       kinhNghiem: json['KinhNghiem'],
       anhCCCDMatTruoc: json['AnhCCCD_MatTruoc'],
@@ -85,14 +92,15 @@ class UserProfile {
       truongDaoTao: json['TruongDaoTao'],
       chuyenNganh: json['ChuyenNganh'],
       thanhTich: json['ThanhTich'],
-      // ⭐️ KHÔNG parse các trường File từ JSON vì chúng chỉ là tạm thời ở client
+
+      // ⭐️ THAY ĐỔI: Parse 1 môn học
+      monID: json['MonID'],
+      tenMon: json['TenMon'], // Sẽ có nếu bạn sửa AuthController.php
     );
   }
 
   Map<String, dynamic> toJson() {
-    // ⭐️ Lưu ý: toJson này chỉ dùng cho dữ liệu TEXT.
-    // Việc gửi file cần một hàm riêng với multipart/form-data.
-    return {
+    final Map<String, dynamic> data = {
       'TaiKhoanID': taiKhoanID,
       'Email': email,
       'HoTen': hoTen,
@@ -102,20 +110,19 @@ class UserProfile {
       'DiaChi': diaChi,
       'GioiTinh': gioiTinh,
       'NgaySinh': ngaySinh,
-      // 'AnhDaiDien': anhDaiDien, // Ảnh đại diện sẽ được gửi riêng nếu là File
-      
       'NguoiHocID': nguoiHocID,
       'GiaSuID': giaSuID,
-
       'BangCap': bangCap,
       'KinhNghiem': kinhNghiem,
-      // 'AnhCCCD_MatTruoc': anhCCCDMatTruoc, // Các ảnh này sẽ được gửi riêng nếu là File
-      // 'AnhCCCD_MatSau': anhCCCDMatSau,
-      // 'AnhBangCap': anhBangCap,
       'TruongDaoTao': truongDaoTao,
       'ChuyenNganh': chuyenNganh,
       'ThanhTich': thanhTich,
+
+      // ⭐️ THAY ĐỔI: Gửi đi 1 MonID
+      'MonID': monID,
     };
+
+    return data;
   }
 }
 
@@ -129,9 +136,6 @@ class LoginResponse {
     final userData = json['data'] ?? {};
     final token = json['token'] ?? '';
 
-    return LoginResponse(
-      token: token,
-      user: UserProfile.fromJson(userData),
-    );
+    return LoginResponse(token: token, user: UserProfile.fromJson(userData));
   }
 }

@@ -6,7 +6,10 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile_model.dart';
-import 'package:intl/intl.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/dropdown_repository.dart';
+
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/auth/edit_profile_screen.dart';
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -44,6 +47,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return date;
   }
 
+  // ⭐️ HÀM HELPER MỚI ĐỂ HIỂN THỊ MÔN HỌC (DẠNG CHIP)
+  Widget _buildMonHocInfo(List<DropdownItem>? monHocList) {
+    return Container(
+      width: double.infinity, // Đảm bảo chiếm đủ chiều rộng
+      padding: const EdgeInsets.all(AppSpacing.md),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.grey50,
+        borderRadius: BorderRadius.circular(AppSpacing.buttonBorderRadius),
+        border: Border.all(color: AppColors.borderLight, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Tiêu đề
+          Text(
+            "Môn học giảng dạy",
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: AppTypography.body2,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          // Danh sách Chips
+          if (monHocList == null || monHocList.isEmpty)
+            Text(
+              "Chưa cập nhật",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: AppTypography.body2,
+                fontWeight: FontWeight.w400,
+              ),
+            )
+          else
+            Wrap(
+              spacing: AppSpacing.sm, // Khoảng cách ngang giữa các chip
+              runSpacing: AppSpacing.sm, // Khoảng cách dọc giữa các hàng chip
+              children:
+                  monHocList.map((mon) {
+                    return Chip(
+                      label: Text(mon.ten),
+                      backgroundColor: AppColors.primaryContainer,
+                      labelStyle: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w500,
+                        fontSize: AppTypography.body2,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.xs,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.buttonBorderRadius,
+                        ),
+                        side: BorderSide(color: AppColors.primaryContainer),
+                      ),
+                    );
+                  }).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
@@ -75,6 +146,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            // ⭐️ THÊM NÚT EDIT
+            actions: [
+              if (state is AuthAuthenticated) // Chỉ hiện khi đã có data
+                IconButton(
+                  icon: Icon(Icons.edit, color: AppColors.textLight),
+                  onPressed: () {
+                    // Khi nhấn nút Edit
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => EditProfileScreen(user: userData!),
+                      ),
+                    ).then((result) {
+                      // ⭐️ SAU KHI MÀN HÌNH EDIT ĐÓNG LẠI
+                      // (Bất kể lưu hay hủy)
+                      // Chúng ta gọi lại API để đảm bảo BLoC
+                      // và màn hình này có dữ liệu mới nhất
+
+                      // Nếu result != null (nghĩa là pop có trả về data)
+                      // thì mới fetch lại
+                      if (result != null) {
+                        context.read<AuthBloc>().add(
+                          const FetchProfileRequested(),
+                        );
+                      }
+                    });
+                  },
+                ),
+            ],
           ),
           backgroundColor: AppColors.backgroundGrey,
           body: SingleChildScrollView(
@@ -224,6 +325,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Info(
                           infoKey: "Chuyên ngành",
                           info: userData?.chuyenNganh ?? "Chưa cập nhật",
+                        ),
+                        Info(
+                          infoKey: "Môn dạy",
+                          info: userData?.tenMon ?? "Chưa cập nhật",
                         ),
                         Info(
                           infoKey: "Kinh nghiệm",
