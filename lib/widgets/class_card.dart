@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc_model.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/untils/format_vnd.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/utils/format_vnd.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_info_row.dart';
 
 class LopHocCard extends StatelessWidget {
@@ -77,7 +77,7 @@ class LopHocCard extends StatelessWidget {
                 InfoRow(
                   icon: Icons.attach_money,
                   label: "Học phí",
-                  value: formatCurrency(lopHoc.hocPhi),
+                  value: '${formatNumber(toNumber(lopHoc.hocPhi))} VNĐ/Buổi',
                 ),
 
                 // Địa chỉ (nếu có)
@@ -94,7 +94,17 @@ class LopHocCard extends StatelessWidget {
                 InfoRow(
                   icon: Icons.money_off,
                   label: "Phí nhận lớp",
-                  value: formatPhi(lopHoc.hocPhi),
+                  value: tinhPhiNhanLop(
+                    hocPhiMotBuoi: toNumber(lopHoc.hocPhi),
+                    soBuoiMotTuan: lopHoc.soBuoiTuan,
+                  ) !=
+                          null
+                      ? '${formatNumber(tinhPhiNhanLop(
+                            hocPhiMotBuoi: toNumber(lopHoc.hocPhi),
+                            soBuoiMotTuan: lopHoc.soBuoiTuan,
+                          ))} VNĐ'
+                      : 'Chưa có',
+                  
                   valueStyle: const TextStyle(fontWeight: FontWeight.bold),
                 ),
 

@@ -9,7 +9,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repo
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/auth/change_password_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/auth/edit_profile_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/auth/profile_screen.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/splash_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/home/splash_screen.dart';
 
 class Account extends StatefulWidget {
   const Account({super.key});

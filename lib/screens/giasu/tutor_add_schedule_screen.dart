@@ -1,4 +1,4 @@
-// file: tutor_add_schedule_screen.dart (CHO PHÉP TRỐNG LINK)
+// file: tutor_add_schedule_screen.dart (ĐÃ SỬA LỖI)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,8 +8,16 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc_model.dart';
 
+// [THÊM MỚI] Import màn hình Payment và AuthBloc
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/payment/payment_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/utils/format_vnd.dart';
+// Giả sử AuthState 'AuthAuthenticated' có 1 object 'user' và user có 'taiKhoanID'
+// import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile_model.dart';
+
 class BuoiHocUI {
-  int ngayThu; 
+  int ngayThu;
   TimeOfDay thoiGianBatDau;
 
   BuoiHocUI({required this.ngayThu, required this.thoiGianBatDau});
@@ -35,7 +43,13 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
   final List<BuoiHocUI> _cacBuoiHoc = [];
 
   final List<String> _weekdayNames = [
-    'Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7',
+    'Chủ Nhật',
+    'Thứ 2',
+    'Thứ 3',
+    'Thứ 4',
+    'Thứ 5',
+    'Thứ 6',
+    'Thứ 7',
   ];
   final TimeOfDay _defaultTime = const TimeOfDay(hour: 19, minute: 0);
 
@@ -128,7 +142,6 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
     });
   }
 
-  // [SỬA] Cập nhật hàm validate (CHO PHÉP TRỐNG)
   bool _validateForm() {
     if (_cacBuoiHoc.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -142,31 +155,99 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
 
     final duongDanNhap = _duongDanController.text.trim();
 
-    // [SỬA] Chỉ validate nếu có nhập
     if (widget.lopHoc.hinhThuc == 'Online' && duongDanNhap.isNotEmpty) {
-      
-      // Dùng Uri.tryParse (dễ dãi) để validate
       final uri = Uri.tryParse(duongDanNhap);
       if (uri == null || !uri.isAbsolute || uri.host.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              'Đường dẫn không hợp lệ. (vd: https://google.com)',
-            ),
+            content: Text('Đường dẫn không hợp lệ. (vd: https://google.com)'),
             backgroundColor: Colors.orange,
           ),
         );
         return false;
       }
     }
-
-    // Nếu không phải lớp Online, hoặc là lớp Online nhưng để trống,
-    // hoặc lớp Online và nhập URL hợp lệ (theo Uri.tryParse) -> thì cho qua.
     return true;
   }
 
-  Future<void> _taoLichHoc() async {
+  // [THÊM MỚI] Hàm xử lý trung gian, vừa check thanh toán vừa tạo lịch
+  Future<void> _handleThanhToanVaTaoLich() async {
+    // 1. Validate form trước
     if (!_validateForm()) return;
+
+    // 2. Lấy thông tin TaiKhoanID (Gia sư) từ AuthBloc
+    final authState = context.read<AuthBloc>().state;
+    int? taiKhoanID;
+
+    // Giả sử AuthState của bạn là AuthAuthenticated khi đã đăng nhập
+    // và có chứa thông tin user
+    if (authState is AuthAuthenticated) {
+      // [SỬA LỖI 1] Dùng 'taiKhoanID' thay vì 'id'
+      // Giả định UserProfile model của bạn có trường 'taiKhoanID'
+      taiKhoanID = authState.user.taiKhoanID;
+    }
+
+    if (taiKhoanID == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lỗi xác thực người dùng. Vui lòng đăng nhập lại.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // [SỬA LỖI 2] Sử dụng helper 'toNumber' và 'tinhPhiNhanLop' như trong build()
+    final hocPhiBuoi = toNumber(widget.lopHoc.hocPhi);
+    final double soTien =
+        tinhPhiNhanLop(
+          hocPhiMotBuoi: hocPhiBuoi,
+          soBuoiMotTuan: widget.lopHoc.soBuoiTuan,
+        ) ??
+        0.0;
+
+    if (soTien <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lỗi: Không tìm thấy phí nhận lớp.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // 4. Điều hướng đến màn hình thanh toán
+    final bool? paymentSuccess = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => PaymentScreen(
+              lopYeuCauID: widget.lopHoc.maLop,
+              soTien: soTien,
+              // [SỬA LỖI 3] Dùng 'taiKhoanID!' vì đã check null ở trên
+              taiKhoanID: taiKhoanID!,
+            ),
+      ),
+    );
+
+    // 5. Xử lý kết quả thanh toán
+    if (paymentSuccess == true) {
+      // Thanh toán thành công -> Mới gọi hàm tạo lịch
+      _taoLichHoc();
+    } else {
+      // Thanh toán bị hủy hoặc thất bại
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bạn đã hủy thanh toán hoặc thanh toán thất bại.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+  }
+
+  Future<void> _taoLichHoc() async {
+    // Không cần validate nữa vì đã làm ở hàm _handleThanhToanVaTaoLich
+    // if (!_validateForm()) return;
 
     final List<Map<String, dynamic>> buoiHocMau = [];
     for (var buoi in _cacBuoiHoc) {
@@ -178,9 +259,7 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
 
     final String? finalDuongDan;
     final text = _duongDanController.text.trim();
-    
-    // [SỬA] Nếu là Online và text không rỗng -> gán text.
-    // Nếu Offline, hoặc Online nhưng text rỗng -> gán null.
+
     if (widget.lopHoc.hinhThuc == 'Online' && text.isNotEmpty) {
       finalDuongDan = text;
     } else {
@@ -198,6 +277,7 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
     );
   }
 
+  // ... (Các hàm build khác không thay đổi: _buildFormField, _buildScheduleEditor, _buildBuoiHocItem) ...
   Widget _buildFormField({
     required String label,
     required TextEditingController controller,
@@ -255,7 +335,6 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
               style: TextStyle(color: Colors.grey[600]),
             ),
           ),
-
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -264,7 +343,6 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
             return _buildBuoiHocItem(_cacBuoiHoc[index], index);
           },
         ),
-
         const SizedBox(height: 8),
         SizedBox(
           width: double.infinity,
@@ -325,9 +403,7 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                 ),
               ),
             ),
-
             const SizedBox(width: 8),
-
             Expanded(
               flex: 2,
               child: InkWell(
@@ -360,7 +436,6 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                 ),
               ),
             ),
-
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.red),
               onPressed: () {
@@ -416,11 +491,12 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
               fontSize: AppTypography.appBarTitle,
             ),
           ),
+          // [CHỈNH SỬA] Nút này cũng gọi hàm mới
           actions: [
             IconButton(
               icon: const Icon(Icons.save),
-              onPressed: _taoLichHoc,
-              tooltip: 'Tạo lịch học',
+              onPressed: _handleThanhToanVaTaoLich,
+              tooltip: 'Thanh toán & Tạo lịch',
             ),
           ],
         ),
@@ -447,6 +523,21 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                           ),
                         ),
                         const SizedBox(height: 12),
+                        _buildInfoRow(
+                          Icons.money_off, // Hoặc Icons.monetization_on
+                          'Phí nhận lớp:',
+                          (() {
+                            final hocPhi = toNumber(widget.lopHoc.hocPhi);
+                            final phi = tinhPhiNhanLop(
+                              hocPhiMotBuoi: hocPhi,
+                              soBuoiMotTuan: widget.lopHoc.soBuoiTuan,
+                            );
+                            return phi != null
+                                ? '${formatNumber(phi)} VNĐ'
+                                : 'Chưa có';
+                          })(),
+                          isWarning: true,
+                        ),
                         _buildInfoRow(
                           Icons.calendar_today,
                           'Lịch mong muốn (Gợi ý):',
@@ -520,7 +611,7 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Đường dẫn (Online)', // [SỬA] Bỏ dấu *
+                        'Đường dẫn (Online)',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -530,8 +621,7 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                       TextFormField(
                         controller: _duongDanController,
                         decoration: InputDecoration(
-                          hintText:
-                              'https://... (Có thể bỏ trống)', // [SỬA] Thêm gợi ý
+                          hintText: 'https://... (Có thể bỏ trống)',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -594,8 +684,11 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
+                        // [CHỈNH SỬA] Gọi hàm mới _handleThanhToanVaTaoLich
                         onPressed:
-                            (isLoading || totalBuoi == 0) ? null : _taoLichHoc,
+                            (isLoading || totalBuoi == 0)
+                                ? null
+                                : _handleThanhToanVaTaoLich,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
@@ -627,12 +720,13 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                                 : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    const Icon(Icons.add, size: 20),
+                                    // [CHỈNH SỬA] Thay icon Add thành Payment
+                                    const Icon(Icons.payment, size: 20),
                                     const SizedBox(width: 8),
                                     Text(
                                       totalBuoi > 0
-                                          ? 'TẠO $totalBuoi BUỔI HỌC'
-                                          : 'TẠO LỊCH HỌC',
+                                          ? 'THANH TOÁN & TẠO LỊCH'
+                                          : 'THANH TOÁN & TẠO LỊCH',
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,

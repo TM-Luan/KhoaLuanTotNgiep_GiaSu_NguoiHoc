@@ -5,7 +5,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/untils/format_vnd.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/utils/format_vnd.dart';
 
 enum UserRole { tutor, student }
 
@@ -238,7 +238,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
           _buildDetailRow(
             Icons.attach_money,
             'Học phí',
-            formatCurrency(_lopHoc!.hocPhi),
+            '${formatNumber(toNumber(_lopHoc!.hocPhi))} VNĐ/Buổi',
           ),
 
           // === THÔNG TIN CHI TIẾT LỚP ===

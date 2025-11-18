@@ -4,13 +4,13 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/add_class_screen.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/class_detail_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/add_class_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/class_detail_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/student_class_proposals_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notification_service.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/untils/format_vnd.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/utils/format_vnd.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_info_row.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/complaint_form_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/complaint_form_screen.dart';
 
 class StudentMyClassesPage extends StatefulWidget {
   const StudentMyClassesPage({super.key});
@@ -384,7 +384,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                 InfoRow(
                   icon: Icons.attach_money,
                   label: 'Học phí',
-                  value: formatCurrency(lopHoc.hocPhi),
+                  value: '${formatNumber(toNumber(lopHoc.hocPhi))} VNĐ/Buổi',
                 ),
                 if (lopHoc.diaChi?.isNotEmpty ?? false) ...[
                   const SizedBox(height: 6),

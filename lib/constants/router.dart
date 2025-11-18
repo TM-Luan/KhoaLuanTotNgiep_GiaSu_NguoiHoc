@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/giasu_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/auth/login_screen.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/splash_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/home/splash_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/auth/register_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/student_home_screen.dart'; // LearnerHomeScreen
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_home_page_screen.dart'; // TutorHomePage (thay vì TutorListPage)
@@ -10,7 +10,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/student_sc
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_my_classes_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_schedule_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/student_my_classes_screen.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/home_screen.dart'; // Có thể là màn hình chung?
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/home/home_screen.dart'; // Có thể là màn hình chung?
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/auth/profile_screen.dart';
 
 

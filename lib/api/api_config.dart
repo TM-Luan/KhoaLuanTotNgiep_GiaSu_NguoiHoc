@@ -23,7 +23,7 @@ class ApiConfig {
       '/lop'; // POST /lop/{id}/lich-hoc-lap-lai
   static const String capNhatLichHoc = '/lich-hoc'; // PUT /lich-hoc/{id}
   static const String xoaLichHoc = '/lich-hoc'; // DELETE /lich-hoc/{id}
-
+  static const String taoGiaoDich = '/giao-dich';
   // === SỬA ĐỔI CHO GIẢI PHÁP 2 ===
   // Endpoints Lịch học Gia Sư
   static const String lichHocGiaSuSummary =

@@ -14,10 +14,10 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/yeu_cau_nhan_lo
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/class_detail_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/class_detail_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_add_schedule_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notification_service.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/untils/format_vnd.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/utils/format_vnd.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_info_row.dart';
 
 class TutorMyClassesScreen extends StatefulWidget {
@@ -356,7 +356,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                     InfoRow(
                       icon: Icons.attach_money,
                       label: 'Học phí',
-                      value: formatCurrency(lop.hocPhi),
+                      value: '${formatNumber(toNumber(lop.hocPhi))} VNĐ/Buổi',
                     ),
                     if (lop.diaChi?.isNotEmpty ?? false) ...[
                       const SizedBox(height: 6),
@@ -571,7 +571,8 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
               InfoRow(
                 icon: Icons.attach_money,
                 label: 'Học phí',
-                value: formatCurrency(yeuCau.lopHoc.hocPhi),
+                value:
+                    '${formatNumber(toNumber(yeuCau.lopHoc.hocPhi))} VNĐ/Buổi',
               ),
               if (yeuCau.lopHoc.diaChi?.isNotEmpty ?? false) ...[
                 const SizedBox(height: 6),
