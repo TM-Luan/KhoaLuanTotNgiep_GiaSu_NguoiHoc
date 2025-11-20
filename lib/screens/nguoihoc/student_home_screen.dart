@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/notification/notification_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/notification/notification_event.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/notification/notification_state.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor/tutor_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/giasu_model.dart';
@@ -13,6 +16,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_re
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/tutor_search_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/yeu_cau_nhan_lop_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_detail_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/notification/notification_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/tutor_card.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/tutor_filter_widget.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/app_components.dart';
@@ -48,6 +52,7 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
     currentProfile = widget.userProfile;
     context.read<TutorBloc>().add(LoadAllTutorsEvent());
     _loadFilterOptions();
+    context.read<NotificationBloc>().add(LoadNotifications());
   }
 
   @override
@@ -57,18 +62,17 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
   }
 
   Future<void> _loadFilterOptions() async {
-     {
+    {
       final response = await _searchRepo.getFilterOptions();
       if (response.isSuccess && mounted) {
         setState(() {
           _filterOptions = response.data;
         });
       }
-    } 
+    }
   }
 
   Future<void> _performSearch({String? query}) async {
-
     setState(() {
       _isSearching = true;
       _searchQuery = query;
@@ -80,25 +84,21 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
         filter: _currentFilter.hasActiveFilters ? _currentFilter : null,
       );
 
-
-      if (!response.isSuccess) {
-       
-      }
+      if (!response.isSuccess) {}
 
       if (response.isSuccess && mounted) {
         setState(() {
           _searchResults = response.data ?? [];
           _isSearching = false;
         });
-
       } else {
         setState(() {
           _isSearching = false;
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response.message)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(response.message)));
         }
       }
     } catch (e) {
@@ -106,9 +106,9 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
         _isSearching = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi tìm kiếm: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi tìm kiếm: $e')));
       }
     }
   }
@@ -132,7 +132,7 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
     if (_searchQuery != null || _currentFilter.hasActiveFilters) {
       return _buildSearchResults();
     }
-    
+
     // Show default tutor list
     return CustomScrollView(
       slivers: [
@@ -156,26 +156,16 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search_off,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'Không tìm thấy gia sư nào',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
             Text(
               'Thử thay đổi từ khóa hoặc bộ lọc',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
             ),
           ],
         ),
@@ -186,7 +176,12 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
     return CustomScrollView(
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 100),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            100,
+          ),
           sliver: SliverLayoutBuilder(
             builder: (context, constraints) {
               final crossAxisCount = constraints.crossAxisExtent >= 420 ? 3 : 2;
@@ -219,10 +214,11 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => BlocProvider.value(
-          value: context.read<TutorBloc>(),
-          child: TutorDetailPage(),
-        ),
+        builder:
+            (context) => BlocProvider.value(
+              value: context.read<TutorBloc>(),
+              child: TutorDetailPage(),
+            ),
       ),
     );
   }
@@ -264,7 +260,12 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
       }
 
       return SliverPadding(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 100),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.sm,
+          AppSpacing.lg,
+          100,
+        ),
         sliver: SliverLayoutBuilder(
           builder: (context, constraints) {
             final crossAxisCount = constraints.crossAxisExtent >= 420 ? 3 : 2;
@@ -287,7 +288,8 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
                       arguments: tutor,
                     );
                   },
-                  onOfferTap: _isProcessingInvite ? null : () => _handleOfferTap(tutor),
+                  onOfferTap:
+                      _isProcessingInvite ? null : () => _handleOfferTap(tutor),
                 );
               }, childCount: tutorList.length),
             );
@@ -309,6 +311,63 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
         leadingIcon: Icons.person_search,
         title: 'Xin chào, $displayName',
         subtitle: 'Tìm kiếm gia sư phù hợp',
+        actions: [
+          BlocBuilder<NotificationBloc, NotificationState>(
+            builder: (context, state) {
+              int unread = 0;
+              if (state is NotificationLoaded) {
+                unread = state.unreadCount;
+              }
+
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.notifications_outlined,
+                      color: Colors.white,
+                    ),
+                    onPressed: () {
+                      // Chuyển sang màn hình thông báo
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NotificationScreen(),
+                        ),
+                      );
+                      // Reload lại danh sách khi mở (để cập nhật mới nhất)
+                      context.read<NotificationBloc>().add(LoadNotifications());
+                    },
+                  ),
+                  if (unread > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          '$unread',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(width: 10), // Khoảng cách lề phải
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -327,12 +386,13 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
                           decoration: InputDecoration(
                             hintText: 'Tìm kiếm gia sư...',
                             prefixIcon: const Icon(Icons.search),
-                            suffixIcon: _searchQuery != null
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear),
-                                    onPressed: _clearSearch,
-                                  )
-                                : null,
+                            suffixIcon:
+                                _searchQuery != null
+                                    ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: _clearSearch,
+                                    )
+                                    : null,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(25),
                               borderSide: BorderSide.none,
@@ -352,17 +412,19 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
                       const SizedBox(width: AppSpacing.sm),
                       Container(
                         decoration: BoxDecoration(
-                          color: _showFilters || _currentFilter.hasActiveFilters 
-                              ? AppColors.primary 
-                              : Colors.grey[100],
+                          color:
+                              _showFilters || _currentFilter.hasActiveFilters
+                                  ? AppColors.primary
+                                  : Colors.grey[100],
                           borderRadius: BorderRadius.circular(25),
                         ),
                         child: IconButton(
                           icon: Icon(
                             Icons.filter_list,
-                            color: _showFilters || _currentFilter.hasActiveFilters 
-                                ? Colors.white 
-                                : Colors.grey[600],
+                            color:
+                                _showFilters || _currentFilter.hasActiveFilters
+                                    ? Colors.white
+                                    : Colors.grey[600],
                           ),
                           onPressed: () {
                             setState(() {
@@ -373,7 +435,7 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
                       ),
                     ],
                   ),
-                  
+
                   // Filter widget
                   if (_showFilters) ...[
                     const SizedBox(height: AppSpacing.md),
@@ -394,10 +456,13 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
                 ],
               ),
             ),
-            
+
             // Title section
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.sm,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -441,10 +506,8 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
                 ],
               ),
             ),
-            
-            Expanded(
-              child: _buildTutorListView(),
-            ),
+
+            Expanded(child: _buildTutorListView()),
           ],
         ),
       ),
@@ -454,7 +517,7 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
   // Method để xử lý khi user ấn nút "Đề nghị dạy"
   void _handleOfferTap(Tutor tutor) {
     final authState = context.read<AuthBloc>().state;
-    
+
     if (authState is! AuthAuthenticated ||
         authState.user.nguoiHocID == null ||
         authState.user.taiKhoanID == null) {
@@ -468,7 +531,10 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
     _loadClassesAndPrompt(authState, tutor);
   }
 
-  Future<void> _loadClassesAndPrompt(AuthAuthenticated auth, Tutor tutor) async {
+  Future<void> _loadClassesAndPrompt(
+    AuthAuthenticated auth,
+    Tutor tutor,
+  ) async {
     setState(() {
       _isProcessingInvite = true;
     });
@@ -494,12 +560,11 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
       return;
     }
 
-    final availableClasses = response.data!
-        .where((lop) {
+    final availableClasses =
+        response.data!.where((lop) {
           final status = (lop.trangThai ?? '').toUpperCase();
           return status == 'TIMGIASU' || status == 'CHODUYET';
-        })
-        .toList();
+        }).toList();
 
     if (availableClasses.isEmpty) {
       _showSnack('Bạn chưa có lớp nào đang tìm gia sư để gửi đề nghị.', true);
@@ -566,7 +631,7 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  
+
                   // Chọn lớp học
                   Text(
                     'Chọn lớp học',
@@ -599,20 +664,21 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
                           });
                         }
                       },
-                      items: availableClasses.map((lop) {
-                        return DropdownMenuItem<int>(
-                          value: lop.maLop,
-                          child: Text(
-                            lop.tieuDeLop,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        );
-                      }).toList(),
+                      items:
+                          availableClasses.map((lop) {
+                            return DropdownMenuItem<int>(
+                              value: lop.maLop,
+                              child: Text(
+                                lop.tieuDeLop,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }).toList(),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // Ghi chú
                   Text(
                     'Ghi chú (tùy chọn)',
@@ -634,7 +700,8 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
                       maxLength: 500,
                       decoration: InputDecoration(
                         border: InputBorder.none,
-                        hintText: 'Mô tả yêu cầu, thời gian mong muốn, hoặc câu hỏi cho gia sư...',
+                        hintText:
+                            'Mô tả yêu cầu, thời gian mong muốn, hoặc câu hỏi cho gia sư...',
                         hintStyle: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[400],
@@ -648,9 +715,9 @@ class _LearnerHomeScreenState extends State<LearnerHomeScreen> {
                       style: const TextStyle(fontSize: 14),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // Action buttons
                   Row(
                     children: [

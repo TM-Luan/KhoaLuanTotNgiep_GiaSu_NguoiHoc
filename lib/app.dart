@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/notification/notification_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/notification_repository.dart';
 import 'constants/router.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/giasu_repository.dart';
@@ -22,6 +24,7 @@ class GiaSuApp extends StatelessWidget {
         RepositoryProvider(create: (context) => LopHocRepository()),
         RepositoryProvider(create: (context) => YeuCauNhanLopRepository()),
         RepositoryProvider(create: (context) => LichHocRepository()),
+        RepositoryProvider(create: (context) => NotificationRepository()),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -34,6 +37,11 @@ class GiaSuApp extends StatelessWidget {
           BlocProvider<LichHocBloc>(
             create: (context) => LichHocBloc(context.read<LichHocRepository>()),
           ),
+          BlocProvider<NotificationBloc>(
+            create: (context) => NotificationBloc(context.read<NotificationRepository>()),
+          ),
+
+          
         ],
         child: SafeArea(
           child: MaterialApp(
