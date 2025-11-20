@@ -178,12 +178,7 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
     // 2. Lấy thông tin TaiKhoanID (Gia sư) từ AuthBloc
     final authState = context.read<AuthBloc>().state;
     int? taiKhoanID;
-
-    // Giả sử AuthState của bạn là AuthAuthenticated khi đã đăng nhập
-    // và có chứa thông tin user
     if (authState is AuthAuthenticated) {
-      // [SỬA LỖI 1] Dùng 'taiKhoanID' thay vì 'id'
-      // Giả định UserProfile model của bạn có trường 'taiKhoanID'
       taiKhoanID = authState.user.taiKhoanID;
     }
 
@@ -238,7 +233,7 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
       // Thanh toán bị hủy hoặc thất bại
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Bạn đã hủy thanh toán hoặc thanh toán thất bại.'),
+          content: Text('Thanh toán thất bại.'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -621,7 +616,7 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                       TextFormField(
                         controller: _duongDanController,
                         decoration: InputDecoration(
-                          hintText: 'https://... (Có thể bỏ trống)',
+                          hintText: 'https://... (Có thể thêm sau)',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -664,7 +659,7 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                           }).toList(),
                           const SizedBox(height: 8),
                           Text(
-                            'Tổng cộng: $totalBuoi buổi học sẽ được tạo (API sẽ tự động kiểm tra trùng lịch).',
+                            'Tổng cộng: $totalBuoi buổi học sẽ được tạo.',
                             style: const TextStyle(
                               fontSize: 14,
                               fontStyle: FontStyle.italic,

@@ -606,7 +606,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
         } else if (state is LichHocUpdated) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Cập nhật buổi học thành công'),
+              content: Text('Cập nhật lịch học thành công'),
               backgroundColor: Colors.green,
             ),
           );

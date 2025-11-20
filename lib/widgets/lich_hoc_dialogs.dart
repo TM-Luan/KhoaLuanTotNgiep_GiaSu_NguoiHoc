@@ -1,11 +1,13 @@
-// file: widgets/lich_hoc_dialogs.dart (CHO PHÉP TRỐNG LINK)
+// file: widgets/lich_hoc_dialogs.dart
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 
-// DIALOG SỬA LỊCH HỌC
+// ============================================================================
+// 1. DIALOG SỬA LỊCH HỌC (CẬP NHẬT TRẠNG THÁI & LINK)
+// ============================================================================
 class SuaLichHocDialog extends StatefulWidget {
   final LichHoc lichHoc;
   final Function(String trangThai, String? duongDan) onUpdate;
@@ -25,7 +27,7 @@ class SuaLichHocDialog extends StatefulWidget {
 class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
   late String _selectedTrangThai;
   late TextEditingController _duongDanController;
-  final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>(); // Key để quản lý form validation
 
   @override
   void initState() {
@@ -35,6 +37,8 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
       text: widget.lichHoc.duongDan ?? '',
     );
 
+    // Logic kinh doanh: Nếu đã Hủy hoặc Đã học thì không cho sửa sang trạng thái khác
+    // (Hoặc chỉ hiển thị chính nó trong dropdown)
     if (_selectedTrangThai == 'Huy') {
       _cacTrangThai.removeWhere((item) => item['value'] != 'Huy');
     } else if (_selectedTrangThai == 'DaHoc') {
@@ -50,44 +54,43 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
 
   final List<Map<String, dynamic>> _cacTrangThai = [
     {'value': 'SapToi', 'text': 'Sắp Tới'},
-    {'value': 'DangDay', 'text': 'Đang Dạy'},
-    {'value': 'DaHoc', 'text': 'Đã Học'},
     {'value': 'Huy', 'text': 'Hủy buổi học'},
   ];
 
-  // [SỬA] Cập nhật hàm validate (CHO PHÉP TRỐNG)
+  // --- HÀM VALIDATE ---
   String? _validateDuongDan(String? value) {
-    // Dùng widget.isOnlineClass
+    // 1. Nếu không phải lớp Online -> Không cần validate
     if (!widget.isOnlineClass) return null;
 
     final text = value?.trim() ?? "";
 
-    // [SỬA] Nếu text rỗng -> Hợp lệ (cho phép trống)
+    // 2. Cho phép để trống (Optional)
     if (text.isEmpty) {
       return null;
     }
 
-    // [SỬA] Nếu text không rỗng, dùng Uri.tryParse (dễ dãi)
-    final uri = Uri.tryParse(text);
-    if (uri == null || !uri.isAbsolute || uri.host.isEmpty) {
-      return 'Link không hợp lệ. (vd: https://google.com)';
+    // 3. Nếu đã nhập, bắt buộc phải đúng định dạng URL (http hoặc https)
+    final urlPattern = RegExp(r'^(http|https):\/\/[^\s$.?#].[^\s]*$');
+    if (!urlPattern.hasMatch(text)) {
+      return 'không phải định dạng URL hợp lệ ';
     }
 
     return null; // Hợp lệ
   }
 
-  // [SỬA] Cập nhật hàm update (CHO PHÉP TRỐNG)
+  // --- HÀM XỬ LÝ CẬP NHẬT ---
   void _handleUpdate() {
-    // Chỉ chạy khi form hợp lệ
+    // Chỉ xử lý khi form hợp lệ (các validator trả về null)
     if (_formKey.currentState!.validate()) {
       String? finalDuongDan;
       final text = _duongDanController.text.trim();
 
-      // [SỬA] Nếu là Online VÀ text không rỗng -> gán text
+      // Logic gán dữ liệu:
+      // - Nếu là lớp Online VÀ có nhập text -> Lấy text đó.
+      // - Các trường hợp còn lại -> Gán null.
       if (widget.isOnlineClass && text.isNotEmpty) {
         finalDuongDan = text;
       } else {
-        // Lớp offline, hoặc lớp Online nhưng để trống -> gán null
         finalDuongDan = null;
       }
 
@@ -98,10 +101,15 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
 
   @override
   Widget build(BuildContext context) {
+    // Kiểm tra trạng thái để disable dropdown nếu cần
+    final bool isLocked =
+        (widget.lichHoc.trangThai == 'DaHoc' ||
+            widget.lichHoc.trangThai == 'Huy');
+
     return AlertDialog(
       title: const Text('Cập nhật buổi học'),
       content: Form(
-        key: _formKey, // Thêm form key
+        key: _formKey,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -112,6 +120,8 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
+
+              // --- Dropdown Trạng Thái ---
               const Text(
                 'Cập nhật trạng thái:',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
@@ -133,9 +143,8 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
                       );
                     }).toList(),
                 onChanged:
-                    (widget.lichHoc.trangThai == 'DaHoc' ||
-                            widget.lichHoc.trangThai == 'Huy')
-                        ? null // Vô hiệu hóa nếu đã học hoặc đã hủy
+                    isLocked
+                        ? null // Disable nếu bị khóa
                         : (value) {
                           if (value != null) {
                             setState(() {
@@ -148,30 +157,31 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                  filled:
-                      (widget.lichHoc.trangThai == 'DaHoc' ||
-                          widget.lichHoc.trangThai == 'Huy'),
+                  filled: isLocked,
                   fillColor: Colors.grey[200],
                 ),
               ),
 
+              // --- Input Link Online (Chỉ hiện nếu là lớp Online) ---
               if (widget.isOnlineClass) ...[
                 const SizedBox(height: 16),
                 const Text(
-                  'Cập nhật đường dẫn (Online):',
+                  'Cập nhật đường dẫn:',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _duongDanController,
+                  keyboardType: TextInputType.url,
                   decoration: InputDecoration(
-                    hintText: 'https://... (Có thể bỏ trống)', // [SỬA]
+                    hintText: 'https://meet.google.com/...',
+                    helperText: 'Có thể bỏ trống', // Hướng dẫn người dùng
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                   ),
-                  validator: _validateDuongDan, // validator đã được cập nhật
+                  validator: _validateDuongDan, // Gắn hàm validate vào đây
                 ),
               ],
             ],
@@ -184,7 +194,7 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
           child: const Text('Thoát'),
         ),
         ElevatedButton(
-          onPressed: _handleUpdate, // hàm update đã được cập nhật
+          onPressed: _handleUpdate,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
@@ -196,6 +206,9 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
   }
 }
 
+// ============================================================================
+// 2. DIALOG CHI TIẾT LỊCH HỌC (XEM THÔNG TIN)
+// ============================================================================
 class ChiTietLichHocDialog extends StatelessWidget {
   final LichHoc lichHoc;
   final bool isGiaSu;
@@ -240,10 +253,14 @@ class ChiTietLichHocDialog extends StatelessWidget {
               'Thời gian',
               '${lichHoc.thoiGianBatDau} - ${lichHoc.thoiGianKetThuc}',
             ),
-            if (lichHoc.duongDan != null) _buildTile('Link', lichHoc.duongDan!),
+            if (lichHoc.duongDan != null && lichHoc.duongDan!.isNotEmpty)
+              _buildTile('Link', lichHoc.duongDan!),
             if (lichHoc.lopHoc?.diaChi != null &&
                 lichHoc.lopHoc!.diaChi!.isNotEmpty)
               _buildTile('Địa chỉ', lichHoc.lopHoc!.diaChi!),
+
+            const SizedBox(height: 10),
+            _buildStatusBadge(lichHoc.trangThai),
           ],
         ),
       ),
@@ -273,6 +290,45 @@ class ChiTietLichHocDialog extends StatelessWidget {
         ),
         const Divider(height: 1),
       ],
+    );
+  }
+
+  Widget _buildStatusBadge(String status) {
+    String text;
+    Color color;
+    switch (status) {
+      case 'SapToi':
+        text = 'Sắp tới';
+        color = Colors.blue;
+        break;
+      case 'DangDay':
+        text = 'Đang diễn ra';
+        color = Colors.green;
+        break;
+      case 'DaHoc':
+        text = 'Đã hoàn thành';
+        color = Colors.grey;
+        break;
+      case 'Huy':
+        text = 'Đã hủy';
+        color = Colors.red;
+        break;
+      default:
+        text = status;
+        color = Colors.black;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(color: color, fontWeight: FontWeight.bold),
+      ),
     );
   }
 }
