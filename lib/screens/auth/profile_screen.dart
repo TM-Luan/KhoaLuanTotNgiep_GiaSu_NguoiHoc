@@ -7,7 +7,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/dropdown_repository.dart';
-
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/auth/edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -575,16 +575,40 @@ class ProfileImageInfo extends StatelessWidget {
     );
   }
 
+  // Widget _buildImage() {
+  //   if (imageUrl != null && imageUrl!.isNotEmpty) {
+  //     return Image.network(
+  //       imageUrl!,
+  //       fit: BoxFit.contain,
+  //       loadingBuilder: (context, child, loadingProgress) {
+  //         if (loadingProgress == null) return child;
+  //         return const Center(child: CircularProgressIndicator());
+  //       },
+  //       errorBuilder: (context, error, stackTrace) {
+  //         return _buildPlaceholder("Lỗi tải ảnh");
+  //       },
+  //     );
+  //   } else {
+  //     return _buildPlaceholder("Chưa cập nhật ảnh");
+  //   }
+  // }
   Widget _buildImage() {
     if (imageUrl != null && imageUrl!.isNotEmpty) {
-      return Image.network(
-        imageUrl!,
+      return CachedNetworkImage(
+        imageUrl: imageUrl!,
         fit: BoxFit.contain,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return const Center(child: CircularProgressIndicator());
-        },
-        errorBuilder: (context, error, stackTrace) {
+
+        // [QUAN TRỌNG] Giảm kích thước ảnh trong bộ nhớ RAM
+        // Nếu ảnh này chỉ hiển thị nhỏ, hãy đặt memCacheWidth khoảng 300-500.
+        // Nếu là ảnh banner lớn full màn hình thì có thể bỏ dòng này hoặc tăng lên.
+        memCacheWidth: 500,
+
+        // Widget hiển thị khi đang tải (thay thế loadingBuilder)
+        placeholder:
+            (context, url) => const Center(child: CircularProgressIndicator()),
+
+        // Widget hiển thị khi lỗi (thay thế errorBuilder)
+        errorWidget: (context, url, error) {
           return _buildPlaceholder("Lỗi tải ảnh");
         },
       );

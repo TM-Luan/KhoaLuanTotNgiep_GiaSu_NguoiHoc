@@ -7,6 +7,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart'
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/dropdown_repository.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final UserProfile user;
@@ -178,6 +179,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       onImagePicked(null);
     }
   }
+
   Future<void> _fetchMonHoc() async {
     setState(() => _isLoadingMonHoc = true);
     try {
@@ -1037,35 +1039,69 @@ class EditProfilePic extends StatelessWidget {
     );
   }
 
+  // Widget _buildImage() {
+  //   if (newImageFile != null) {
+  //     return Image.file(newImageFile!, fit: BoxFit.cover);
+  //   }
+
+  //   if (image.isNotEmpty) {
+  //     return Image.network(
+  //       image,
+  //       fit: BoxFit.cover,
+
+  //       errorBuilder: (context, error, stackTrace) {
+  //         return _buildAvatarPlaceholder();
+  //       },
+
+  //       loadingBuilder: (context, child, loadingProgress) {
+  //         if (loadingProgress == null) return child;
+  //         return Center(
+  //           child: CircularProgressIndicator(
+  //             value:
+  //                 loadingProgress.expectedTotalBytes != null
+  //                     ? loadingProgress.cumulativeBytesLoaded /
+  //                         loadingProgress.expectedTotalBytes!
+  //                     : null,
+  //           ),
+  //         );
+  //       },
+  //     );
+  //   }
+
+  //   return _buildAvatarPlaceholder();
+  // }
   Widget _buildImage() {
+    // 1. Ưu tiên hiển thị ảnh mới chọn từ thư viện (để preview nhanh)
     if (newImageFile != null) {
       return Image.file(newImageFile!, fit: BoxFit.cover);
     }
 
+    // 2. Nếu có URL ảnh (ảnh cũ trên server) thì dùng CachedNetworkImage
     if (image.isNotEmpty) {
-      return Image.network(
-        image,
+      return CachedNetworkImage(
+        imageUrl: image,
         fit: BoxFit.cover,
 
-        errorBuilder: (context, error, stackTrace) {
-          return _buildAvatarPlaceholder();
-        },
+        // [QUAN TRỌNG] Tối ưu bộ nhớ RAM
+        // Avatar thường nhỏ, chỉ cần cache khoảng 300-400px là nét.
+        // Tránh việc load nguyên ảnh gốc 5MB vào khung hình bé xíu gây lag.
+        memCacheWidth: 400,
 
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Center(
-            child: CircularProgressIndicator(
-              value:
-                  loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
-                      : null,
+        // Hiển thị vòng quay kèm tiến độ tải (thay thế loadingBuilder cũ)
+        progressIndicatorBuilder:
+            (context, url, downloadProgress) => Center(
+              child: CircularProgressIndicator(
+                value: downloadProgress.progress, // Hiển thị % tải xuống
+                strokeWidth: 2, // Làm thanh mảnh hơn cho đẹp
+              ),
             ),
-          );
-        },
+
+        // Xử lý khi lỗi (thay thế errorBuilder cũ)
+        errorWidget: (context, url, error) => _buildAvatarPlaceholder(),
       );
     }
 
+    // 3. Nếu không có gì cả thì hiện placeholder
     return _buildAvatarPlaceholder();
   }
 

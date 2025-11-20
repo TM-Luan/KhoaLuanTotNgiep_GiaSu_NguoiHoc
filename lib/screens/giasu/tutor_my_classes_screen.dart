@@ -1,4 +1,4 @@
-// file: tutor_my_classes_screen.dart
+// file: lib/screens/giasu/tutor_my_classes_screen.dart
 
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -16,6 +16,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/class_detail_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_add_schedule_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/payment/payment_screen.dart'; // Import màn hình thanh toán
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notification_service.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/utils/format_vnd.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_info_row.dart';
@@ -252,7 +253,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
     );
   }
 
-  // --- PHẦN CHỈNH SỬA CHÍNH: Lớp Đang Dạy ---
+  // --- Lớp Đang Dạy (Có logic thanh toán) ---
   Widget _buildLopDangDayList(BuildContext context, List<LopHoc> lopHocList) {
     if (lopHocList.isEmpty) {
       return Center(
@@ -284,6 +285,10 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
           final Color statusColor = Colors.blue.shade100;
           final Color textColor = Colors.blue.shade700;
           final IconData statusIcon = Icons.send_outlined;
+
+          // KIỂM TRA TRẠNG THÁI THANH TOÁN
+          // Nếu trường này null hoặc không phải 'DaThanhToan', coi như chưa thanh toán
+          final bool isPaid = lop.trangThaiThanhToan == 'DaThanhToan';
 
           return Card(
             elevation: 3,
@@ -323,27 +328,33 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
                             ),
-                            // FIX: Tránh tràn chữ trên màn hình nhỏ
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 8),
+                        // BADGE TRẠNG THÁI
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 6,
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
+                            color:
+                                isPaid
+                                    ? Colors.green.shade100
+                                    : Colors.orange.shade100,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            'Đang dạy',
+                            isPaid ? 'Đang dạy' : 'Chưa thanh toán',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade700,
+                              color:
+                                  isPaid
+                                      ? Colors.green.shade800
+                                      : Colors.orange.shade800,
                             ),
                           ),
                         ),
@@ -361,6 +372,22 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                       label: 'Học phí',
                       value: '${formatNumber(toNumber(lop.hocPhi))} VNĐ/Buổi',
                     ),
+
+                    // Hiển thị thêm thông tin phí nếu chưa thanh toán
+                    if (!isPaid) ...[
+                      const SizedBox(height: 6),
+                      InfoRow(
+                        icon: Icons.payment,
+                        label: 'Phí nhận lớp',
+                        value:
+                            '${formatNumber(tinhPhiNhanLop(hocPhiMotBuoi: toNumber(lop.hocPhi), soBuoiMotTuan: lop.soBuoiTuan))} VNĐ',
+                        valueStyle: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+
                     if (lop.diaChi?.isNotEmpty ?? false) ...[
                       const SizedBox(height: 6),
                       InfoRow(
@@ -371,7 +398,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                     ],
                     const SizedBox(height: 12),
 
-                    // FIX: Sử dụng Wrap thay vì Row để nút không bị tràn
                     Wrap(
                       spacing: 8.0,
                       runSpacing: 8.0,
@@ -385,21 +411,36 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                           onPressed:
                               () => _navigateToClassDetail(context, lop.maLop),
                         ),
-                        _buildActionButton(
-                          context: context,
-                          label: 'Tạo Lịch',
-                          icon: Icons.schedule,
-                          color: Colors.green.shade600,
-                          onPressed: () => _navigateToAddSchedule(context, lop),
-                        ),
-                        _buildActionButton(
-                          context: context,
-                          label: 'Hủy Lịch',
-                          icon: Icons.delete_sweep_outlined,
-                          color: Colors.red.shade600,
-                          onPressed:
-                              () => _showDeleteAllSchedulesDialog(context, lop),
-                        ),
+
+                        // LOGIC ẨN HIỆN NÚT
+                        if (isPaid) ...[
+                          _buildActionButton(
+                            context: context,
+                            label: 'Tạo Lịch',
+                            icon: Icons.schedule,
+                            color: Colors.green.shade600,
+                            onPressed:
+                                () => _navigateToAddSchedule(context, lop),
+                          ),
+                          _buildActionButton(
+                            context: context,
+                            label: 'Hủy Lịch',
+                            icon: Icons.delete_sweep_outlined,
+                            color: Colors.red.shade600,
+                            onPressed:
+                                () =>
+                                    _showDeleteAllSchedulesDialog(context, lop),
+                          ),
+                        ] else ...[
+                          // Nút thanh toán nếu chưa trả phí
+                          _buildActionButton(
+                            context: context,
+                            label: 'Thanh toán phí',
+                            icon: Icons.payment_outlined,
+                            color: Colors.orange.shade700,
+                            onPressed: () => _navigateToPayment(context, lop),
+                          ),
+                        ],
                       ],
                     ),
                   ],
@@ -412,7 +453,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
     );
   }
 
-  // Helper để tạo nút hành động gọn gàng
   Widget _buildActionButton({
     required BuildContext context,
     required String label,
@@ -427,7 +467,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         foregroundColor: Colors.white,
-        // Padding nhỏ gọn hơn
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         elevation: 0,
@@ -478,7 +517,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
     );
   }
 
-  // --- PHẦN CHỈNH SỬA CHÍNH: Card Đề Nghị ---
   Widget _buildRequestCard(
     BuildContext context,
     YeuCauNhanLop yeuCau,
@@ -531,7 +569,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),
-                      // FIX: Tránh tràn tiêu đề
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -596,13 +633,11 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                     fontStyle: FontStyle.italic,
                     color: Colors.grey.shade700,
                   ),
-                  // FIX: Tự động xử lý dòng ghi chú
                   maxLines: 2,
                 ),
               ],
               const SizedBox(height: 12),
 
-              // Footer: Trạng thái + Nút bấm
               if (isActionLoading)
                 const Center(
                   child: SizedBox(
@@ -616,7 +651,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Trạng thái (Footer text)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -636,7 +670,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // Nút bấm (Flexible để tránh tràn)
                     Flexible(child: _buildActionButtons(context, yeuCau)),
                   ],
                 ),
@@ -657,14 +690,12 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
     }
     final bool isOwnRequest = yeuCau.nguoiGuiTaiKhoanID == currentTaiKhoanId;
 
-    // FIX: Sử dụng Wrap cho nhóm nút hành động
     return Wrap(
       spacing: 8.0,
       runSpacing: 8.0,
       alignment: WrapAlignment.end,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        // Nút Chi tiết (Chung)
         _buildOutlineActionButton(
           label: 'Chi tiết',
           icon: Icons.visibility,
@@ -704,7 +735,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
             ),
           ],
         ] else ...[
-          // Người học mời -> Gia sư có thể Từ chối hoặc Chấp nhận
           _buildOutlineActionButton(
             label: 'Từ chối',
             icon: Icons.close,
@@ -724,7 +754,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
     );
   }
 
-  // Helper cho nút outline nhỏ gọn
   Widget _buildOutlineActionButton({
     required String label,
     required IconData icon,
@@ -835,6 +864,54 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen> {
                 ClassDetailScreen(classId: lopHocId, userRole: UserRole.tutor),
       ),
     );
+  }
+
+  // Hàm điều hướng sang trang thanh toán
+  void _navigateToPayment(BuildContext context, LopHoc lop) async {
+    final authState = context.read<AuthBloc>().state;
+    int taiKhoanId = 0;
+    if (authState is AuthAuthenticated) {
+      taiKhoanId = authState.user.taiKhoanID ?? 0;
+    }
+
+    if (taiKhoanId == 0) {
+      _showSnack(
+        context,
+        'Lỗi: Không tìm thấy thông tin tài khoản',
+        Colors.red,
+      );
+      return;
+    }
+
+    final double? hocPhi = toNumber(lop.hocPhi);
+    final int? soBuoi = lop.soBuoiTuan;
+    final double? phiNhanLop = tinhPhiNhanLop(
+      hocPhiMotBuoi: hocPhi,
+      soBuoiMotTuan: soBuoi,
+    );
+
+    if (phiNhanLop == null || phiNhanLop <= 0) {
+      _showSnack(context, 'Lỗi: Không thể tính phí nhận lớp', Colors.red);
+      return;
+    }
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => PaymentScreen(
+              lopYeuCauID: lop.maLop,
+              soTien: phiNhanLop,
+              taiKhoanID: taiKhoanId,
+            ),
+      ),
+    );
+
+    if (result == true) {
+      if (mounted) {
+        context.read<TutorClassesBloc>().add(TutorClassesRefreshRequested());
+      }
+    }
   }
 
   void _navigateToAddSchedule(BuildContext context, LopHoc lop) {

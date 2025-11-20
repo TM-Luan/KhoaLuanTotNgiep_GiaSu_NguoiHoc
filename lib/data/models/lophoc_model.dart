@@ -1,8 +1,10 @@
+// file: lib/data/models/lophoc_model.dart
+
 class LopHoc {
   final int maLop;
   final String tieuDeLop;
   final String tenNguoiHoc;
-  final String? soDienThoai; // <--- NEW: Thêm trường này
+  final String? soDienThoai;
   final String? diaChi;
   final String hocPhi;
   final String? moTaChiTiet;
@@ -20,12 +22,14 @@ class LopHoc {
   final String? tenKhoiLop;
   final String? tenGiaSu;
   final int? doiTuongID;
+  // NEW: Thêm trường trạng thái thanh toán
+  final String? trangThaiThanhToan;
 
   LopHoc({
     required this.maLop,
     required this.tieuDeLop,
     required this.tenNguoiHoc,
-    this.soDienThoai, // <--- Thêm vào constructor
+    this.soDienThoai,
     this.diaChi,
     required this.hocPhi,
     this.moTaChiTiet,
@@ -43,6 +47,7 @@ class LopHoc {
     this.tenKhoiLop,
     this.tenGiaSu,
     this.doiTuongID,
+    this.trangThaiThanhToan,
   });
 
   factory LopHoc.fromJson(Map<String, dynamic> json) {
@@ -50,10 +55,7 @@ class LopHoc {
       maLop: json['MaLop'] ?? json['LopYeuCauID'] ?? 0,
       tieuDeLop: json['TieuDeLop'] ?? json['TenMon'] ?? 'Không rõ môn học',
       tenNguoiHoc: json['TenNguoiHoc'] ?? 'Chưa rõ',
-      
-      // <--- Map dữ liệu JSON
-      soDienThoai: json['SoDienThoai']?.toString(), 
-      
+      soDienThoai: json['SoDienThoai']?.toString(),
       diaChi: json['DiaChi']?.toString(),
       hocPhi: json['HocPhi']?.toString() ?? '0',
       moTaChiTiet: json['MoTaChiTiet']?.toString(),
@@ -77,6 +79,8 @@ class LopHoc {
       tenMon: json['TenMon']?.toString(),
       tenKhoiLop: json['TenKhoiLop']?.toString(),
       tenGiaSu: json['TenGiaSu']?.toString(),
+      // NEW: Map dữ liệu từ JSON (Giả sử API trả về trường này)
+      trangThaiThanhToan: json['TrangThaiThanhToan']?.toString(),
     );
   }
 }
