@@ -156,23 +156,71 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final pass = passCtrl.text.trim();
     final confirm = confirmPassCtrl.text.trim();
 
+    // Regex kiểm tra email chuẩn
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+
+    // Regex kiểm tra họ tên chỉ chứa chữ cái & khoảng trắng
+    final nameRegex = RegExp(r'^[a-zA-ZÀ-ỹ\s]+$');
+
+    // Regex số điện thoại (10 chữ số)
+    final phoneRegex = RegExp(r'^[0-9]{10}$');
+
     if (role.isEmpty) {
       _showSnackBar('Vui lòng chọn vai trò');
       return;
     }
-    if ([name, phone, email, pass, confirm].any((e) => e.isEmpty)) {
-      _showSnackBar('Vui lòng nhập đủ thông tin');
+
+    if (name.isEmpty) {
+      _showSnackBar('Vui lòng nhập họ tên');
+      return;
+    }
+    if (!nameRegex.hasMatch(name)) {
+      _showSnackBar('Họ tên không hợp lệ (không chứa số/ký tự đặc biệt)');
+      return;
+    }
+
+    if (phone.isEmpty) {
+      _showSnackBar('Vui lòng nhập số điện thoại');
+      return;
+    }
+    if (!phoneRegex.hasMatch(phone)) {
+      _showSnackBar('Số điện thoại phải gồm 10 chữ số');
+      return;
+    }
+
+    if (email.isEmpty) {
+      _showSnackBar('Vui lòng nhập email');
+      return;
+    }
+    if (!emailRegex.hasMatch(email)) {
+      _showSnackBar('Email không hợp lệ');
+      return;
+    }
+
+    if (pass.isEmpty) {
+      _showSnackBar('Vui lòng nhập mật khẩu');
+      return;
+    }
+    if (pass.length < 6) {
+      _showSnackBar('Mật khẩu phải có ít nhất 6 ký tự');
+      return;
+    }
+
+    if (confirm.isEmpty) {
+      _showSnackBar('Vui lòng xác nhận mật khẩu');
       return;
     }
     if (pass != confirm) {
       _showSnackBar('Mật khẩu không khớp');
       return;
     }
+
     if (!agreeTerms) {
       _showSnackBar('Vui lòng đồng ý điều khoản');
       return;
     }
 
+    // Gửi sự kiện đăng ký
     context.read<AuthBloc>().add(
       RegisterRequested(
         hoTen: name,
