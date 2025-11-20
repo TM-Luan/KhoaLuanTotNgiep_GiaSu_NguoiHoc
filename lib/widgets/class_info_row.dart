@@ -8,6 +8,7 @@ class InfoRow extends StatelessWidget {
   final double iconSize;
   final TextStyle? labelStyle;
   final TextStyle? valueStyle;
+  final int? maxLines;
 
   const InfoRow({
     super.key,
@@ -18,33 +19,25 @@ class InfoRow extends StatelessWidget {
     this.iconSize = 18,
     this.labelStyle,
     this.valueStyle,
+    this.maxLines,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: iconSize,
-          color: iconColor ?? Colors.grey[600],
-        ),
+        Icon(icon, size: iconSize, color: iconColor ?? Colors.grey[600]),
         const SizedBox(width: 8),
         Text(
           '$label: ',
-          style: labelStyle ??
-              TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
-              ),
+          style:
+              labelStyle ??
+              TextStyle(fontWeight: FontWeight.w500, color: Colors.grey[700]),
         ),
         Expanded(
           child: Text(
             value,
-            style: valueStyle ??
-                const TextStyle(
-                  fontWeight: FontWeight.w400,
-                ),
+            style: valueStyle ?? const TextStyle(fontWeight: FontWeight.w400),
           ),
         ),
       ],
