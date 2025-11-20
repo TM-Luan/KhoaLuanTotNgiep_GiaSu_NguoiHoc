@@ -18,7 +18,7 @@ class ApiService {
       BaseOptions(
         baseUrl: ApiConfig.baseUrl,
         receiveTimeout: ApiConfig.receiveTimeout,
-        connectTimeout: const Duration(seconds: 10),
+        connectTimeout: ApiConfig.connectTimeout,
         headers: ApiConfig.headers,
       ),
     );

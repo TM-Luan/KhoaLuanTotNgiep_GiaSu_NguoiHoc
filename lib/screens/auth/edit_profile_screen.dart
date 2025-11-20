@@ -170,7 +170,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _pickImage(Function(File?) onImagePicked) async {
     final pickedFile = await _picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 80,
+      imageQuality: 60,
     );
     if (pickedFile != null) {
       onImagePicked(File(pickedFile.path));
@@ -178,8 +178,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       onImagePicked(null);
     }
   }
-
-  // === ⭐️ HÀM TẢI DANH SÁCH MÔN HỌC (cho Dropdown) ⭐️ ===
   Future<void> _fetchMonHoc() async {
     setState(() => _isLoadingMonHoc = true);
     try {

@@ -2,8 +2,8 @@
 class ApiConfig {
   // static const String baseUrl = 'https://tutorconectstudent.online/api';
   static const String baseUrl = 'http://10.0.2.2:8000/api';
-  static const Duration connectTimeout = Duration(seconds: 15);
-  static const Duration receiveTimeout = Duration(seconds: 15);
+  static const Duration connectTimeout = Duration(seconds: 60);
+  static const Duration receiveTimeout = Duration(seconds: 60);
 
   // Endpoints (Chung)
   static const String login = '/login';
