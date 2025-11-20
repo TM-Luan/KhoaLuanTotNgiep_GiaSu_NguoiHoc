@@ -10,6 +10,9 @@ class Tutor {
   final double diemSo;
   final int tongSoDanhGia;
   final TaiKhoan taiKhoan;
+  final String? truongDaoTao;
+  final String? chuyenNganh;
+  final String? thanhTich;
 
   String? soDienThoai;
 
@@ -25,6 +28,9 @@ class Tutor {
     required this.diemSo,
     this.tongSoDanhGia = 0,
     required this.taiKhoan,
+    this.truongDaoTao,
+    this.chuyenNganh,
+    this.thanhTich,
   });
 
   factory Tutor.fromJson(Map<String, dynamic> json) {
@@ -40,10 +46,13 @@ class Tutor {
       diemSo: (json['DiemSo'] as num?)?.toDouble() ?? 0.0,
       tongSoDanhGia: json['TongSoDanhGia'] ?? 0,
       taiKhoan: TaiKhoan.fromJson(json['TaiKhoan']),
+      truongDaoTao: json['TruongDaoTao'],
+      chuyenNganh: json['ChuyenNganh'],
+      thanhTich: json['ThanhTich'],
     );
   }
 
-  // Getter để tương thích với TutorCard hiện tại
+  // Getters
   String get name => hoTen;
   String? get subject => bangCap;
   double get rating => diemSo;

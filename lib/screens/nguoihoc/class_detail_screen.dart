@@ -154,7 +154,24 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
             ),
             const SizedBox(height: 16),
           ],
+          if (isTutor) ...[
+            _buildDetailRow(Icons.person, 'Người đăng', _lopHoc!.tenNguoiHoc),
 
+            // === THÊM DÒNG NÀY: Hiển thị SĐT ===
+            _buildDetailRow(
+              Icons.phone,
+              'Số điện thoại',
+              _lopHoc!.soDienThoai ?? 'Chưa cập nhật',
+            ),
+            // ===================================
+          ] else ...[
+            // Nếu là người học xem lớp của mình hoặc người khác
+            _buildDetailRow(
+              Icons.person,
+              'Gia sư',
+              _lopHoc!.tenGiaSu ?? 'Chưa có',
+            ),
+          ],
           // === TRẠNG THÁI ===
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -220,9 +237,6 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
 
           const Divider(height: 32),
 
-          // === THÔNG TIN CHÍNH - HIỂN THỊ THEO ROLE ===
-          if (isTutor)
-            _buildDetailRow(Icons.person, 'Người đăng', _lopHoc!.tenNguoiHoc),
           if (!isTutor)
             _buildDetailRow(
               Icons.person,

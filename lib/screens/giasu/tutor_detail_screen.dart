@@ -45,7 +45,7 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar và thông tin cơ bản
+          // 1. Header: Avatar, Tên, Bằng cấp
           Center(
             child: Column(
               children: [
@@ -62,6 +62,7 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
                               fit: BoxFit.cover,
                             )
                             : null,
+                    border: Border.all(color: Colors.blue.shade100, width: 4),
                   ),
                   child:
                       tutor.image.isEmpty
@@ -75,24 +76,38 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
                 const SizedBox(height: 16),
                 Text(
                   tutor.name,
+                  textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
-                if (tutor.bangCap != null)
-                  Text(
-                    tutor.bangCap!,
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
                   ),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    tutor.bangCap ?? 'Gia sư',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.blue.shade800,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
 
           const SizedBox(height: 32),
 
-          // Thông tin chi tiết
+          // 2. Thông tin Liên hệ
           _buildInfoSection('Thông tin liên hệ', [
             _buildInfoItem('Email', tutor.taiKhoan.email, Icons.email),
             _buildInfoItem(
@@ -102,53 +117,92 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
             ),
           ]),
 
-          if (tutor.diaChi != null) ...[
+          // 3. Thông tin Học vấn & Chuyên môn (MỚI)
+          const SizedBox(height: 24),
+          _buildInfoSection('Học vấn & Chuyên môn', [
+            if (tutor.truongDaoTao != null && tutor.truongDaoTao!.isNotEmpty)
+              _buildInfoItem(
+                'Trường đào tạo',
+                tutor.truongDaoTao!,
+                Icons.school,
+              ),
+            if (tutor.chuyenNganh != null && tutor.chuyenNganh!.isNotEmpty)
+              _buildInfoItem('Chuyên ngành', tutor.chuyenNganh!, Icons.book),
+            if (tutor.kinhNghiem != null && tutor.kinhNghiem!.isNotEmpty)
+              _buildInfoItem(
+                'Kinh nghiệm',
+                tutor.kinhNghiem!,
+                Icons.work_history,
+              ),
+          ]),
+
+          // 4. Thành tích nổi bật (MỚI)
+          if (tutor.thanhTich != null && tutor.thanhTich!.isNotEmpty) ...[
             const SizedBox(height: 24),
-            _buildInfoSection('Thông tin cá nhân', [
-              if (tutor.diaChi != null)
-                _buildInfoItem('Địa chỉ', tutor.diaChi!, Icons.location_on),
-              if (tutor.gioiTinh != null)
-                _buildInfoItem('Giới tính', tutor.gioiTinh!, Icons.person),
-              if (tutor.ngaySinh != null)
-                _buildInfoItem(
-                  'Ngày sinh',
-                  _formatDate(tutor.ngaySinh!),
-                  Icons.cake,
+            _buildInfoSection('Thành tích nổi bật', [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber.shade200),
                 ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.emoji_events,
+                      color: Colors.amber.shade700,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        tutor.thanhTich!,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.grey[800],
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ]),
           ],
 
-          if (tutor.kinhNghiem != null) ...[
-            const SizedBox(height: 24),
-            _buildInfoSection('Kinh nghiệm & Đánh giá', [
-              _buildInfoItem('Kinh nghiệm', tutor.kinhNghiem!, Icons.work),
-              _buildRatingItem('Điểm đánh giá', tutor.rating),
-            ]),
-          ],
+          // 5. Thông tin Cá nhân
+          const SizedBox(height: 24),
+          _buildInfoSection('Thông tin cá nhân', [
+            if (tutor.diaChi != null)
+              _buildInfoItem('Địa chỉ', tutor.diaChi!, Icons.location_on),
+            if (tutor.gioiTinh != null)
+              _buildInfoItem('Giới tính', tutor.gioiTinh!, Icons.person),
+            if (tutor.ngaySinh != null)
+              _buildInfoItem(
+                'Ngày sinh',
+                _formatDate(tutor.ngaySinh!),
+                Icons.cake,
+              ),
+          ]),
+
+          // 6. Đánh giá
+          const SizedBox(height: 24),
+          _buildInfoSection('Đánh giá từ học viên', [
+            _buildRatingItem('Điểm đánh giá', tutor.rating),
+          ]),
 
           const SizedBox(height: 32),
 
-          // Nút hành động
+          // 7. Nút hành động (Giữ nguyên logic cũ)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               children: [
-                // Hàng đầu tiên: Liên hệ và Đề nghị dạy
                 Row(
                   children: [
-                    // Expanded(
-                    //   child: ElevatedButton.icon(
-                    //     onPressed: () {
-                    //       _showContactDialog(tutor);
-                    //     },
-                    //     icon: const Icon(Icons.message),
-                    //     label: const Text('Liên hệ ngay'),
-                    //     style: ElevatedButton.styleFrom(
-                    //       padding: const EdgeInsets.symmetric(vertical: 12),
-                    //     ),
-                    //   ),
-                    // ),
-                    // const SizedBox(width: 12),
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed:
@@ -171,13 +225,13 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
                                 : const Text('Mời dạy'),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
+                          side: BorderSide(color: Colors.blue),
                         ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                // Hàng thứ hai: Xem đánh giá và Đánh giá gia sư
                 Row(
                   children: [
                     Expanded(
@@ -216,7 +270,6 @@ class _TutorDetailPageState extends State<TutorDetailPage> {
               ],
             ),
           ),
-
           const SizedBox(height: 20),
         ],
       ),
