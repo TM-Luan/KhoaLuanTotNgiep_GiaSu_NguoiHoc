@@ -11,6 +11,8 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notificatio
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/utils/format_vnd.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_info_row.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/complaint_form_screen.dart';
+// Import trang lịch học
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/student_schedule_screen.dart';
 
 class StudentMyClassesPage extends StatefulWidget {
   const StudentMyClassesPage({super.key});
@@ -30,7 +32,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
 
   // Danh sách cho từng tab
   List<LopHoc> _lopHocTimGiaSu = [];
-  List<LopHoc> _lopHocDangDay = [];
+  List<LopHoc> _lopHocDangDay = []; // Biến này chứa danh sách Đang Học
 
   @override
   void initState() {
@@ -43,7 +45,6 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
         .proposalUpdateStream
         .listen((event) {
           // Refresh data khi có proposal được chấp nhận/từ chối
-
           _fetchClasses();
         });
 
@@ -62,12 +63,11 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
     setState(() {
       _isLoading = true;
       _errorMessage = null;
-      _lopHocTimGiaSu = []; // Xóa dữ liệu cũ
-      _lopHocDangDay = []; // Xóa dữ liệu cũ
+      _lopHocTimGiaSu = []; 
+      _lopHocDangDay = []; 
     });
 
     try {
-      // 1. GỌI API MỚI (CHỈ 1 LẦN)
       final response = await _lopHocRepo.getLopHocCuaNguoiHoc();
 
       if (!mounted) return;
@@ -75,14 +75,10 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
       if (response.isSuccess && response.data != null) {
         final List<LopHoc> tatCaLopCuaToi = response.data!;
 
-        // 2. TỰ LỌC RA 2 DANH SÁCH CHO 2 TAB
         setState(() {
           _lopHocTimGiaSu =
               tatCaLopCuaToi
-                  .where(
-                    (lop) =>
-                        lop.trangThai == 'TimGiaSu', // Chỉ còn trạng thái này
-                  )
+                  .where((lop) => lop.trangThai == 'TimGiaSu')
                   .toList();
 
           _lopHocDangDay =
@@ -91,7 +87,6 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                   .toList();
         });
       } else {
-        // Nếu API thất bại
         _errorMessage = response.message;
       }
     } catch (e) {
@@ -134,37 +129,6 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
         ),
         backgroundColor: AppColors.primary,
         elevation: 0,
-        // actions: [
-        //   Padding(
-        //     padding: const EdgeInsets.only(right: AppSpacing.md),
-        //     child: Container(
-        //       decoration: BoxDecoration(
-        //         color: AppColors.background,
-        //         borderRadius: BorderRadius.circular(AppSpacing.sm),
-        //       ),
-        //       child: IconButton(
-        //         onPressed: () async {
-        //           final isAdded = await Navigator.push(
-        //             context,
-        //             MaterialPageRoute(
-        //               builder: (context) => const AddClassPage(),
-        //             ),
-        //           );
-        //           // ✅ Khi AddClassPage pop về và trả về true → tự động reload
-        //           if (isAdded == true) {
-        //             _fetchClasses();
-        //           }
-        //         },
-        //         icon: Icon(
-        //           Icons.add,
-        //           color: AppColors.primary,
-        //           size: AppSpacing.smallIconSize,
-        //         ),
-        //         tooltip: 'Thêm Lớp',
-        //       ),
-        //     ),
-        //   ),
-        // ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48.0),
           child: Container(
@@ -179,32 +143,33 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                 fontWeight: FontWeight.bold,
                 fontSize: AppTypography.body2,
               ),
-              tabs: const [Tab(text: 'Đang Tìm Gia Sư'), Tab(text: 'Đang Học')],
+              // === THAY ĐỔI Ở ĐÂY: Đảo thứ tự Tab ===
+              tabs: const [
+                Tab(text: 'Đang Học'), 
+                Tab(text: 'Đang Tìm Gia Sư'),
+              ],
             ),
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          // Đây là logic bạn đã viết cho nút (+) cũ
           final isAdded = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddClassPage()),
           );
-          // Khi AddClassPage pop về và trả về true → tự động reload
           if (isAdded == true) {
             _fetchClasses();
           }
         },
-        backgroundColor: AppColors.primary, // Dấu cộng màu trắng
-        tooltip: 'Thêm Lớp', // Màu xanh chính
+        backgroundColor: AppColors.primary, 
+        tooltip: 'Thêm Lớp', 
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: _buildBody(),
     );
   }
 
-  // Hàm xây dựng Body
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -226,20 +191,24 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
       );
     }
 
-    // Hiển thị TabBarView
+    // === THAY ĐỔI Ở ĐÂY: Đảo thứ tự nội dung tương ứng với Tab ===
     return TabBarView(
       controller: _tabController,
       children: [
+        // Tab 1: Đang Học (Hiển thị đầu tiên)
+        _buildClassListView(
+          _lopHocDangDay, 
+          'Bạn chưa có lớp nào đang học.',
+        ),
+        // Tab 2: Đang Tìm Gia Sư
         _buildClassListView(
           _lopHocTimGiaSu,
           'Không có lớp nào đang tìm gia sư.',
         ),
-        _buildClassListView(_lopHocDangDay, 'Không có lớp nào đang dạy.'),
       ],
     );
   }
 
-  // Hàm xây dựng danh sách cho mỗi tab
   Widget _buildClassListView(List<LopHoc> lopHocList, String emptyMessage) {
     if (lopHocList.isEmpty) {
       return Center(
@@ -272,7 +241,6 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
   }
 
   Widget _buildClassCard(BuildContext context, LopHoc lopHoc) {
-    // Xác định trạng thái
     final String statusCode = lopHoc.trangThai ?? 'N/A';
 
     String getStatusText(String code) {
@@ -288,12 +256,10 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
       }
     }
 
-    // DÙNG MÀU XANH DƯƠNG GIỐNG HỆT CARD "GIA SƯ GỬI YÊU CẦU"
     final Color cardColor = Colors.blue.shade50;
     final Color statusColor = Colors.blue.shade100;
     final Color textColor = Colors.blue.shade700;
-    final IconData statusIcon =
-        Icons.send_outlined; // Giống icon khi Gia sư gửi
+    final IconData statusIcon = Icons.send_outlined;
 
     final statusText = getStatusText(statusCode);
 
@@ -320,7 +286,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [cardColor, Colors.white], // Xanh nhạt → trắng
+              colors: [cardColor, Colors.white], 
             ),
           ),
           child: Padding(
@@ -328,7 +294,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- HEADER (GIỐNG HỆT CARD GIA SƯ GỬI) ---
+                // --- HEADER ---
                 Row(
                   children: [
                     Container(
@@ -351,7 +317,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                     ),
 
                     Container(
-                      margin: const EdgeInsets.only(left: 8), // Thêm margin
+                      margin: const EdgeInsets.only(left: 8),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6,
                         vertical: 3,
@@ -397,7 +363,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
 
                 const SizedBox(height: 12),
 
-                // --- FOOTER (GIỐNG HỆT CARD GIA SƯ) ---
+                // --- FOOTER ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -405,7 +371,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                     _buildActionButtons(
                       context,
                       lopHoc,
-                    ), // Giữ nguyên chức năng
+                    ), 
                   ],
                 ),
               ],
@@ -416,11 +382,9 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
     );
   }
 
-  // Hàm xây dựng các nút hành động (Xem đề nghị, Sửa, Đóng...)
   Widget _buildActionButtons(BuildContext context, LopHoc lopHoc) {
     String status = lopHoc.trangThai ?? '';
 
-    // Hàm tạo kiểu cho nút
     ElevatedButton styledButton(
       String text,
       VoidCallback onPressed, [
@@ -442,12 +406,10 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
       return Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          // NÚT XEM ĐỀ NGHỊ MỚI
           styledButton('Xem đề nghị', () {
             Navigator.push(
               context,
               MaterialPageRoute(
-                // Điều hướng đến trang xem đề nghị, truyền ID lớp
                 builder:
                     (context) =>
                         StudentClassProposalsScreen(lopHocId: lopHoc.maLop),
@@ -462,8 +424,6 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                 builder: (context) => AddClassPage(classId: lopHoc.maLop),
               ),
             ).then((isSuccess) {
-              // 2. Sau khi sửa xong, nếu isSuccess là true,
-              //    tải lại danh sách lớp
               if (isSuccess == true) {
                 _fetchClasses();
               }
@@ -537,17 +497,13 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                             ),
                             ElevatedButton.icon(
                               onPressed: () async {
-                                Navigator.pop(context); // Đóng dialog
-
-                                // Dùng context gốc của màn hình chính
+                                Navigator.pop(context); 
                                 final rootContext = this.context;
-
                                 final response = await _lopHocRepo.deleteLopHoc(
                                   lopHoc.maLop,
                                 );
 
-                                if (!mounted)
-                                  return; // đảm bảo widget chưa bị dispose
+                                if (!mounted) return; 
 
                                 if (response.success) {
                                   ScaffoldMessenger.of(
@@ -601,7 +557,6 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
       return Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          // ✨ NÚT KHIẾU NẠI MỚI ✨
           styledButton(
             'Khiếu nại',
             () {
@@ -609,17 +564,22 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                 MaterialPageRoute(
                   builder:
                       (context) => ComplaintFormScreen(
-                        lopId: lopHoc.maLop, // Truyền ID lớp học
+                        lopId: lopHoc.maLop, 
                       ),
                 ),
               );
             },
-            Colors.red.shade400, // Dùng màu đỏ cho nút
+            Colors.red.shade400, 
           ),
           const SizedBox(width: 8),
-
-          // Nút xem lịch cũ
-          styledButton('Xem lịch', () {}),
+          styledButton('Xem lịch', () {
+             Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const LearnerSchedulePage(),
+              ),
+            );
+          }),
         ],
       );
     }
