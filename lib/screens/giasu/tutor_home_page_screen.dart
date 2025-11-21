@@ -17,13 +17,10 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/notification/notifi
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_card.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/class_filter_widget.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/app_components.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 
 class TutorHomePage extends StatefulWidget {
-  final UserProfile? userProfile; // THÊM PROPERTY
-
+  final UserProfile? userProfile;
   const TutorHomePage({super.key, this.userProfile});
 
   @override
@@ -39,7 +36,6 @@ class _TutorHomePageState extends State<TutorHomePage> {
   String? _errorMessage;
   UserProfile? currentProfile;
 
-  // Search related variables
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
   bool _showFilters = false;
@@ -69,14 +65,11 @@ class _TutorHomePageState extends State<TutorHomePage> {
     _yeuCauRepo ??= context.read<YeuCauNhanLopRepository>();
   }
 
+  // ... Giữ nguyên logic _loadFilterOptions, _performSearch, _clearSearch, _fetchLopHocChuaGiao, _handleDeNghiDay ...
   Future<void> _loadFilterOptions() async {
-    {
-      final response = await _searchRepo.getFilterOptions();
-      if (response.isSuccess && mounted) {
-        setState(() {
-          _filterOptions = response.data;
-        });
-      }
+    final response = await _searchRepo.getFilterOptions();
+    if (response.isSuccess && mounted) {
+      setState(() => _filterOptions = response.data);
     }
   }
 
@@ -85,37 +78,19 @@ class _TutorHomePageState extends State<TutorHomePage> {
       _isSearching = true;
       _searchQuery = query;
     });
-
     try {
       final response = await _searchRepo.searchClasses(
         query: query,
         filter: _currentFilter.hasActiveFilters ? _currentFilter : null,
       );
-
-      if (response.isSuccess && mounted) {
+      if (mounted) {
         setState(() {
-          _searchResults = response.data ?? [];
+          _searchResults = response.isSuccess ? (response.data ?? []) : [];
           _isSearching = false;
         });
-      } else {
-        setState(() {
-          _isSearching = false;
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(response.message)));
-        }
       }
     } catch (e) {
-      setState(() {
-        _isSearching = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Lỗi tìm kiếm: $e')));
-      }
+      setState(() => _isSearching = false);
     }
   }
 
@@ -129,25 +104,13 @@ class _TutorHomePageState extends State<TutorHomePage> {
     });
   }
 
-  // GETTERS ĐỂ HIỂN THỊ THÔNG TIN NGƯỜI DÙNG
-  String get displayName {
-    return currentProfile?.hoTen ?? 'Gia sư';
-  }
-
-  String get avatarText {
-    final userName = currentProfile?.hoTen ?? '';
-    return userName.isNotEmpty ? userName[0].toUpperCase() : 'G';
-  }
-
   Future<void> _fetchLopHocChuaGiao() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
-
     final ApiResponse<List<LopHoc>> response = await _lopHocRepo
         .getLopHocByTrangThai('TimGiaSu');
-
     if (mounted) {
       if (response.isSuccess && response.data != null) {
         setState(() {
@@ -165,21 +128,7 @@ class _TutorHomePageState extends State<TutorHomePage> {
 
   Future<void> _handleDeNghiDay(LopHoc lop) async {
     final authState = context.read<AuthBloc>().state;
-
-    if (authState is! AuthAuthenticated) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng đăng nhập để gửi đề nghị.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final giaSuId = authState.user.giaSuID;
-    final taiKhoanId = authState.user.taiKhoanID;
-
-    if (giaSuId == null || taiKhoanId == null) {
+    if (authState is! AuthAuthenticated || authState.user.giaSuID == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Chỉ gia sư mới có thể gửi đề nghị.'),
@@ -189,111 +138,38 @@ class _TutorHomePageState extends State<TutorHomePage> {
       return;
     }
 
-    if (_yeuCauRepo == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lỗi hệ thống. Vui lòng thử lại.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // Hiển thị dialog nhập ghi chú tùy chọn
-    final String? note = await _showNoteDialog();
-    if (note == null) {
-      return; // Người dùng hủy
-    }
-
-    // Show loading indicator
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Row(
-          children: [
-            SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            SizedBox(width: 16),
-            Text('Đang gửi đề nghị...'),
-          ],
-        ),
-        duration: Duration(seconds: 30),
-      ),
+    final note = await showDialog<String>(
+      context: context,
+      builder: (ctx) => _NoteDialogWidget(),
     );
+    if (note == null) return;
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Đang gửi đề nghị...')));
 
     try {
-      final response = await _yeuCauRepo!
-          .giaSuGuiYeuCau(
-            lopId: lop.maLop,
-            giaSuId: giaSuId,
-            nguoiGuiTaiKhoanId: taiKhoanId,
-            ghiChu: note.isEmpty ? null : note, // Cho phép ghi chú trống
-          )
-          .timeout(Duration(seconds: 10));
-
-      // Hide loading snackbar first
+      final response = await _yeuCauRepo!.giaSuGuiYeuCau(
+        lopId: lop.maLop,
+        giaSuId: authState.user.giaSuID!,
+        nguoiGuiTaiKhoanId: authState.user.taiKhoanID!,
+        ghiChu: note.isEmpty ? null : note,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        // Wait a bit to ensure loading snackbar is completely hidden
-        await Future.delayed(const Duration(milliseconds: 200));
-      }
-
-      if (!mounted) return;
-
-      if (response.success == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              '✅ Đã gửi đề nghị dạy lớp "${lop.tieuDeLop}" thành công!',
-            ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      } else {
-        // Hiển thị thông báo lỗi từ server với màu cam để phân biệt
-        final errorMessage =
-            (response.message.isNotEmpty)
-                ? response.message
-                : 'Không thể gửi đề nghị. Vui lòng thử lại.';
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.info, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(child: Text(errorMessage)),
-              ],
-            ),
-            backgroundColor: Colors.orange.shade600,
-            duration: const Duration(seconds: 4),
+            content: Text(response.message),
+            backgroundColor: response.success ? Colors.green : Colors.red,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        await Future.delayed(const Duration(milliseconds: 200));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
+        );
       }
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error, color: Colors.white),
-              const SizedBox(width: 8),
-              Expanded(child: Text('Lỗi kết nối: $e')),
-            ],
-          ),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 4),
-        ),
-      );
     }
   }
 
@@ -311,289 +187,243 @@ class _TutorHomePageState extends State<TutorHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundGrey,
-      appBar: StandardAppBar(
-        leadingIcon: Icons.class_,
-        title: 'Xin chào, $displayName',
-        subtitle: 'Tìm kiếm lớp học phù hợp',
-        actions: [
-          BlocBuilder<NotificationBloc, NotificationState>(
-            builder: (context, state) {
-              int unread = 0;
-              if (state is NotificationLoaded) {
-                unread = state.unreadCount;
-              }
-
-              return Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.notifications_outlined,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {
-                      // Chuyển sang màn hình thông báo
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const NotificationScreen(),
-                        ),
-                      );
-                      // Reload lại danh sách khi mở (để cập nhật mới nhất)
-                      context.read<NotificationBloc>().add(LoadNotifications());
-                    },
-                  ),
-                  if (unread > 0)
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: Text(
-                          '$unread',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(width: 10), // Khoảng cách lề phải
-        ],
-      ),
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Search bar
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                children: [
-                  // Search field with filter button
-                  Row(
+        child: NestedScrollView(
+          headerSliverBuilder:
+              (context, innerBoxIsScrolled) => [
+                SliverAppBar(
+                  backgroundColor: Colors.white,
+                  floating: true,
+                  pinned: false,
+                  snap: true,
+                  elevation: 0,
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: 'Tìm kiếm lớp học...',
-                            prefixIcon: const Icon(Icons.search),
-                            suffixIcon:
-                                _searchQuery != null
-                                    ? IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      onPressed: _clearSearch,
-                                    )
-                                    : null,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(25),
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey[100],
-                          ),
-                          onSubmitted: (query) {
-                            if (query.trim().isNotEmpty) {
-                              _performSearch(query: query.trim());
-                            } else {
-                              _clearSearch();
-                            }
-                          },
+                      Text(
+                        'Xin chào, ${currentProfile?.hoTen ?? "Gia sư"}!',
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Container(
-                        decoration: BoxDecoration(
-                          color:
-                              _showFilters || _currentFilter.hasActiveFilters
-                                  ? AppColors.primary
-                                  : Colors.grey[100],
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.filter_list,
-                            color:
-                                _showFilters || _currentFilter.hasActiveFilters
-                                    ? Colors.white
-                                    : Colors.grey[600],
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _showFilters = !_showFilters;
-                            });
-                          },
+                      Text(
+                        'Tìm lớp học phù hợp ngay',
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 12,
+                          fontWeight: FontWeight.normal,
                         ),
                       ),
                     ],
                   ),
-
-                  // Filter widget
-                  if (_showFilters) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    ClassFilterWidget(
-                      initialFilter: _currentFilter,
-                      filterOptions: _filterOptions,
-                      onFilterChanged: (filter) {
-                        setState(() {
-                          _currentFilter = filter;
-                        });
-                        // Auto search when filter changes
-                        if (filter.hasActiveFilters || _searchQuery != null) {
-                          _performSearch(query: _searchQuery);
-                        }
+                  actions: [
+                    BlocBuilder<NotificationBloc, NotificationState>(
+                      builder: (context, state) {
+                        int unread =
+                            (state is NotificationLoaded)
+                                ? state.unreadCount
+                                : 0;
+                        return Stack(
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                Icons.notifications_outlined,
+                                color: Colors.grey.shade700,
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const NotificationScreen(),
+                                  ),
+                                );
+                                context.read<NotificationBloc>().add(
+                                  LoadNotifications(),
+                                );
+                              },
+                            ),
+                            if (unread > 0)
+                              Positioned(
+                                right: 8,
+                                top: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    '$unread',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
                       },
                     ),
+                    const SizedBox(width: 8),
                   ],
-                ],
-              ),
-            ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    child: Column(
+                      children: [
+                        // Search Bar Modern
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: TextField(
+                                  controller: _searchController,
+                                  textAlignVertical: TextAlignVertical.center,
+                                  decoration: InputDecoration(
+                                    hintText: 'Tìm lớp theo môn, tên...',
+                                    hintStyle: TextStyle(
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.search,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    suffixIcon:
+                                        _searchQuery != null
+                                            ? IconButton(
+                                              icon: const Icon(
+                                                Icons.clear,
+                                                size: 18,
+                                              ),
+                                              onPressed: _clearSearch,
+                                            )
+                                            : null,
+                                    border: InputBorder.none,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                    ),
+                                  ),
+                                  onSubmitted:
+                                      (q) =>
+                                          q.trim().isNotEmpty
+                                              ? _performSearch(query: q.trim())
+                                              : _clearSearch(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            GestureDetector(
+                              onTap:
+                                  () => setState(
+                                    () => _showFilters = !_showFilters,
+                                  ),
+                              child: Container(
+                                height: 48,
+                                width: 48,
+                                decoration: BoxDecoration(
+                                  color:
+                                      (_showFilters ||
+                                              _currentFilter.hasActiveFilters)
+                                          ? AppColors.primary
+                                          : Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.tune_rounded,
+                                  color:
+                                      (_showFilters ||
+                                              _currentFilter.hasActiveFilters)
+                                          ? Colors.white
+                                          : Colors.grey.shade600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
 
-            // Title section
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg,
-                vertical: AppSpacing.sm,
-              ),
-              child: Row(
-                children: [
-                  AppIconContainer(
-                    icon: Icons.class_,
-                    backgroundColor: AppColors.primaryContainer,
-                    iconColor: AppColors.primary,
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Text(
-                    _searchQuery != null || _currentFilter.hasActiveFilters
-                        ? 'KẾT QUẢ TÌM KIẾM (${_searchResults.length})'
-                        : 'DANH SÁCH LỚP CHƯA GIAO',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: AppTypography.body2,
-                      letterSpacing: 0.5,
+                        if (_showFilters)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16),
+                            child: ClassFilterWidget(
+                              initialFilter: _currentFilter,
+                              filterOptions: _filterOptions,
+                              onFilterChanged: (filter) {
+                                setState(() => _currentFilter = filter);
+                                if (filter.hasActiveFilters ||
+                                    _searchQuery != null) {
+                                  _performSearch(query: _searchQuery);
+                                }
+                              },
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            Expanded(child: _buildClassList()),
-          ],
+                ),
+              ],
+          body: _buildClassList(),
         ),
       ),
     );
   }
 
   Widget _buildClassList() {
-    // Show search results if searching or has search query/filter
     if (_searchQuery != null || _currentFilter.hasActiveFilters) {
       return _buildSearchResults();
     }
-
-    // Show default class list
     return _buildDefaultClassList();
   }
 
   Widget _buildSearchResults() {
-    if (_isSearching) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
+    if (_isSearching) return const Center(child: CircularProgressIndicator());
     if (_searchResults.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+            Icon(Icons.search_off, size: 64, color: Colors.grey.shade300),
             const SizedBox(height: 16),
             Text(
-              'Không tìm thấy lớp học nào',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Thử thay đổi từ khóa hoặc bộ lọc',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+              'Không tìm thấy lớp học',
+              style: TextStyle(color: Colors.grey.shade500),
             ),
           ],
         ),
       );
     }
-
-    // Sử dụng ListView để card có kích thước cố định, tránh bị kéo dài
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.sm,
-        AppSpacing.lg,
-        100,
-      ),
-      itemCount: _searchResults.length,
-      itemBuilder: (context, index) {
-        final lop = _searchResults[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 14),
-          child: LopHocCard(
-            lopHoc: lop,
-            onDeNghiDay: () => _handleDeNghiDay(lop),
-            onCardTap: () => _navigateToDetail(context, lop),
-          ),
-        );
-      },
-    );
+    return _buildListView(_searchResults);
   }
 
   Widget _buildDefaultClassList() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (_errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('Lỗi: $_errorMessage', textAlign: TextAlign.center),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: _fetchLopHocChuaGiao,
-                child: const Text('Thử lại'),
-              ),
-            ],
-          ),
-        ),
-      );
+      return Center(child: Text('Lỗi: $_errorMessage'));
     }
-
     if (_lopHocList.isEmpty) {
       return const Center(child: Text('Không có lớp nào cần tìm gia sư.'));
     }
+    return _buildListView(_lopHocList);
+  }
 
+  Widget _buildListView(List<LopHoc> list) {
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.sm,
-        AppSpacing.sm,
-        AppSpacing.sm,
-        100,
-      ),
-      itemCount: _lopHocList.length,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+      itemCount: list.length,
       itemBuilder: (context, index) {
-        final lop = _lopHocList[index];
+        final lop = list[index];
         return LopHocCard(
           lopHoc: lop,
           onDeNghiDay: () => _handleDeNghiDay(lop),
@@ -602,79 +432,50 @@ class _TutorHomePageState extends State<TutorHomePage> {
       },
     );
   }
-
-  // Dialog nhập ghi chú tùy chọn
-  Future<String?> _showNoteDialog() async {
-    return showDialog<String>(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return _NoteDialogWidget();
-      },
-    );
-  }
 }
 
-// Separate StatefulWidget for the note dialog
 class _NoteDialogWidget extends StatefulWidget {
   @override
   _NoteDialogWidgetState createState() => _NoteDialogWidgetState();
 }
 
 class _NoteDialogWidgetState extends State<_NoteDialogWidget> {
-  late TextEditingController _noteController;
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  @override
-  void initState() {
-    super.initState();
-    _noteController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _noteController.dispose();
-    super.dispose();
-  }
+  final _noteController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Gửi đề nghị dạy'),
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          controller: _noteController,
-          maxLines: 4,
-          maxLength: 500,
-          decoration: const InputDecoration(
-            labelText: 'Ghi chú',
-            hintText: 'Thêm ghi chú cho đề nghị (tùy chọn)',
-            border: OutlineInputBorder(),
-          ),
-          validator: (value) {
-            final text = value?.trim() ?? '';
-            if (text.length > 500) {
-              return 'Ghi chú tối đa 500 ký tự';
-            }
-            return null;
-          },
+      title: const Text(
+        'Gửi đề nghị dạy',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      content: TextField(
+        controller: _noteController,
+        maxLines: 3,
+        maxLength: 500,
+        decoration: InputDecoration(
+          hintText: 'Ghi chú (tùy chọn)...',
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          filled: true,
+          fillColor: Colors.grey.shade50,
         ),
       ),
-      actions: <Widget>[
+      actions: [
         TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(); // Trả về null
-          },
-          child: const Text('Hủy'),
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
         ),
         ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              Navigator.of(context).pop(_noteController.text.trim());
-            }
-          },
-          child: const Text('Gửi đề nghị'),
+          onPressed: () => Navigator.pop(context, _noteController.text.trim()),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: const Text('Gửi ngay', style: TextStyle(color: Colors.white)),
         ),
       ],
     );

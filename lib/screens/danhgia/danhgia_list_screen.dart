@@ -27,13 +27,31 @@ class _DanhGiaListScreenState extends State<DanhGiaListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
-          'Đánh giá của học viên',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          'Đánh giá & Nhận xét',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: Colors.black87,
+            fontSize: 18,
+          ),
         ),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.black87,
+            size: 20,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: Colors.grey.shade100, height: 1),
+        ),
       ),
       body: BlocBuilder<DanhGiaBloc, DanhGiaState>(
         builder: (context, state) {
@@ -62,26 +80,23 @@ class _DanhGiaListScreenState extends State<DanhGiaListScreen> {
           LoadDanhGiaGiaSu(giaSuId: widget.tutor.giaSuID),
         );
       },
-      child: Column(
-        children: [
-          // Tổng quan đánh giá
-          _buildRatingSummary(response),
-          
-          const Divider(height: 1),
-
-          // Danh sách đánh giá
-          Expanded(
-            child: response.danhGiaList.isEmpty
-                ? _buildEmptyState()
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: response.danhGiaList.length,
-                    separatorBuilder: (context, index) => 
-                        const SizedBox(height: 16),
-                    itemBuilder: (context, index) {
-                      return _buildDanhGiaCard(response.danhGiaList[index]);
-                    },
-                  ),
+      color: AppColors.primary,
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: _buildRatingSummary(response)),
+          SliverToBoxAdapter(
+            child: Divider(height: 1, thickness: 8, color: Colors.grey.shade50),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            sliver:
+                response.danhGiaList.isEmpty
+                    ? SliverToBoxAdapter(child: _buildEmptyState())
+                    : SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        return _buildDanhGiaItem(response.danhGiaList[index]);
+                      }, childCount: response.danhGiaList.length),
+                    ),
           ),
         ],
       ),
@@ -89,233 +104,274 @@ class _DanhGiaListScreenState extends State<DanhGiaListScreen> {
   }
 
   Widget _buildRatingSummary(DanhGiaResponse response) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      color: Colors.white,
-      child: Column(
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Điểm trung bình
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          // Cột điểm số lớn bên trái
+          Column(
             children: [
-              // Số điểm lớn
-              Column(
-                children: [
-                  Text(
-                    response.diemTrungBinh.toStringAsFixed(1),
-                    style: const TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.amber,
-                    ),
-                  ),
-                  Row(
-                    children: List.generate(5, (index) {
-                      return Icon(
-                        index < response.diemTrungBinh.floor()
-                            ? Icons.star
-                            : (index < response.diemTrungBinh
-                                ? Icons.star_half
-                                : Icons.star_border),
-                        color: Colors.amber,
-                        size: 20,
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${response.tongSoDanhGia} đánh giá',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(width: 32),
-
-              // Phân bố sao
-              Expanded(
-                child: Column(
-                  children: List.generate(5, (index) {
-                    final star = 5 - index;
-                    final count = response.phanBoSao[star] ?? 0;
-                    final percentage = response.tongSoDanhGia > 0
-                        ? (count / response.tongSoDanhGia * 100)
-                        : 0.0;
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Row(
-                        children: [
-                          Text('$star'),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.star, size: 16, color: Colors.amber),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: percentage / 100,
-                                backgroundColor: Colors.grey[200],
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Colors.amber,
-                                ),
-                                minHeight: 8,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          SizedBox(
-                            width: 32,
-                            child: Text(
-                              '$count',
-                              textAlign: TextAlign.end,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
+              Text(
+                response.diemTrungBinh.toStringAsFixed(1),
+                style: const TextStyle(
+                  fontSize: 56,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black87,
+                  letterSpacing: -2,
                 ),
               ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(5, (index) {
+                  return Icon(
+                    index < response.diemTrungBinh.round()
+                        ? Icons.star_rounded
+                        : Icons.star_outline_rounded,
+                    color: Colors.amber,
+                    size: 18,
+                  );
+                }),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${response.tongSoDanhGia} nhận xét',
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+              ),
             ],
+          ),
+          const SizedBox(width: 24),
+
+          // Cột thanh tiến trình bên phải
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(5, (index) {
+                final star = 5 - index;
+                final count = response.phanBoSao[star] ?? 0;
+                final percentage =
+                    response.tongSoDanhGia > 0
+                        ? (count / response.tongSoDanhGia)
+                        : 0.0;
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 12,
+                        child: Text(
+                          '$star',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            Container(
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            FractionallySizedBox(
+                              widthFactor: percentage,
+                              child: Container(
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: Colors.amber,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDanhGiaCard(DanhGia danhGia) {
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+  Widget _buildDanhGiaItem(DanhGia danhGia) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundImage: danhGia.anhDaiDien != null
-                      ? NetworkImage(danhGia.anhDaiDien!)
-                      : null,
-                  child: danhGia.anhDaiDien == null
-                      ? const Icon(Icons.person, size: 20)
-                      : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              // Avatar
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.grey.shade200,
+                  image:
+                      danhGia.anhDaiDien != null
+                          ? DecorationImage(
+                            image: NetworkImage(danhGia.anhDaiDien!),
+                            fit: BoxFit.cover,
+                          )
+                          : null,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        danhGia.tenNguoiHoc ?? 'Học viên',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
+                child:
+                    danhGia.anhDaiDien == null
+                        ? Icon(
+                          Icons.person,
+                          size: 20,
+                          color: Colors.grey.shade400,
+                        )
+                        : null,
+              ),
+              const SizedBox(width: 12),
+
+              // Name & Date
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      danhGia.tenNguoiHoc ?? 'Người dùng ẩn danh',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: Colors.black87,
                       ),
-                      Text(
-                        _formatDate(danhGia.ngayDanhGia),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _formatDate(danhGia.ngayDanhGia),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade400,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
 
-            const SizedBox(height: 12),
-
-            // Số sao
-            Row(
-              children: List.generate(5, (index) {
-                return Icon(
-                  index < danhGia.diemSo
-                      ? Icons.star
-                      : Icons.star_border,
-                  color: Colors.amber,
-                  size: 18,
-                );
-              }),
-            ),
-
-            // Bình luận
-            if (danhGia.binhLuan != null && danhGia.binhLuan!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(
-                danhGia.binhLuan!,
-                style: const TextStyle(
-                  fontSize: 14,
-                  height: 1.5,
+              // Stars
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      danhGia.diemSo.toString(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 14,
+                      color: Colors.amber,
+                    ),
+                  ],
                 ),
               ),
             ],
+          ),
+
+          if (danhGia.binhLuan != null && danhGia.binhLuan!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              danhGia.binhLuan!,
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.5,
+                color: Colors.grey.shade800,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 60),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(
+              Icons.chat_bubble_outline_rounded,
+              size: 64,
+              color: Colors.grey.shade300,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Chưa có đánh giá nào',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.rate_review_outlined, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            'Chưa có đánh giá nào',
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildError(String message) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 64, color: Colors.red),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: const TextStyle(fontSize: 16, color: Colors.red),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              context.read<DanhGiaBloc>().add(
-                LoadDanhGiaGiaSu(giaSuId: widget.tutor.giaSuID),
-              );
-            },
-            child: const Text('Thử lại'),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 48,
+              color: Colors.red.shade300,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed:
+                  () => context.read<DanhGiaBloc>().add(
+                    LoadDanhGiaGiaSu(giaSuId: widget.tutor.giaSuID),
+                  ),
+              child: const Text("Thử lại"),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   String _formatDate(String date) {
     try {
-      final dateTime = DateTime.parse(date);
-      return DateFormat('dd/MM/yyyy').format(dateTime);
+      return DateFormat('dd/MM/yyyy').format(DateTime.parse(date));
     } catch (e) {
       return date;
     }

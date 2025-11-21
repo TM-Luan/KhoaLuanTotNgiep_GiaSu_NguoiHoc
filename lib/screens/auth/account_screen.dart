@@ -1,8 +1,5 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/flutter_secure_storage_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
@@ -52,265 +49,325 @@ class _AccountState extends State<Account> {
     }
   }
 
-  Widget _buildAccountItem({
-    required String title,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Column(
-      children: [
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.circular(AppSpacing.buttonBorderRadius),
-          ),
-          child: ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              decoration: BoxDecoration(
-                color: AppColors.primaryContainer,
-                borderRadius: BorderRadius.circular(
-                  AppSpacing.iconContainerRadius,
-                ),
-              ),
-              child: Icon(
-                icon,
-                color: AppColors.primary,
-                size: AppSpacing.iconSize,
-              ),
-            ),
-            title: Text(
-              title,
-              style: TextStyle(
-                fontSize: AppTypography.body1,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            trailing: Icon(
-              Icons.arrow_forward_ios,
-              size: AppSpacing.smallIconSize,
-              color: AppColors.textMuted,
-            ),
-            onTap: onTap,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-      ],
+  // --- LOGIC LOGOUT ---
+  void _handleLogout() async {
+    final token = await SecureStorage.getToken();
+    if (token != null) {
+      await _repo.logout(token); // Gọi API (có thể bỏ qua lỗi để force logout)
+    }
+
+    await SecureStorage.deleteToken();
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Đăng xuất thành công"),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const SplashPage()),
+      (route) => false,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
-        backgroundColor: AppColors.backgroundGrey,
-        body: const Center(child: CircularProgressIndicator()),
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB), // Xám rất nhạt (Modern Grey)
       appBar: AppBar(
-        title: Text(
-          'THÔNG TIN CÁ NHÂN',
+        title: const Text(
+          'Tài khoản',
           style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: AppTypography.appBarTitle,
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            color: Colors.black87,
           ),
         ),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.textLight,
+        centerTitle: false,
+        backgroundColor: const Color(0xFFF9FAFB),
         elevation: 0,
       ),
-      backgroundColor: AppColors.backgroundGrey,
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: Column(
           children: [
-            // Profile Header với nền xám đẹp
+            // --- SECTION 1: HEADER PROFILE ---
+            _buildProfileHeader(),
+
+            const SizedBox(height: 30),
+
+            // --- SECTION 2: MENU ACTIONS ---
+            _buildSectionTitle("Cài đặt chung"),
             Container(
-              width: double.infinity,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppColors.grey100,
-                    AppColors.grey50,
-                    AppColors.background,
-                  ],
-                ),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withValues(alpha: 0.03),
                     blurRadius: 10,
-                    offset: const Offset(0, 3),
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.xxl),
-                child: Column(
-                  children: [
-                    // Profile Avatar
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.2),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.primary,
-                            width: 4,
+              child: Column(
+                children: [
+                  _buildMenuItem(
+                    title: 'Trang cá nhân',
+                    subtitle: 'Xem chi tiết hồ sơ công khai',
+                    icon: Icons.person_outline_rounded,
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ProfileScreen(),
                           ),
                         ),
-                        child:
-                            _profile?.anhDaiDien?.isNotEmpty == true
-                                ? CircleAvatar(
-                                  radius: 55,
-                                  backgroundColor: AppColors.primarySurface,
-                                  backgroundImage: NetworkImage(
-                                    _profile!.anhDaiDien!,
-                                  ),
-                                  onBackgroundImageError: (_, __) {},
-                                )
-                                : CircleAvatar(
-                                  radius: 55,
-                                  backgroundColor: AppColors.primarySurface,
-                                  child: Icon(
-                                    Icons.person,
-                                    size: 55,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // User Name
-                    Text(
-                      _profile?.hoTen ?? "Người dùng",
-                      style: TextStyle(
-                        fontSize: AppTypography.heading1,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-
-                    // User Role
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg,
-                        vertical: AppSpacing.md,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [AppColors.primaryLight, AppColors.primary],
+                  ),
+                  _buildDivider(),
+                  _buildMenuItem(
+                    title: 'Chỉnh sửa thông tin',
+                    subtitle: 'Cập nhật hồ sơ của bạn',
+                    icon: Icons.edit_outlined,
+                    onTap: () async {
+                      if (_profile == null) return;
+                      final updated = await Navigator.push<UserProfile?>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => EditProfileScreen(user: _profile!),
                         ),
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.buttonBorderRadius * 3,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
+                      );
+                      if (updated != null && mounted) {
+                        setState(() => _profile = updated);
+                      }
+                    },
+                  ),
+                  _buildDivider(),
+                  _buildMenuItem(
+                    title: 'Đổi mật khẩu',
+                    subtitle: 'Bảo mật tài khoản',
+                    icon: Icons.lock_outline_rounded,
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ChangePasswordPage(),
                           ),
-                        ],
-                      ),
-                      child: Text(
-                        _getRoleText(_profile?.vaiTro),
-                        style: TextStyle(
-                          fontSize: AppTypography.body1,
-                          color: AppColors.textLight,
-                          fontWeight: FontWeight.w600,
                         ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
 
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: 30),
 
-            // Menu Items
-            _buildAccountItem(
-              title: 'Trang cá nhân',
-              icon: Icons.person_outline,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                );
-              },
-            ),
-            _buildAccountItem(
-              title: 'Chỉnh sửa thông tin',
-              icon: Icons.edit_outlined,
-              onTap: () async {
-                if (_profile == null) return;
-                final updated = await Navigator.push<UserProfile?>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => EditProfileScreen(user: _profile!),
+            // --- SECTION 3: LOGOUT ---
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                );
-                if (updated != null && mounted) {
-                  setState(() => _profile = updated);
-                }
-              },
+                ],
+              ),
+              child: _buildMenuItem(
+                title: 'Đăng xuất',
+                icon: Icons.logout_rounded,
+                iconColor: Colors.redAccent,
+                textColor: Colors.redAccent,
+                hideArrow: true,
+                onTap: _handleLogout,
+              ),
             ),
-            _buildAccountItem(
-              title: 'Đổi mật khẩu',
-              icon: Icons.lock_outline,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ChangePasswordPage(),
-                  ),
-                );
-              },
+
+            const SizedBox(height: 40),
+            Text(
+              "Phiên bản 1.0.0",
+              style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
             ),
-            _buildAccountItem(
-              title: 'Đăng xuất',
-              icon: Icons.exit_to_app,
-              onTap: () async {
-                final token = await SecureStorage.getToken();
-                if (token == null) return;
-                final res = await _repo.logout(token);
-
-                if (!context.mounted) return;
-                final msg = (res.message);
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(msg), backgroundColor: Colors.green),
-                );
-                await SecureStorage.deleteToken();
-
-                if (!context.mounted) return;
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => SplashPage()),
-                  (route) => false,
-                );
-              },
-            ),
-            const SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: 20),
           ],
         ),
       ),
+    );
+  }
+
+  // --- WIDGETS ---
+
+  Widget _buildProfileHeader() {
+    return Column(
+      children: [
+        const SizedBox(height: 10),
+        // Avatar
+        Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 4),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: CircleAvatar(
+            radius: 50,
+            backgroundColor: Colors.grey.shade200,
+            backgroundImage:
+                (_profile?.anhDaiDien?.isNotEmpty == true)
+                    ? NetworkImage(_profile!.anhDaiDien!)
+                    : null,
+            child:
+                (_profile?.anhDaiDien?.isEmpty ?? true)
+                    ? Icon(Icons.person, size: 50, color: Colors.grey.shade400)
+                    : null,
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Name
+        Text(
+          _profile?.hoTen ?? "Người dùng",
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: Colors.black87,
+            letterSpacing: -0.5,
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        // Role Badge (Modern Chip style)
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+          ),
+          child: Text(
+            _getRoleText(_profile?.vaiTro),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, bottom: 12),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          title.toUpperCase(),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: Colors.grey.shade500,
+            letterSpacing: 1.0,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuItem({
+    required String title,
+    String? subtitle,
+    required IconData icon,
+    required VoidCallback onTap,
+    Color? iconColor,
+    Color? textColor,
+    bool hideArrow = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: (iconColor ?? AppColors.primary).withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: iconColor ?? AppColors.primary,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: textColor ?? Colors.black87,
+                    ),
+                  ),
+                  if (subtitle != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (!hideArrow)
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: Colors.grey.shade400,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      color: Colors.grey.shade100,
+      indent: 60,
     );
   }
 }

@@ -18,7 +18,6 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_home_pa
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_schedule_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_my_classes_screen.dart';
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -36,37 +35,15 @@ class HomeScreenState extends State<HomeScreen> {
     context.read<AuthBloc>().add(const FetchProfileRequested());
   }
 
-  // --- Getters để lấy thông tin từ profile ---
-  String get role {
-    final userRole = currentProfile?.vaiTro ?? 0;
-    if (userRole == 2) {
-      return "gia sư";
-    } else if (userRole == 3) {
-      return "học viên";
-    } else {
-      return "người dùng";
-    }
-  }
-
-  String get displayName {
-    return currentProfile?.hoTen ?? 'Người dùng';
-  }
-
-  String get avatarText {
-    final userName = currentProfile?.hoTen ?? '';
-    return userName.isNotEmpty ? userName[0].toUpperCase() : 'U';
-  }
-
   List<Widget> get pages {
     final userRole = currentProfile?.vaiTro ?? 0;
 
     if (userRole == 2) {
       // Gia sư
       return [
-        TutorHomePage(userProfile: currentProfile), // TRUYỀN PROFILE CHO TUTOR
+        TutorHomePage(userProfile: currentProfile),
         const TutorSchedulePage(),
         const TutorMyClassesScreen(),
-        // const Placeholder(),
         const Account(),
       ];
     } else if (userRole == 3) {
@@ -78,10 +55,11 @@ class HomeScreenState extends State<HomeScreen> {
         const Account(),
       ];
     } else {
+      // Fallback hoặc Loading
       return [
-        const Center(child: Text('Vui lòng cập nhật vai trò')),
-        const Center(child: Text('Vui lòng cập nhật vai trò')),
-        const Center(child: Text('Vui lòng cập nhật vai trò')),
+        const Scaffold(body: Center(child: CircularProgressIndicator())),
+        const Scaffold(body: Center(child: CircularProgressIndicator())),
+        const Scaffold(body: Center(child: CircularProgressIndicator())),
         const Account(),
       ];
     }
@@ -96,36 +74,21 @@ class HomeScreenState extends State<HomeScreen> {
               currentState is AuthLoggedOut ||
               currentState is AuthError,
       listener: (context, state) {
-        print(">>> [HomeScreen Listener] New Auth State: ${state.runtimeType}");
         if (state is AuthAuthenticated) {
           setState(() => currentProfile = state.user);
-          print(
-            ">>> [HomeScreen Listener] Profile Updated: ${currentProfile?.hoTen}, Role: ${currentProfile?.vaiTro}",
-          );
         } else if (state is AuthLoggedOut) {
-          print(">>> [HomeScreen Listener] Logged out, navigating to /login");
           Navigator.pushReplacementNamed(context, '/login');
         } else if (state is AuthError) {
-          print(">>> [HomeScreen Listener] Auth Error: ${state.message}");
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Lỗi xác thực: ${state.message}')),
-            );
-          }
-          if (currentProfile == null) {
-            print(
-              ">>> [HomeScreen Listener] Error fetching profile, profile is null.",
             );
           }
         }
       },
       buildWhen: (previousState, currentState) => true,
       builder: (context, state) {
-        print(
-          ">>> [HomeScreen Builder] Building with Auth State: ${state.runtimeType}",
-        );
         final isLoading = state is AuthLoading && currentProfile == null;
-        print(">>> [HomeScreen Builder] isLoading: $isLoading");
 
         if (isLoading) {
           return const Scaffold(
@@ -134,49 +97,79 @@ class HomeScreenState extends State<HomeScreen> {
         }
 
         return Scaffold(
-          body: pages[pageIndex],
-          bottomNavigationBar: buildMyNavBar(context),
+          backgroundColor: Colors.white, // Nền sạch
+          body: IndexedStack(
+            // Dùng IndexedStack để giữ trạng thái các trang
+            index: pageIndex,
+            children: pages,
+          ),
+          bottomNavigationBar: _buildModernNavBar(context),
         );
       },
     );
   }
 
-  // --- Bottom Navigation Bar ---
-  Container buildMyNavBar(BuildContext context) {
+  // --- Modern Bottom Navigation Bar ---
+  Widget _buildModernNavBar(BuildContext context) {
     return Container(
-      height: 75,
       decoration: BoxDecoration(
-        color: AppColors.lightwhite,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
+        color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withAlpha((255 * 0.1).round()),
-            offset: const Offset(0, -2),
-            blurRadius: 6,
+            color: Colors.black.withValues(
+              alpha: 0.04,
+            ), // Bóng mờ nhẹ nhàng hơn
+            offset: const Offset(0, -4),
+            blurRadius: 16,
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          buildNavItem(icon: Icons.home_filled, label: "Trang chủ", index: 0),
-          buildNavItem(icon: Icons.calendar_today, label: "Lịch", index: 1),
-          buildNavItem(icon: Icons.class_, label: "Lớp", index: 2),
-          buildNavItem(icon: Icons.person, label: "Tài khoản", index: 3),
-        ],
+      child: SafeArea(
+        child: Container(
+          height: 65, // Chiều cao vừa phải
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(
+                icon: Icons.home_rounded,
+                activeIcon: Icons.home_rounded,
+                label: "Trang chủ",
+                index: 0,
+              ),
+              _buildNavItem(
+                icon: Icons.calendar_today_rounded,
+                activeIcon: Icons.calendar_month_rounded,
+                label: "Lịch",
+                index: 1,
+              ),
+              _buildNavItem(
+                icon: Icons.class_outlined,
+                activeIcon: Icons.class_rounded,
+                label: "Lớp học",
+                index: 2,
+              ),
+              _buildNavItem(
+                icon: Icons.person_outline_rounded,
+                activeIcon: Icons.person_rounded,
+                label: "Tài khoản",
+                index: 3,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget buildNavItem({
+  Widget _buildNavItem({
     required IconData icon,
+    required IconData activeIcon,
     required String label,
     required int index,
   }) {
     final isSelected = pageIndex == index;
+    final color = isSelected ? AppColors.primary : Colors.grey.shade400;
 
     return Expanded(
       child: GestureDetector(
@@ -185,23 +178,28 @@ class HomeScreenState extends State<HomeScreen> {
             pageIndex = index;
           });
         },
-        behavior: HitTestBehavior.opaque,
+        behavior: HitTestBehavior.opaque, // Tăng vùng bấm
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: isSelected ? AppColors.primaryBlue : AppColors.grey,
-              size: 28,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: EdgeInsets.all(isSelected ? 0 : 2), // Hiệu ứng nảy nhẹ
+              child: Icon(
+                isSelected ? activeIcon : icon,
+                color: color,
+                size: 26,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? AppColors.primaryBlue : AppColors.grey,
+                color: color,
                 fontSize: 11,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                letterSpacing: 0.3,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

@@ -22,7 +22,6 @@ class NotificationRepository {
       return [];
     } catch (e) {
       // Thêm dòng in lỗi này để nếu có lỗi khác bạn sẽ thấy trong Debug Console
-      print("Lỗi Get Notifications: $e");
       throw Exception('Lỗi lấy thông báo: $e');
     }
   }
@@ -32,7 +31,7 @@ class NotificationRepository {
     try {
       await _apiService.put('/notifications/$id/read', data: {});
     } catch (e) {
-      print('Lỗi đánh dấu đã đọc: $e');
+      throw Exception('Lỗi đánh dấu thông báo đã đọc: $e');
     }
   }
 }

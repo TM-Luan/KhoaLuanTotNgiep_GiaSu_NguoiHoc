@@ -4,9 +4,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_event.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile_model.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/dropdown_repository.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/auth/edit_profile_screen.dart';
 
@@ -35,86 +33,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  String _getGenderText(String? gioiTinh) {
-    if (gioiTinh == null || gioiTinh.isEmpty) {
-      return "Chưa cập nhật";
-    }
-    return gioiTinh;
-  }
-
-  String _formatDate(String? date) {
-    if (date == null || date.isEmpty) return "Chưa cập nhật";
-    return date;
-  }
-
-  // ⭐️ HÀM HELPER MỚI ĐỂ HIỂN THỊ MÔN HỌC (DẠNG CHIP)
-  Widget _buildMonHocInfo(List<DropdownItem>? monHocList) {
-    return Container(
-      width: double.infinity, // Đảm bảo chiếm đủ chiều rộng
-      padding: const EdgeInsets.all(AppSpacing.md),
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: AppColors.grey50,
-        borderRadius: BorderRadius.circular(AppSpacing.buttonBorderRadius),
-        border: Border.all(color: AppColors.borderLight, width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Tiêu đề
-          Text(
-            "Môn học giảng dạy",
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: AppTypography.body2,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-
-          // Danh sách Chips
-          if (monHocList == null || monHocList.isEmpty)
-            Text(
-              "Chưa cập nhật",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: AppTypography.body2,
-                fontWeight: FontWeight.w400,
-              ),
-            )
-          else
-            Wrap(
-              spacing: AppSpacing.sm, // Khoảng cách ngang giữa các chip
-              runSpacing: AppSpacing.sm, // Khoảng cách dọc giữa các hàng chip
-              children:
-                  monHocList.map((mon) {
-                    return Chip(
-                      label: Text(mon.ten),
-                      backgroundColor: AppColors.primaryContainer,
-                      labelStyle: TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w500,
-                        fontSize: AppTypography.body2,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: AppSpacing.xs,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.buttonBorderRadius,
-                        ),
-                        side: BorderSide(color: AppColors.primaryContainer),
-                      ),
-                    );
-                  }).toList(),
-            ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
@@ -130,29 +48,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (state is AuthAuthenticated) {
           userData = state.user;
         }
-
         final bool isGiaSu = userData?.vaiTro == 2;
 
         return Scaffold(
+          backgroundColor: Colors.white, // Nền trắng sạch
           appBar: AppBar(
-            centerTitle: false,
-            elevation: 0,
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.textLight,
-            title: Text(
-              "Trang cá nhân",
-              style: TextStyle(
-                fontSize: AppTypography.appBarTitle,
-                fontWeight: FontWeight.w600,
-              ),
+            title: const Text(
+              "Hồ sơ cá nhân",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
-            // ⭐️ THÊM NÚT EDIT
+            centerTitle: true,
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black87,
+            elevation: 0,
             actions: [
-              if (state is AuthAuthenticated) // Chỉ hiện khi đã có data
+              if (state is AuthAuthenticated)
                 IconButton(
-                  icon: Icon(Icons.edit, color: AppColors.textLight),
+                  icon: Icon(Icons.edit_outlined, color: AppColors.primary),
                   onPressed: () {
-                    // Khi nhấn nút Edit
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -160,13 +73,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             (context) => EditProfileScreen(user: userData!),
                       ),
                     ).then((result) {
-                      // ⭐️ SAU KHI MÀN HÌNH EDIT ĐÓNG LẠI
-                      // (Bất kể lưu hay hủy)
-                      // Chúng ta gọi lại API để đảm bảo BLoC
-                      // và màn hình này có dữ liệu mới nhất
-
-                      // Nếu result != null (nghĩa là pop có trả về data)
-                      // thì mới fetch lại
                       if (result != null) {
                         context.read<AuthBloc>().add(
                           const FetchProfileRequested(),
@@ -177,186 +83,132 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
             ],
           ),
-          backgroundColor: AppColors.backgroundGrey,
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            physics: const BouncingScrollPhysics(),
             child: Column(
               children: [
-                // Profile Avatar Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(AppSpacing.xxl),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(
-                      AppSpacing.cardBorderRadius,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
+                const SizedBox(height: 20),
+                // --- Header: Avatar & Name ---
+                Center(
                   child: Column(
                     children: [
                       ProfilePic(image: userData?.anhDaiDien ?? ""),
-                      const SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: 16),
                       Text(
-                        userData?.hoTen ?? "Chưa có tên",
-                        style: TextStyle(
-                          fontSize: AppTypography.heading1,
+                        userData?.hoTen ?? "Chưa cập nhật",
+                        style: const TextStyle(
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.sm,
+                          horizontal: 12,
+                          vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryContainer,
-                          borderRadius: BorderRadius.circular(
-                            AppSpacing.buttonBorderRadius,
-                          ),
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           _getRoleText(userData?.vaiTro),
                           style: TextStyle(
-                            fontSize: AppTypography.body2,
+                            fontSize: 13,
                             color: AppColors.primary,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: 30),
 
-                // Thông tin cá nhân Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(
-                      AppSpacing.cardBorderRadius,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                // --- Sections ---
+                _buildSectionTitle("Thông tin liên hệ"),
+                _buildInfoTile("Email", userData?.email, Icons.email_outlined),
+                _buildInfoTile(
+                  "Điện thoại",
+                  userData?.soDienThoai,
+                  Icons.phone_outlined,
+                ),
+                _buildInfoTile(
+                  "Địa chỉ",
+                  userData?.diaChi,
+                  Icons.location_on_outlined,
+                ),
+                _buildInfoTile(
+                  "Giới tính",
+                  userData?.gioiTinh,
+                  Icons.person_outline,
+                ),
+                _buildInfoTile(
+                  "Ngày sinh",
+                  userData?.ngaySinh,
+                  Icons.cake_outlined,
+                ),
+
+                if (isGiaSu) ...[
+                  const SizedBox(height: 20),
+                  _buildSectionTitle("Hồ sơ gia sư"),
+                  _buildInfoTile(
+                    "Môn dạy",
+                    userData?.tenMon,
+                    Icons.book_outlined,
+                  ), // Sửa lại key hiển thị
+                  _buildInfoTile(
+                    "Bằng cấp",
+                    userData?.bangCap,
+                    Icons.school_outlined,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(AppSpacing.sm),
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryContainer,
-                              borderRadius: BorderRadius.circular(
-                                AppSpacing.iconContainerRadius,
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.person,
-                              color: AppColors.primary,
-                              size: AppSpacing.iconSize,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          Text(
-                            "Thông tin cá nhân",
-                            style: TextStyle(
-                              fontSize: AppTypography.heading3,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
+                  _buildInfoTile(
+                    "Trường ĐT",
+                    userData?.truongDaoTao,
+                    Icons.business_outlined,
+                  ),
+                  _buildInfoTile(
+                    "Chuyên ngành",
+                    userData?.chuyenNganh,
+                    Icons.work_outline,
+                  ),
+                  _buildInfoTile(
+                    "Kinh nghiệm",
+                    userData?.kinhNghiem,
+                    Icons.history_edu_outlined,
+                  ),
+                  _buildInfoTile(
+                    "Thành tích",
+                    userData?.thanhTich,
+                    Icons.star_outline,
+                  ),
 
-                      Info(
-                        infoKey: "Mã tài khoản",
-                        info:
-                            userData?.taiKhoanID?.toString() ?? "Chưa cập nhật",
-                      ),
-                      Info(
-                        infoKey: "Email",
-                        info: userData?.email ?? "Chưa cập nhật",
-                      ),
-                      Info(
-                        infoKey: "Số điện thoại",
-                        info: userData?.soDienThoai ?? "Chưa cập nhật",
-                      ),
-                      Info(
-                        infoKey: "Giới tính",
-                        info: _getGenderText(userData?.gioiTinh),
-                      ),
-                      Info(
-                        infoKey: "Ngày sinh",
-                        info: _formatDate(userData?.ngaySinh),
-                      ),
-                      Info(
-                        infoKey: "Địa chỉ",
-                        info: userData?.diaChi ?? "Chưa cập nhật",
-                      ),
-
-                      // ⭐️ CHỈ HIỂN THỊ NẾU LÀ GIA SƯ
-                      if (isGiaSu) ...[
-                        Info(
-                          infoKey: "Bằng cấp",
-                          info: userData?.bangCap ?? "Chưa cập nhật",
+                  const SizedBox(height: 20),
+                  _buildSectionTitle("Giấy tờ xác thực"),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        _buildImagePreview(
+                          "CCCD Mặt trước",
+                          userData?.anhCCCDMatTruoc,
                         ),
-                        Info(
-                          infoKey: "Trường đào tạo",
-                          info: userData?.truongDaoTao ?? "Chưa cập nhật",
+                        const SizedBox(height: 12),
+                        _buildImagePreview(
+                          "CCCD Mặt sau",
+                          userData?.anhCCCDMatSau,
                         ),
-                        Info(
-                          infoKey: "Chuyên ngành",
-                          info: userData?.chuyenNganh ?? "Chưa cập nhật",
-                        ),
-                        Info(
-                          infoKey: "Môn dạy",
-                          info: userData?.tenMon ?? "Chưa cập nhật",
-                        ),
-                        Info(
-                          infoKey: "Kinh nghiệm",
-                          info: userData?.kinhNghiem ?? "Chưa cập nhật",
-                        ),
-                        Info(
-                          infoKey: "Thành tích",
-                          info: userData?.thanhTich ?? "Chưa cập nhật",
-                        ),
-
-                        // ⭐️ SỬA LẠI: Hiển thị ảnh thay vì text
-                        ProfileImageInfo(
-                          title: "CCCD mặt trước",
-                          imageUrl: userData?.anhCCCDMatTruoc,
-                        ),
-                        ProfileImageInfo(
-                          title: "CCCD mặt sau",
-                          imageUrl: userData?.anhCCCDMatSau,
-                        ),
-                        ProfileImageInfo(
-                          title: "Ảnh bằng cấp",
-                          imageUrl: userData?.anhBangCap,
+                        const SizedBox(height: 12),
+                        _buildImagePreview(
+                          "Bằng cấp / Chứng chỉ",
+                          userData?.anhBangCap,
                         ),
                       ],
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.xxl),
+                ],
+                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -364,278 +216,133 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     );
   }
-}
 
-// ======= UI components (Giữ nguyên) =======
-
-class ProfilePic extends StatelessWidget {
-  const ProfilePic({
-    super.key,
-    required this.image,
-    this.isShowPhotoUpload = false,
-    this.imageUploadBtnPress,
-  });
-
-  final String image;
-  final bool isShowPhotoUpload;
-  final VoidCallback? imageUploadBtnPress;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.2),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          title.toUpperCase(),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: Colors.grey.shade500,
+            letterSpacing: 1.0,
           ),
-        ],
-      ),
-      child: Stack(
-        alignment: Alignment.bottomRight,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary, width: 3),
-            ),
-            child: CircleAvatar(
-              radius: 60,
-              backgroundColor: AppColors.primarySurface,
-              child: ClipOval(
-                child: SizedBox(
-                  width: 120,
-                  height: 120,
-                  child: _buildImage(image), // Gọi helper
-                ),
-              ),
-            ),
-          ),
-          if (isShowPhotoUpload)
-            Positioned(
-              bottom: 4,
-              right: 4,
-              child: InkWell(
-                onTap: imageUploadBtnPress,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 5,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.camera_alt,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ),
-              ),
-            ),
-        ],
+        ),
       ),
     );
   }
 
-  // Helper build ảnh cho Ảnh đại diện
-  Widget _buildImage(String image) {
-    if (image.isNotEmpty) {
-      return Image.network(
-        image,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return _buildAvatarPlaceholder();
-        },
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return const Center(child: CircularProgressIndicator());
-        },
-      );
-    }
-    // Không có ảnh nào -> Placeholder
-    return _buildAvatarPlaceholder();
-  }
-
-  // Placeholder cho ảnh đại diện
-  Widget _buildAvatarPlaceholder() {
+  Widget _buildInfoTile(String label, String? value, IconData icon) {
     return Container(
-      color: AppColors.primarySurface,
-      child: Icon(Icons.person, size: 50, color: AppColors.primary),
-    );
-  }
-}
-
-class Info extends StatelessWidget {
-  const Info({super.key, required this.infoKey, required this.info});
-
-  final String infoKey, info;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.grey50,
-        borderRadius: BorderRadius.circular(AppSpacing.buttonBorderRadius),
-        border: Border.all(color: AppColors.borderLight, width: 1),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              infoKey,
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: AppTypography.body2,
-                fontWeight: FontWeight.w500,
-              ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(8),
             ),
+            child: Icon(icon, size: 20, color: Colors.grey.shade600),
           ),
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: 16),
           Expanded(
-            flex: 3,
-            child: Text(
-              info,
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: AppTypography.body2,
-                fontWeight: FontWeight.w400,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  (value == null || value.isEmpty) ? "Chưa cập nhật" : value,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildImagePreview(String title, String? url) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 180,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child:
+              (url != null && url.isNotEmpty)
+                  ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: CachedNetworkImage(
+                      imageUrl: url,
+                      fit: BoxFit.cover,
+                      placeholder:
+                          (context, url) =>
+                              const Center(child: CircularProgressIndicator()),
+                      errorWidget:
+                          (context, url, error) => const Icon(
+                            Icons.broken_image,
+                            color: Colors.grey,
+                          ),
+                    ),
+                  )
+                  : Center(
+                    child: Text(
+                      "Chưa có ảnh",
+                      style: TextStyle(color: Colors.grey.shade400),
+                    ),
+                  ),
+        ),
+      ],
     );
   }
 }
 
-// ⭐️ WIDGET MỚI ĐỂ HIỂN THỊ ẢNH
-class ProfileImageInfo extends StatelessWidget {
-  final String title;
-  final String? imageUrl;
-
-  const ProfileImageInfo({super.key, required this.title, this.imageUrl});
+class ProfilePic extends StatelessWidget {
+  final String image;
+  const ProfilePic({super.key, required this.image});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: AppColors.grey50,
-        borderRadius: BorderRadius.circular(AppSpacing.buttonBorderRadius),
-        border: Border.all(color: AppColors.borderLight, width: 1),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.grey.shade200, width: 2),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Tiêu đề
-          Text(
-            title,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: AppTypography.body2,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-
-          // Khung hiển thị ảnh
-          Container(
-            height: 150,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: AppColors.background, // Nền trắng
-              borderRadius: BorderRadius.circular(
-                AppSpacing.buttonBorderRadius,
-              ),
-              border: Border.all(color: AppColors.borderLight),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(
-                AppSpacing.buttonBorderRadius,
-              ),
-              child: _buildImage(), // Gọi helper
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Widget _buildImage() {
-  //   if (imageUrl != null && imageUrl!.isNotEmpty) {
-  //     return Image.network(
-  //       imageUrl!,
-  //       fit: BoxFit.contain,
-  //       loadingBuilder: (context, child, loadingProgress) {
-  //         if (loadingProgress == null) return child;
-  //         return const Center(child: CircularProgressIndicator());
-  //       },
-  //       errorBuilder: (context, error, stackTrace) {
-  //         return _buildPlaceholder("Lỗi tải ảnh");
-  //       },
-  //     );
-  //   } else {
-  //     return _buildPlaceholder("Chưa cập nhật ảnh");
-  //   }
-  // }
-  Widget _buildImage() {
-    if (imageUrl != null && imageUrl!.isNotEmpty) {
-      return CachedNetworkImage(
-        imageUrl: imageUrl!,
-        fit: BoxFit.contain,
-
-        // [QUAN TRỌNG] Giảm kích thước ảnh trong bộ nhớ RAM
-        // Nếu ảnh này chỉ hiển thị nhỏ, hãy đặt memCacheWidth khoảng 300-500.
-        // Nếu là ảnh banner lớn full màn hình thì có thể bỏ dòng này hoặc tăng lên.
-        memCacheWidth: 500,
-
-        // Widget hiển thị khi đang tải (thay thế loadingBuilder)
-        placeholder:
-            (context, url) => const Center(child: CircularProgressIndicator()),
-
-        // Widget hiển thị khi lỗi (thay thế errorBuilder)
-        errorWidget: (context, url, error) {
-          return _buildPlaceholder("Lỗi tải ảnh");
-        },
-      );
-    } else {
-      return _buildPlaceholder("Chưa cập nhật ảnh");
-    }
-  }
-
-  Widget _buildPlaceholder(String text) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.image_not_supported_outlined,
-            color: AppColors.textSecondary,
-            size: 40,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            text,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: AppTypography.body2,
-            ),
-          ),
-        ],
+      child: CircleAvatar(
+        radius: 50,
+        backgroundColor: Colors.grey.shade100,
+        backgroundImage: (image.isNotEmpty) ? NetworkImage(image) : null,
+        child:
+            (image.isEmpty)
+                ? const Icon(Icons.person, size: 50, color: Colors.grey)
+                : null,
       ),
     );
   }

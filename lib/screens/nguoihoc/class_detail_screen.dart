@@ -1,8 +1,8 @@
+// Giữ nguyên imports
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/utils/format_vnd.dart';
@@ -25,7 +25,6 @@ class ClassDetailScreen extends StatefulWidget {
 
 class _ClassDetailScreenState extends State<ClassDetailScreen> {
   final LopHocRepository _lopHocRepo = LopHocRepository();
-
   bool _isLoading = true;
   LopHoc? _lopHoc;
   String? _errorMessage;
@@ -41,11 +40,9 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
       _isLoading = true;
       _errorMessage = null;
     });
-
     final ApiResponse<LopHoc> response = await _lopHocRepo.getLopHocById(
       widget.classId,
     );
-
     if (mounted) {
       if (response.isSuccess && response.data != null) {
         setState(() {
@@ -61,161 +58,131 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
     }
   }
 
-  // === HÀM XỬ LÝ TRẠNG THÁI CHUNG ===
-  Map<String, dynamic> getTrangThaiStyle(String? trangThaiCode) {
-    switch (trangThaiCode) {
-      case 'DangHoc':
-        return {
-          'text': 'Đang hoạt động',
-          'color': Colors.green,
-          'icon': Icons.check_circle_outline,
-          'bgColor': Colors.green.withValues(alpha: 0.15),
-        };
-      case 'TimGiaSu':
-        return {
-          'text': 'Tìm gia sư',
-          'color': Colors.orange,
-          'icon': Icons.search,
-          'bgColor': Colors.orange.withValues(alpha: 0.15),
-        };
+  Color _getStatusColor(String? code) {
+    if (code == 'DangHoc') return Colors.green;
+    if (code == 'TimGiaSu') return Colors.orange;
+    return Colors.grey;
+  }
 
-      default:
-        return {
-          'text': 'Không xác định',
-          'color': Colors.grey,
-          'icon': Icons.info_outline,
-          'bgColor': Colors.grey.withValues(alpha: 0.15),
-        };
-    }
+  String _getStatusText(String? code) {
+    if (code == 'DangHoc') return 'Đang hoạt động';
+    if (code == 'TimGiaSu') return 'Đang tìm gia sư';
+    return 'Khác';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Chi tiết lớp học',
           style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: AppTypography.appBarTitle,
+            fontWeight: FontWeight.w700,
+            color: Colors.black87,
+            fontSize: 18,
           ),
         ),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.textLight,
+        centerTitle: true,
+        backgroundColor: Colors.white,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: Colors.grey.shade100, height: 1),
+        ),
       ),
       body: _buildBody(),
     );
   }
 
-  // Hàm xây dựng nội dung Body
   Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (_errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('Lỗi: $_errorMessage', textAlign: TextAlign.center),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: _fetchLopHocDetail,
-                child: const Text('Thử lại'),
-              ),
-            ],
-          ),
-        ),
-      );
+      return Center(child: Text('Lỗi: $_errorMessage'));
     }
-
     if (_lopHoc == null) {
-      return const Center(child: Text('Không tìm thấy chi tiết lớp học.'));
+      return const Center(child: Text('Không tìm thấy lớp học.'));
     }
 
-    // === XỬ LÝ HIỂN THỊ THEO ROLE ===
-    final statusStyle = getTrangThaiStyle(_lopHoc!.trangThai);
     final bool isTutor = widget.userRole == UserRole.tutor;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // === TIÊU ĐỀ (chỉ hiển thị cho học sinh) ===
-          if (!isTutor) ...[
-            Text(
-              _lopHoc!.tieuDeLop,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          // Header Card
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.1),
+              ),
             ),
-            const SizedBox(height: 16),
-          ],
-          if (isTutor) ...[
-            _buildDetailRow(Icons.person, 'Người đăng', _lopHoc!.tenNguoiHoc),
-
-            // === THÊM DÒNG NÀY: Hiển thị SĐT ===
-            _buildDetailRow(
-              Icons.phone,
-              'Số điện thoại',
-              _lopHoc!.soDienThoai ?? 'Chưa cập nhật',
-            ),
-            // ===================================
-          ] else ...[
-            // Nếu là người học xem lớp của mình hoặc người khác
-            _buildDetailRow(
-              Icons.person,
-              'Gia sư',
-              _lopHoc!.tenGiaSu ?? 'Chưa có',
-            ),
-          ],
-          // === TRẠNG THÁI ===
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Row(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  statusStyle['icon'],
-                  color: statusStyle['color'],
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Trạng thái',
-                      style: TextStyle(color: Colors.grey),
+                if (!isTutor)
+                  Text(
+                    _lopHoc!.tieuDeLop,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
-                    const SizedBox(height: 4),
-                    Chip(
-                      avatar: Icon(
-                        statusStyle['icon'],
-                        size: 16,
-                        color: statusStyle['color'],
-                      ),
-                      label: Text(
-                        statusStyle['text'],
-                        style: TextStyle(
-                          color: statusStyle['color'],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                      backgroundColor: statusStyle['bgColor'],
+                  ),
+                if (!isTutor) const SizedBox(height: 12),
+
+                Row(
+                  children: [
+                    Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
-                        vertical: 2,
+                        vertical: 4,
                       ),
-                      shape: RoundedRectangleBorder(
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(
+                          _lopHoc!.trangThai,
+                        ).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
-                        side: BorderSide(
-                          color: statusStyle['color'].withOpacity(0.3),
+                      ),
+                      child: Text(
+                        _getStatusText(_lopHoc!.trangThai),
+                        style: TextStyle(
+                          color: _getStatusColor(_lopHoc!.trangThai),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${formatNumber(toNumber(_lopHoc!.hocPhi))} đ/buổi',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      size: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      "Đăng ngày: ${_lopHoc!.ngayTao ?? 'N/A'}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
                       ),
                     ),
                   ],
@@ -224,123 +191,126 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
             ),
           ),
 
-          const SizedBox(height: 8),
-          Text(
-            'Mã lớp: ${_lopHoc!.maLop}',
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Ngày đăng: ${_lopHoc!.ngayTao ?? "N/A"}',
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
-          ),
+          const SizedBox(height: 24),
+          _buildSectionTitle("Thông tin chung"),
 
-          const Divider(height: 32),
-
-          if (!isTutor)
-            _buildDetailRow(
-              Icons.person,
-              'Gia sư',
-              _lopHoc!.tenGiaSu ?? 'Chưa có',
-            ),
-
-          _buildDetailRow(
-            Icons.location_on,
-            'Địa chỉ',
-            _lopHoc!.diaChi ?? 'Chưa cập nhật',
+          _buildInfoRow(Icons.book_outlined, "Môn học", _lopHoc!.tenMon),
+          _buildInfoRow(Icons.stairs_outlined, "Lớp", _lopHoc!.tenKhoiLop),
+          _buildInfoRow(
+            Icons.computer_outlined,
+            "Hình thức",
+            _lopHoc!.hinhThuc,
           ),
-          _buildDetailRow(
-            Icons.attach_money,
-            'Học phí',
-            '${formatNumber(toNumber(_lopHoc!.hocPhi))} VNĐ/Buổi',
+          _buildInfoRow(Icons.school_outlined, "Yêu cầu GV", _lopHoc!.doiTuong),
+          _buildInfoRow(
+            Icons.people_outline,
+            "Số lượng HV",
+            "${_lopHoc!.soLuong ?? 1}",
           ),
 
-          // === THÔNG TIN CHI TIẾT LỚP ===
-          _buildDetailRow(
-            Icons.computer,
-            'Hình thức',
-            _lopHoc!.hinhThuc ?? 'N/A',
-          ),
+          const SizedBox(height: 24),
+          _buildSectionTitle("Lịch học & Liên hệ"),
 
-          _buildDetailRow(
-            Icons.schedule,
-            'Thời lượng / buổi', // Sửa text
+          _buildInfoRow(
+            Icons.access_time,
+            "Thời lượng",
             _lopHoc!.thoiLuong != null
                 ? '${_lopHoc!.thoiLuong} phút/buổi'
-                : 'N/A',
+                : null,
+          ),
+          _buildInfoRow(
+            Icons.calendar_month_outlined,
+            "Số buổi/tuần",
+            _lopHoc!.soBuoiTuan?.toString(),
+          ),
+          _buildInfoRow(
+            Icons.schedule,
+            "Lịch mong muốn",
+            _lopHoc!.lichHocMongMuon,
           ),
 
-          // SỬA: Thay thế 'Thời gian học' bằng 2 trường mới
-          _buildDetailRow(
-            Icons.calendar_today_outlined, // Icon mới
-            'Số buổi / tuần',
-            _lopHoc!.soBuoiTuan?.toString() ?? 'Chưa cập nhật',
-          ),
-          _buildDetailRow(
-            Icons.access_time_outlined, // Icon mới
-            'Lịch học mong muốn',
-            _lopHoc!.lichHocMongMuon ?? 'Chưa cập nhật',
-          ),
+          if (isTutor) ...[
+            _buildInfoRow(
+              Icons.person_outline,
+              "Người đăng",
+              _lopHoc!.tenNguoiHoc,
+            ),
+            _buildInfoRow(Icons.phone_outlined, "SĐT", _lopHoc!.soDienThoai),
+          ] else ...[
+            _buildInfoRow(
+              Icons.person_outline,
+              "Gia sư",
+              _lopHoc!.tenGiaSu ?? 'Chưa có',
+            ),
+          ],
+          _buildInfoRow(Icons.location_on_outlined, "Địa chỉ", _lopHoc!.diaChi),
 
-          _buildDetailRow(
-            Icons.school,
-            'Đối tượng',
-            _lopHoc!.doiTuong ?? 'N/A',
+          const SizedBox(height: 24),
+          _buildSectionTitle("Ghi chú"),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              _lopHoc!.moTaChiTiet ?? 'Không có mô tả.',
+              style: const TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                color: Colors.black87,
+              ),
+            ),
           ),
-          _buildDetailRow(
-            Icons.people,
-            'Số lượng',
-            _lopHoc!.soLuong?.toString() ?? 'N/A',
-          ),
-          _buildDetailRow(
-            Icons.book_outlined,
-            'Môn học',
-            _lopHoc!.tenMon ?? 'N/A',
-          ),
-          _buildDetailRow(
-            Icons.stairs_outlined,
-            'Khối lớp',
-            _lopHoc!.tenKhoiLop ?? 'N/A',
-          ),
-
-          const Divider(height: 32),
-          const Text(
-            'Mô tả chi tiết',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _lopHoc!.moTaChiTiet ?? 'Không có mô tả chi tiết.',
-            style: const TextStyle(fontSize: 16, height: 1.5),
-          ),
+          const SizedBox(height: 40),
         ],
       ),
     );
   }
 
-  // Widget con để hiển thị từng dòng thông tin
-  Widget _buildDetailRow(IconData icon, String title, String value) {
+  Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: Colors.grey.shade500,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String? value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.blueAccent, size: 20),
+          Icon(icon, size: 20, color: Colors.grey.shade400),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: const TextStyle(color: Colors.grey)),
-              const SizedBox(height: 2),
-              SizedBox(
-                width: MediaQuery.of(context).size.width - 80,
-                // SỬA: Thêm kiểm tra 'isEmpty'
-                child: Text(
-                  (value.isEmpty) ? 'Chưa cập nhật' : value,
-                  style: const TextStyle(fontSize: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                 ),
-              ),
-            ],
+                const SizedBox(height: 2),
+                Text(
+                  value ?? "Chưa cập nhật",
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

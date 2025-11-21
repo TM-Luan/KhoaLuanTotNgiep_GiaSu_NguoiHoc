@@ -19,7 +19,7 @@ class TutorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return GestureDetector(
       onTap:
           onTap ??
           () {
@@ -35,102 +35,131 @@ class TutorCard extends StatelessWidget {
               ),
             );
           },
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.grey.withValues(alpha: 0.3),
-          ), // Viền nhẹ hơn
-          // ĐÃ LOẠI BỎ BÓNG ĐỔ MẠNH
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade100),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            // mainAxisSize: MainAxisSize.min,
-            children: [
-              AspectRatio(aspectRatio: 1, child: _buildTutorImage()),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      tutor.hoTen,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 1. Image Area (Expanded to fill space in Grid)
+            Expanded(
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: double.infinity,
+                      child: _buildTutorImage(),
+                    ),
+                  ),
+                  // Rating Badge
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      tutor.bangCap ?? 'Chưa cập nhật',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.star_rate_rounded,
-                          size: 14,
-                          color: Colors.amber,
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          tutor.diemSo.toStringAsFixed(1),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            color: Colors.amber,
+                            size: 14,
                           ),
-                        ),
-                        if (tutor.tongSoDanhGia > 0) ...[
                           const SizedBox(width: 2),
                           Text(
-                            '(${tutor.tongSoDanhGia})',
-                            style: TextStyle(
+                            tutor.diemSo.toStringAsFixed(1),
+                            style: const TextStyle(
+                              color: Colors.white,
                               fontSize: 11,
-                              color: Colors.grey[600],
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
-                        const Spacer(),
-                        if (onOfferTap != null)
-                          InkWell(
-                            onTap: onOfferTap,
-                            borderRadius: BorderRadius.circular(4),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.lightBlue,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text(
-                                'Mời dạy',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+
+            // 2. Info Area
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tutor.hoTen,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    tutor.bangCap ?? 'Chưa cập nhật',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  ),
+                  const SizedBox(height: 10),
+
+                  if (onOfferTap != null)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 32,
+                      child: OutlinedButton(
+                        onPressed: onOfferTap,
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          side: BorderSide(
+                            color: AppColors.primary.withValues(alpha: 0.5),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          backgroundColor: AppColors.primary.withValues(
+                            alpha: 0.05,
+                          ),
+                        ),
+                        child: Text(
+                          'Mời dạy',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -139,33 +168,17 @@ class TutorCard extends StatelessWidget {
   Widget _buildTutorImage() {
     if (tutor.anhDaiDien == null || tutor.anhDaiDien!.isEmpty) {
       return Container(
-        color: AppColors.lightGrey,
-        child: const Icon(
-          Icons.person_outline,
-          size: 40,
-          color: AppColors.grey,
-        ),
+        color: Colors.grey.shade100,
+        child: Icon(Icons.person, size: 48, color: Colors.grey.shade300),
       );
     }
-
     return Image.network(
       tutor.anhDaiDien!,
       fit: BoxFit.cover,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return Container(
-          color: AppColors.lightGrey,
-          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        );
-      },
       errorBuilder:
           (context, error, stackTrace) => Container(
-            color: AppColors.lightGrey,
-            child: const Icon(
-              Icons.person_outline,
-              size: 40,
-              color: AppColors.grey,
-            ),
+            color: Colors.grey.shade100,
+            child: Icon(Icons.person, size: 48, color: Colors.grey.shade300),
           ),
     );
   }

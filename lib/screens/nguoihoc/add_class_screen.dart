@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // SỬA: Thêm import
+import 'package:flutter/services.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/dropdown_repository.dart';
@@ -30,9 +29,6 @@ class _AddClassPageState extends State<AddClassPage> {
   final _hocPhiController = TextEditingController();
   final _soLuongController = TextEditingController(text: '1');
   final _moTaController = TextEditingController();
-
-  // SỬA: Xóa _soBuoiTuanController, giữ _lichHocMongMuonController
-  // final _soBuoiTuanController = TextEditingController(); // BỊ XÓA
   final _lichHocMongMuonController = TextEditingController();
 
   int? _selectedMonID;
@@ -40,8 +36,6 @@ class _AddClassPageState extends State<AddClassPage> {
   int? _selectedDoiTuongID;
   String? _selectedHinhThuc;
   int? _selectedThoiLuong;
-
-  // SỬA: Thêm biến mới cho dropdown số buổi
   int? _selectedSoBuoiTuan;
 
   List<DropdownItem> _monHocList = [];
@@ -50,9 +44,13 @@ class _AddClassPageState extends State<AddClassPage> {
 
   final List<String> _hinhThucOptions = ['Online', 'Offline'];
   final List<int> _thoiLuongOptions = [60, 90, 120];
+  final List<int> _soBuoiOptions = [1, 2, 3, 4, 5];
 
-  // SỬA: Thêm danh sách tùy chọn số buổi
-  final List<int> _soBuoiOptions = [1, 2, 3];
+  // --- THEME COLORS ---
+  final Color _primaryColor = AppColors.primaryBlue; // Xanh hiện đại
+  final Color _backgroundColor = const Color(0xFFF9FAFB); // Xám rất nhạt
+  final Color _inputFillColor = Colors.white;
+  final Color _borderColor = const Color(0xFFE5E7EB); // Xám viền
 
   @override
   void initState() {
@@ -62,13 +60,11 @@ class _AddClassPageState extends State<AddClassPage> {
     });
   }
 
-  // SỬA: Xóa dispose của _soBuoiTuanController
   @override
   void dispose() {
     _hocPhiController.dispose();
     _soLuongController.dispose();
     _moTaController.dispose();
-    // _soBuoiTuanController.dispose(); // BỊ XÓA
     _lichHocMongMuonController.dispose();
     super.dispose();
   }
@@ -117,10 +113,7 @@ class _AddClassPageState extends State<AddClassPage> {
         _hocPhiController.text = lop.hocPhi;
         _soLuongController.text = lop.soLuong?.toString() ?? '1';
         _moTaController.text = lop.moTaChiTiet ?? '';
-
-        // SỬA: Cập nhật logic load
-        // _soBuoiTuanController.text = lop.soBuoiTuan?.toString() ?? ''; // BỊ XÓA
-        _selectedSoBuoiTuan = lop.soBuoiTuan; // THAY THẾ
+        _selectedSoBuoiTuan = lop.soBuoiTuan;
         _lichHocMongMuonController.text = lop.lichHocMongMuon ?? '';
       });
     }
@@ -144,28 +137,27 @@ class _AddClassPageState extends State<AddClassPage> {
         'ThoiLuong': _selectedThoiLuong,
         'SoLuong': int.tryParse(_soLuongController.text) ?? 1,
         'MoTa': _moTaController.text,
-
-        // SỬA: Cập nhật logic gửi đi
-        'SoBuoiTuan': _selectedSoBuoiTuan, // THAY THẾ
-        'LichHocMongMuon': _lichHocMongMuonController.text.isEmpty
-            ? null
-            : _lichHocMongMuonController.text,
+        'SoBuoiTuan': _selectedSoBuoiTuan,
+        'LichHocMongMuon':
+            _lichHocMongMuonController.text.isEmpty
+                ? null
+                : _lichHocMongMuonController.text,
       };
 
-      ApiResponse<LopHoc> res = isEditMode
-          ? await _lopHocRepo.updateLopHoc(widget.classId!, data)
-          : await _lopHocRepo.createLopHoc(data);
+      ApiResponse<LopHoc> res =
+          isEditMode
+              ? await _lopHocRepo.updateLopHoc(widget.classId!, data)
+              : await _lopHocRepo.createLopHoc(data);
 
       if (!mounted) return;
       if (res.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              isEditMode
-                  ? 'Cập nhật lớp học thành công!'
-                  : 'Tạo lớp học mới thành công!',
+              isEditMode ? 'Cập nhật thành công!' : 'Tạo lớp thành công!',
             ),
             backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
           ),
         );
         Navigator.pop(context, true);
@@ -181,146 +173,225 @@ class _AddClassPageState extends State<AddClassPage> {
     }
   }
 
+  // --- UI HELPERS FOR CLEAN LOOK ---
+  InputDecoration _cleanInputDecoration(
+    String label,
+    IconData icon, {
+    bool isOptional = false,
+  }) {
+    return InputDecoration(
+      labelText: label + (isOptional ? ' (Tuỳ chọn)' : ''),
+      labelStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+      prefixIcon: Icon(icon, color: Colors.grey.shade400, size: 20),
+      filled: true,
+      fillColor: _inputFillColor,
+      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: _borderColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: _primaryColor, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: Colors.red.shade300),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Colors.red, width: 1.5),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: _backgroundColor,
       appBar: AppBar(
         title: Text(
-          isEditMode ? 'Sửa Lớp Học' : 'Tạo Lớp Học Mới',
-          style: TextStyle(
-            color: AppColors.textLight,
-            fontWeight: FontWeight.bold,
-            fontSize: AppTypography.appBarTitle,
+          isEditMode ? 'Chỉnh sửa lớp học' : 'Đăng tin tìm gia sư',
+          style: const TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
           ),
         ),
-        backgroundColor: AppColors.primary,
+        centerTitle: true,
+        backgroundColor: _backgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.background),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.black87,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(color: AppColors.background, height: 1.0),
+        ),
       ),
-      body: _isDropdownLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _dropdownError != null
+      body:
+          _isDropdownLoading
+              ? Center(child: CircularProgressIndicator(color: _primaryColor))
+              : _dropdownError != null
               ? Center(child: Text(_dropdownError!))
               : _isSubmitting
-                  ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: 16),
-                          Text('Đang xử lý...'),
-                        ],
-                      ),
-                    )
-                  : _buildForm(),
+              ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(color: _primaryColor),
+                    const SizedBox(height: 16),
+                    const Text('Đang xử lý...'),
+                  ],
+                ),
+              )
+              : _buildForm(),
     );
   }
 
   Widget _buildForm() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Card(
-        elevation: 5,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+      padding: const EdgeInsets.all(20),
+      physics: const BouncingScrollPhysics(),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Thông tin môn học'),
+            _buildDropdownField(
+              _selectedMonID,
+              'Môn học',
+              _monHocList,
+              onChanged: (v) => setState(() => _selectedMonID = v),
+              icon: Icons.book_outlined,
+            ),
+            Row(
               children: [
-                Text(
-                  isEditMode
-                      ? 'Chỉnh sửa thông tin lớp học'
-                      : 'Thêm lớp học mới',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blueAccent,
+                Expanded(
+                  child: _buildDropdownField(
+                    _selectedKhoiLopID,
+                    'Lớp',
+                    _khoiLopList,
+                    onChanged: (v) => setState(() => _selectedKhoiLopID = v),
+                    icon: Icons.stairs_outlined,
                   ),
                 ),
-                const SizedBox(height: 20),
-
-                _buildDropdownField(
-                  _selectedMonID,
-                  'Chọn Môn Học',
-                  _monHocList,
-                  onChanged: (v) => setState(() => _selectedMonID = v),
-                  icon: Icons.book_outlined,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildDropdownField(
+                    _selectedDoiTuongID,
+                    'Người dạy',
+                    _doiTuongList,
+                    onChanged: (v) => setState(() => _selectedDoiTuongID = v),
+                    icon: Icons.school_outlined,
+                  ),
                 ),
-                _buildDropdownField(
-                  _selectedKhoiLopID,
-                  'Chọn Chương Trình Lớp',
-                  _khoiLopList,
-                  onChanged: (v) => setState(() => _selectedKhoiLopID = v),
-                  icon: Icons.stairs_outlined,
-                ),
-                _buildDropdownField(
-                  _selectedDoiTuongID,
-                  'Chọn Đối Tượng Dạy',
-                  _doiTuongList,
-                  onChanged: (v) => setState(() => _selectedDoiTuongID = v),
-                  icon: Icons.school_outlined,
-                ),
-                _buildStringDropdownField(
-                  _selectedHinhThuc,
-                  'Chọn Hình Thức',
-                  _hinhThucOptions,
-                  onChanged: (v) => setState(() => _selectedHinhThuc = v),
-                  icon: Icons.computer_outlined,
-                ),
-                _buildTextField(
-                  controller: _hocPhiController,
-                  label: 'Học phí (VNĐ/buổi)',
-                  icon: Icons.attach_money,
-                  keyboardType: TextInputType.number, // Thêm
-                ),
-                _buildIntDropdownField(
-                  _selectedThoiLuong,
-                  'Chọn Thời Lượng / Buổi', // Sửa
-                  _thoiLuongOptions,
-                  onChanged: (v) => setState(() => _selectedThoiLuong = v),
-                  icon: Icons.schedule_outlined,
-                ),
-
-                // SỬA: Thay thế _buildTextField bằng _buildSoBuoiDropdownField
-                _buildSoBuoiDropdownField(
-                  _selectedSoBuoiTuan,
-                  'Chọn Số Buổi / Tuần',
-                  _soBuoiOptions,
-                  onChanged: (v) => setState(() => _selectedSoBuoiTuan = v),
-                  icon: Icons.calendar_today_outlined,
-                ),
-                _buildTextField(
-                  controller: _lichHocMongMuonController,
-                  label: 'Lịch học (Vd: Tối T2, T4)',
-                  icon: Icons.access_time_outlined,
-                  isOptional: true, // Không bắt buộc
-                ),
-
-                _buildTextField(
-                  controller: _soLuongController,
-                  label: 'Số lượng học viên',
-                  icon: Icons.people_outline,
-                  keyboardType: TextInputType.number, // Thêm
-                ),
-                _buildTextField(
-                  controller: _moTaController,
-                  label: 'Mô tả chi tiết',
-                  icon: Icons.notes_outlined,
-                  maxLines: 3,
-                  isOptional: true, // Sửa
-                ),
-
-                const SizedBox(height: 24),
-                _buildSubmitButton(),
               ],
             ),
-          ),
+
+            const SizedBox(height: 24),
+            _buildSectionTitle('Yêu cầu & Chi phí'),
+
+            _buildStringDropdownField(
+              _selectedHinhThuc,
+              'Hình thức',
+              _hinhThucOptions,
+              onChanged: (v) => setState(() => _selectedHinhThuc = v),
+              icon: Icons.computer_outlined,
+            ),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    controller: _hocPhiController,
+                    label: 'Học phí/buổi',
+                    icon: Icons.attach_money,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildIntDropdownField(
+                    _selectedThoiLuong,
+                    'Thời lượng',
+                    _thoiLuongOptions,
+                    onChanged: (v) => setState(() => _selectedThoiLuong = v),
+                    icon: Icons.schedule_outlined,
+                    suffix: ' phút',
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+            _buildSectionTitle('Thời gian & Khác'),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSoBuoiDropdownField(
+                    _selectedSoBuoiTuan,
+                    'Số buổi',
+                    _soBuoiOptions,
+                    onChanged: (v) => setState(() => _selectedSoBuoiTuan = v),
+                    icon: Icons.calendar_today_outlined,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildTextField(
+                    controller: _soLuongController,
+                    label: 'Số học viên',
+                    icon: Icons.people_outline,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
+            ),
+
+            _buildTextField(
+              controller: _lichHocMongMuonController,
+              label: 'Lịch học mong muốn',
+              icon: Icons.access_time,
+              isOptional: true,
+              placeholder: 'Vd: Tối thứ 2, thứ 4 (19h-21h)',
+            ),
+
+            _buildTextField(
+              controller: _moTaController,
+              label: 'Ghi chú thêm',
+              icon: Icons.notes_outlined,
+              maxLines: 3,
+              isOptional: true,
+              placeholder: 'Yêu cầu đặc biệt về gia sư...',
+            ),
+
+            const SizedBox(height: 32),
+            _buildSubmitButton(),
+            const SizedBox(height: 20), // Bottom padding
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16, top: 4),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: Colors.grey.shade600,
+          letterSpacing: 1.0,
         ),
       ),
     );
@@ -328,7 +399,7 @@ class _AddClassPageState extends State<AddClassPage> {
 
   Widget _buildDropdownField(
     int? value,
-    String hint,
+    String label,
     List<DropdownItem> items, {
     required ValueChanged<int?> onChanged,
     required IconData icon,
@@ -337,28 +408,25 @@ class _AddClassPageState extends State<AddClassPage> {
       padding: const EdgeInsets.only(bottom: 16.0),
       child: DropdownButtonFormField<int>(
         value: value,
-        decoration: InputDecoration(
-          labelText: hint,
-          prefixIcon: Icon(icon, color: Colors.blueAccent),
-          filled: true,
-          fillColor: Colors.blue.shade50,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        items: items
-            .map(
-              (item) =>
-                  DropdownMenuItem(value: item.id, child: Text(item.ten)),
-            )
-            .toList(),
+        decoration: _cleanInputDecoration(label, icon),
+        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey),
+        items:
+            items
+                .map(
+                  (item) =>
+                      DropdownMenuItem(value: item.id, child: Text(item.ten)),
+                )
+                .toList(),
         onChanged: onChanged,
-        validator: (v) => v == null ? 'Vui lòng chọn' : null,
+        validator: (v) => v == null ? 'Bắt buộc' : null,
+        style: const TextStyle(color: Colors.black87, fontSize: 15),
       ),
     );
   }
 
   Widget _buildStringDropdownField(
     String? value,
-    String hint,
+    String label,
     List<String> items, {
     required ValueChanged<String?> onChanged,
     required IconData icon,
@@ -367,58 +435,52 @@ class _AddClassPageState extends State<AddClassPage> {
       padding: const EdgeInsets.only(bottom: 16.0),
       child: DropdownButtonFormField<String>(
         value: value,
-        decoration: InputDecoration(
-          labelText: hint,
-          prefixIcon: Icon(icon, color: Colors.blueAccent),
-          filled: true,
-          fillColor: Colors.blue.shade50,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        items: items
-            .map((item) => DropdownMenuItem(value: item, child: Text(item)))
-            .toList(),
+        decoration: _cleanInputDecoration(label, icon),
+        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey),
+        items:
+            items
+                .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+                .toList(),
         onChanged: onChanged,
-        validator: (v) => v == null ? 'Vui lòng chọn' : null,
+        validator: (v) => v == null ? 'Bắt buộc' : null,
+        style: const TextStyle(color: Colors.black87, fontSize: 15),
       ),
     );
   }
 
   Widget _buildIntDropdownField(
     int? value,
-    String hint,
+    String label,
     List<int> items, {
     required ValueChanged<int?> onChanged,
     required IconData icon,
+    String suffix = '',
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: DropdownButtonFormField<int>(
         value: value,
-        decoration: InputDecoration(
-          labelText: hint,
-          prefixIcon: Icon(icon, color: Colors.blueAccent),
-          filled: true,
-          fillColor: Colors.blue.shade50,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        items: items
-            .map(
-              (item) => DropdownMenuItem(
-                value: item,
-                child: Text('$item phút/buổi'),
-              ),
-            )
-            .toList(),
+        decoration: _cleanInputDecoration(label, icon),
+        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey),
+        items:
+            items
+                .map(
+                  (item) => DropdownMenuItem(
+                    value: item,
+                    child: Text('$item$suffix'),
+                  ),
+                )
+                .toList(),
         onChanged: onChanged,
-        validator: (v) => v == null ? 'Vui lòng chọn' : null,
+        validator: (v) => v == null ? 'Bắt buộc' : null,
+        style: const TextStyle(color: Colors.black87, fontSize: 15),
       ),
     );
   }
 
-  // SỬA: Thêm Widget mới cho Dropdown Số Buổi
   Widget _buildSoBuoiDropdownField(
     int? value,
-    String hint,
+    String label,
     List<int> items, {
     required ValueChanged<int?> onChanged,
     required IconData icon,
@@ -427,30 +489,24 @@ class _AddClassPageState extends State<AddClassPage> {
       padding: const EdgeInsets.only(bottom: 16.0),
       child: DropdownButtonFormField<int>(
         value: value,
-        decoration: InputDecoration(
-          labelText: hint,
-          prefixIcon: Icon(icon, color: Colors.blueAccent),
-          filled: true,
-          fillColor: Colors.blue.shade50,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        items: items
-            .map(
-              (item) => DropdownMenuItem(
-                value: item,
-                // Hiển thị theo yêu cầu "X buổi/tuần"
-                child: Text('$item buổi/tuần'),
-              ),
-            )
-            .toList(),
+        decoration: _cleanInputDecoration(label, icon, isOptional: true),
+        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey),
+        items:
+            items
+                .map(
+                  (item) => DropdownMenuItem(
+                    value: item,
+                    child: Text('$item buổi/tuần'),
+                  ),
+                )
+                .toList(),
         onChanged: onChanged,
-        // Đặt là optional (không bắt buộc)
-        validator: (v) => null,
+        validator: (v) => null, // Optional
+        style: const TextStyle(color: Colors.black87, fontSize: 15),
       ),
     );
   }
 
-  // SỬA: Cập nhật hàm này để hỗ trợ 'isOptional' và 'keyboardType'
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -458,6 +514,7 @@ class _AddClassPageState extends State<AddClassPage> {
     int maxLines = 1,
     TextInputType? keyboardType,
     bool isOptional = false,
+    String? placeholder,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -465,19 +522,22 @@ class _AddClassPageState extends State<AddClassPage> {
         controller: controller,
         maxLines: maxLines,
         keyboardType: keyboardType,
-        inputFormatters: keyboardType == TextInputType.number
-            ? [FilteringTextInputFormatter.digitsOnly]
-            : [],
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, color: Colors.blueAccent),
-          filled: true,
-          fillColor: Colors.blue.shade50,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        style: const TextStyle(color: Colors.black87, fontSize: 15),
+        inputFormatters:
+            keyboardType == TextInputType.number
+                ? [FilteringTextInputFormatter.digitsOnly]
+                : [],
+        decoration: _cleanInputDecoration(
+          label,
+          icon,
+          isOptional: isOptional,
+        ).copyWith(
+          hintText: placeholder,
+          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
         ),
         validator: (v) {
           if (!isOptional && (v == null || v.isEmpty)) {
-            return 'Vui lòng không để trống';
+            return 'Không được để trống';
           }
           return null;
         },
@@ -486,32 +546,26 @@ class _AddClassPageState extends State<AddClassPage> {
   }
 
   Widget _buildSubmitButton() {
-    return InkWell(
-      onTap: _submitForm,
-      borderRadius: BorderRadius.circular(12),
-      child: Ink(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: const LinearGradient(
-            colors: [Color(0xFF00B4DB), Color(0xFF0083B0)],
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _submitForm,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          elevation: 0, // Flat style
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.blueAccent.withOpacity(0.4),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          shadowColor: Colors.transparent,
         ),
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Center(
-          child: Text(
-            isEditMode ? 'Lưu Thay Đổi' : 'Tạo Lớp Ngay',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+        child: Text(
+          isEditMode ? 'Lưu thay đổi' : 'Đăng yêu cầu',
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
           ),
         ),
       ),

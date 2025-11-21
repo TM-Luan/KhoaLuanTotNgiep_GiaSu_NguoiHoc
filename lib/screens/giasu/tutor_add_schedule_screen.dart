@@ -1,25 +1,13 @@
-// file: tutor_add_schedule_screen.dart (ĐÃ SỬA LỖI)
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_spacing.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc_model.dart';
-
-// [THÊM MỚI] Import màn hình Payment và AuthBloc
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/payment/payment_screen.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/utils/format_vnd.dart';
-// Giả sử AuthState 'AuthAuthenticated' có 1 object 'user' và user có 'taiKhoanID'
-// import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile_model.dart';
 
 class BuoiHocUI {
   int ngayThu;
   TimeOfDay thoiGianBatDau;
-
   BuoiHocUI({required this.ngayThu, required this.thoiGianBatDau});
 }
 
@@ -33,15 +21,11 @@ class TaoLichHocPage extends StatefulWidget {
 
 class _TaoLichHocPageState extends State<TaoLichHocPage> {
   final _formKey = GlobalKey<FormState>();
-
   late TextEditingController _ngayBatDauController;
   late TextEditingController _duongDanController;
-
   DateTime _ngayBatDau = DateTime.now();
   int _soTuan = 4;
-
   final List<BuoiHocUI> _cacBuoiHoc = [];
-
   final List<String> _weekdayNames = [
     'Chủ Nhật',
     'Thứ 2',
@@ -52,7 +36,6 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
     'Thứ 7',
   ];
   final TimeOfDay _defaultTime = const TimeOfDay(hour: 19, minute: 0);
-
   String _lichHocMongMuonText = "Chưa rõ";
   int _soBuoiTuan = 0;
   int _soBuoiTuanLimit = 0;
@@ -75,14 +58,8 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
 
   void _parseLopHocInfo() {
     _soBuoiTuan = widget.lopHoc.soBuoiTuan ?? 0;
-    _soBuoiTuanLimit = _soBuoiTuan;
-
-    if (_soBuoiTuanLimit <= 0) {
-      _soBuoiTuanLimit = 7;
-    }
-
-    String lichMongMuon = widget.lopHoc.lichHocMongMuon ?? '';
-    if (lichMongMuon.isNotEmpty) {
+    _soBuoiTuanLimit = _soBuoiTuan <= 0 ? 7 : _soBuoiTuan;
+    if ((widget.lopHoc.lichHocMongMuon ?? '').isNotEmpty) {
       _lichHocMongMuonText = widget.lopHoc.lichHocMongMuon!;
     } else if (_soBuoiTuan > 0) {
       _lichHocMongMuonText = "$_soBuoiTuan buổi/tuần (chưa rõ ngày)";
@@ -124,7 +101,6 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
       );
       return;
     }
-
     int ngayThuChuaChon = -1;
     for (int i = 0; i < 7; i++) {
       if (!_cacBuoiHoc.any((b) => b.ngayThu == i)) {
@@ -132,14 +108,13 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
         break;
       }
     }
-
-    if (ngayThuChuaChon == -1) return;
-
-    setState(() {
-      _cacBuoiHoc.add(
-        BuoiHocUI(ngayThu: ngayThuChuaChon, thoiGianBatDau: _defaultTime),
+    if (ngayThuChuaChon != -1) {
+      setState(
+        () => _cacBuoiHoc.add(
+          BuoiHocUI(ngayThu: ngayThuChuaChon, thoiGianBatDau: _defaultTime),
+        ),
       );
-    });
+    }
   }
 
   bool _validateForm() {
@@ -152,15 +127,13 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
       );
       return false;
     }
-
     final duongDanNhap = _duongDanController.text.trim();
-
     if (widget.lopHoc.hinhThuc == 'Online' && duongDanNhap.isNotEmpty) {
       final uri = Uri.tryParse(duongDanNhap);
       if (uri == null || !uri.isAbsolute || uri.host.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đường dẫn không hợp lệ. (vd: https://google.com)'),
+            content: Text('Đường dẫn không hợp lệ.'),
             backgroundColor: Colors.orange,
           ),
         );
@@ -170,96 +143,23 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
     return true;
   }
 
-  // [THÊM MỚI] Hàm xử lý trung gian, vừa check thanh toán vừa tạo lịch
-  Future<void> _handleThanhToanVaTaoLich() async {
-    // 1. Validate form trước
-    if (!_validateForm()) return;
-
-    // 2. Lấy thông tin TaiKhoanID (Gia sư) từ AuthBloc
-    final authState = context.read<AuthBloc>().state;
-    int? taiKhoanID;
-    if (authState is AuthAuthenticated) {
-      taiKhoanID = authState.user.taiKhoanID;
-    }
-
-    if (taiKhoanID == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lỗi xác thực người dùng. Vui lòng đăng nhập lại.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // [SỬA LỖI 2] Sử dụng helper 'toNumber' và 'tinhPhiNhanLop' như trong build()
-    final hocPhiBuoi = toNumber(widget.lopHoc.hocPhi);
-    final double soTien =
-        tinhPhiNhanLop(
-          hocPhiMotBuoi: hocPhiBuoi,
-          soBuoiMotTuan: widget.lopHoc.soBuoiTuan,
-        ) ??
-        0.0;
-
-    if (soTien <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lỗi: Không tìm thấy phí nhận lớp.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // 4. Điều hướng đến màn hình thanh toán
-    final bool? paymentSuccess = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) => PaymentScreen(
-              lopYeuCauID: widget.lopHoc.maLop,
-              soTien: soTien,
-              // [SỬA LỖI 3] Dùng 'taiKhoanID!' vì đã check null ở trên
-              taiKhoanID: taiKhoanID!,
-            ),
-      ),
-    );
-
-    // 5. Xử lý kết quả thanh toán
-    if (paymentSuccess == true) {
-      // Thanh toán thành công -> Mới gọi hàm tạo lịch
-      _taoLichHoc();
-    } else {
-      // Thanh toán bị hủy hoặc thất bại
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Thanh toán thất bại.'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-    }
-  }
-
   Future<void> _taoLichHoc() async {
-    // Không cần validate nữa vì đã làm ở hàm _handleThanhToanVaTaoLich
-    // if (!_validateForm()) return;
+    if (!_validateForm()) return;
+    final List<Map<String, dynamic>> buoiHocMau =
+        _cacBuoiHoc
+            .map(
+              (b) => {
+                'ngay_thu': b.ngayThu,
+                'thoi_gian_bat_dau': '${_formatTimeOfDay(b.thoiGianBatDau)}:00',
+              },
+            )
+            .toList();
 
-    final List<Map<String, dynamic>> buoiHocMau = [];
-    for (var buoi in _cacBuoiHoc) {
-      buoiHocMau.add({
-        'ngay_thu': buoi.ngayThu,
-        'thoi_gian_bat_dau': '${_formatTimeOfDay(buoi.thoiGianBatDau)}:00',
-      });
-    }
-
-    final String? finalDuongDan;
-    final text = _duongDanController.text.trim();
-
-    if (widget.lopHoc.hinhThuc == 'Online' && text.isNotEmpty) {
-      finalDuongDan = text;
-    } else {
-      finalDuongDan = null;
-    }
+    final String? finalDuongDan =
+        (widget.lopHoc.hinhThuc == 'Online' &&
+                _duongDanController.text.trim().isNotEmpty)
+            ? _duongDanController.text.trim()
+            : null;
 
     context.read<LichHocBloc>().add(
       CreateLichHocTheoTuan(
@@ -272,175 +172,25 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
     );
   }
 
-  // ... (Các hàm build khác không thay đổi: _buildFormField, _buildScheduleEditor, _buildBuoiHocItem) ...
-  Widget _buildFormField({
-    required String label,
-    required TextEditingController controller,
-    required VoidCallback onTap,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          readOnly: true,
-          onTap: onTap,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            suffixIcon: const Icon(Icons.arrow_drop_down),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 16,
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-
-  Widget _buildScheduleEditor() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Các buổi học trong tuần *',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            if (_soBuoiTuanLimit > 0 && _soBuoiTuanLimit != 7)
-              Text(
-                '(Tối đa $_soBuoiTuanLimit buổi)',
-                style: const TextStyle(color: Colors.blue, fontSize: 14),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        if (_cacBuoiHoc.isEmpty)
-          Center(
-            child: Text(
-              'Chưa thêm buổi học nào',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-          ),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _cacBuoiHoc.length,
-          itemBuilder: (context, index) {
-            return _buildBuoiHocItem(_cacBuoiHoc[index], index);
-          },
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            icon: const Icon(Icons.add),
-            label: const Text('Thêm buổi học'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              side: BorderSide(color: AppColors.primary),
-            ),
-            onPressed:
-                (_cacBuoiHoc.length >= _soBuoiTuanLimit) ? null : _themBuoiHoc,
-          ),
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-
-  Widget _buildBuoiHocItem(BuoiHocUI buoi, int index) {
-    List<int> ngayChuaChon = [];
-    for (int i = 0; i < 7; i++) {
-      if (i == buoi.ngayThu || !_cacBuoiHoc.any((b) => b.ngayThu == i)) {
-        ngayChuaChon.add(i);
-      }
-    }
-
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: buoi.ngayThu,
-                  isExpanded: true,
-                  items:
-                      ngayChuaChon.map((ngay) {
-                        return DropdownMenuItem<int>(
-                          value: ngay,
-                          child: Text(
-                            _weekdayNames[ngay],
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        );
-                      }).toList(),
-                  onChanged: (newNgayThu) {
-                    if (newNgayThu != null) {
-                      setState(() {
-                        buoi.ngayThu = newNgayThu;
-                      });
-                    }
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              flex: 2,
-              child: InkWell(
-                onTap: () async {
-                  final TimeOfDay? picked = await showTimePicker(
-                    context: context,
-                    initialTime: buoi.thoiGianBatDau,
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      buoi.thoiGianBatDau = picked;
-                    });
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Center(
-                    child: Text(
-                      _formatTimeOfDay(buoi.thoiGianBatDau),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              onPressed: () {
-                setState(() {
-                  _cacBuoiHoc.removeAt(index);
-                });
-              },
-            ),
-          ],
-        ),
+  // --- UI HELPER ---
+  InputDecoration _cleanInputDecoration({String? hint}) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+      filled: true,
+      fillColor: Colors.grey.shade50,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: AppColors.primary, width: 1.5),
       ),
     );
   }
@@ -458,276 +208,223 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                 'Tạo thành công ${state.danhSachLichHoc.length} buổi học',
               ),
               backgroundColor: Colors.green,
-              duration: const Duration(seconds: 3),
             ),
           );
-          Future.delayed(const Duration(milliseconds: 1500), () {
-            if (mounted) Navigator.pop(context, true);
-          });
+          Future.delayed(
+            const Duration(milliseconds: 1000),
+            () => Navigator.pop(context, true),
+          );
         } else if (state is LichHocError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Lỗi: ${state.message}'),
               backgroundColor: Colors.red,
-              duration: const Duration(seconds: 4),
             ),
           );
         }
       },
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.white,
-          title: Text(
-            'Tạo Lịch Tự Động',
+          title: const Text(
+            'Tạo Lịch Học',
             style: TextStyle(
-              color: AppColors.textLight,
-              fontWeight: FontWeight.bold,
-              fontSize: AppTypography.appBarTitle,
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
+              fontSize: 18,
             ),
           ),
-          // [CHỈNH SỬA] Nút này cũng gọi hàm mới
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.save),
-              onPressed: _handleThanhToanVaTaoLich,
-              tooltip: 'Thanh toán & Tạo lịch',
-            ),
-          ],
+          backgroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: true,
+          iconTheme: const IconThemeData(color: Colors.black87),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Container(color: Colors.grey.shade100, height: 1),
+          ),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(16),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
-            child: ListView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Card(
-                  elevation: 2,
-                  color: Colors.blue.shade50,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.lopHoc.tieuDeLop,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: Colors.blue,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildInfoRow(
-                          Icons.money_off, // Hoặc Icons.monetization_on
-                          'Phí nhận lớp:',
-                          (() {
-                            final hocPhi = toNumber(widget.lopHoc.hocPhi);
-                            final phi = tinhPhiNhanLop(
-                              hocPhiMotBuoi: hocPhi,
-                              soBuoiMotTuan: widget.lopHoc.soBuoiTuan,
-                            );
-                            return phi != null
-                                ? '${formatNumber(phi)} VNĐ'
-                                : 'Chưa có';
-                          })(),
-                          isWarning: true,
-                        ),
-                        _buildInfoRow(
-                          Icons.calendar_today,
-                          'Lịch mong muốn (Gợi ý):',
-                          _lichHocMongMuonText,
-                        ),
-                        _buildInfoRow(
-                          Icons.repeat,
-                          'Số buổi/tuần:',
-                          _soBuoiTuan > 0 ? '$_soBuoiTuan buổi' : 'Chưa rõ',
-                        ),
-                        _buildInfoRow(
-                          Icons.timelapse,
-                          'Thời lượng:',
-                          '${widget.lopHoc.thoiLuong ?? 90} phút/buổi',
-                        ),
-                      ],
-                    ),
+                // Class Info Card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade200),
                   ),
-                ),
-                const SizedBox(height: 20),
-
-                _buildScheduleEditor(),
-
-                _buildFormField(
-                  label: 'Ngày áp dụng lịch *',
-                  controller: _ngayBatDauController,
-                  onTap: _selectNgayBatDau,
-                ),
-
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Số tuần muốn tạo *',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<int>(
-                      value: _soTuan,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 16,
-                        ),
-                      ),
-                      items:
-                          [4, 8, 12, 16, 24, 52].map((week) {
-                            return DropdownMenuItem(
-                              value: week,
-                              child: Text('$week tuần'),
-                            );
-                          }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _soTuan = value!;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                ),
-
-                if (widget.lopHoc.hinhThuc == 'Online')
-                  Column(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Đường dẫn (Online)',
-                        style: TextStyle(
+                      Text(
+                        widget.lopHoc.tieuDeLop,
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
+                          color: Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _duongDanController,
-                        decoration: InputDecoration(
-                          hintText: 'https://... (Có thể thêm sau)',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 16,
-                          ),
-                        ),
+                      const SizedBox(height: 12),
+                      _buildInfoRow(
+                        Icons.calendar_month_outlined,
+                        'Lịch mong muốn',
+                        _lichHocMongMuonText,
                       ),
-                      const SizedBox(height: 16),
+                      _buildInfoRow(
+                        Icons.repeat,
+                        'Số buổi/tuần',
+                        _soBuoiTuan > 0 ? '$_soBuoiTuan buổi' : 'Chưa rõ',
+                      ),
+                      _buildInfoRow(
+                        Icons.access_time,
+                        'Thời lượng',
+                        '${widget.lopHoc.thoiLuong ?? 90} phút',
+                      ),
                     ],
                   ),
+                ),
+                const SizedBox(height: 32),
 
-                if (_cacBuoiHoc.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Card(
-                    color: Colors.green[50],
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '📅 Sẽ tạo $_soTuan tuần, ${_cacBuoiHoc.length} buổi/tuần:',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Áp dụng từ: ${DateFormat('dd/MM/yyyy').format(_ngayBatDau)}',
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          ..._cacBuoiHoc.map((buoi) {
-                            return Text(
-                              '${_weekdayNames[buoi.ngayThu]} lúc: ${_formatTimeOfDay(buoi.thoiGianBatDau)}',
-                              style: const TextStyle(fontSize: 14),
-                            );
-                          }).toList(),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Tổng cộng: $totalBuoi buổi học sẽ được tạo.',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
+                // Schedule Editor
+                _buildSectionTitle("Lịch học trong tuần"),
+                if (_cacBuoiHoc.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade200),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Chưa thêm buổi học nào',
+                      style: TextStyle(color: Colors.grey.shade400),
+                    ),
+                  )
+                else
+                  Column(
+                    children:
+                        _cacBuoiHoc
+                            .asMap()
+                            .entries
+                            .map(
+                              (entry) =>
+                                  _buildBuoiHocItem(entry.value, entry.key),
+                            )
+                            .toList(),
+                  ),
+
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed:
+                        (_cacBuoiHoc.length >= _soBuoiTuanLimit)
+                            ? null
+                            : _themBuoiHoc,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Thêm buổi học'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      foregroundColor: AppColors.primary,
+                      side: BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+                _buildSectionTitle("Cấu hình thời gian"),
+
+                // Date Picker
+                TextFormField(
+                  controller: _ngayBatDauController,
+                  readOnly: true,
+                  onTap: _selectNgayBatDau,
+                  style: const TextStyle(fontSize: 15),
+                  decoration: _cleanInputDecoration().copyWith(
+                    labelText: "Ngày bắt đầu",
+                    suffixIcon: const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 20,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Duration Dropdown
+                DropdownButtonFormField<int>(
+                  value: _soTuan,
+                  items:
+                      [4, 8, 12, 16, 24]
+                          .map(
+                            (week) => DropdownMenuItem(
+                              value: week,
+                              child: Text('$week tuần'),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (val) => setState(() => _soTuan = val!),
+                  decoration: _cleanInputDecoration().copyWith(
+                    labelText: "Thời gian dạy",
+                  ),
+                ),
+
+                if (widget.lopHoc.hinhThuc == 'Online') ...[
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _duongDanController,
+                    style: const TextStyle(fontSize: 15),
+                    decoration: _cleanInputDecoration(
+                      hint: "https://...",
+                    ).copyWith(labelText: "Link học Online (Tuỳ chọn)"),
                   ),
                 ],
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 40),
+
+                // Submit Button
                 BlocBuilder<LichHocBloc, LichHocState>(
                   builder: (context, state) {
                     final isLoading = state is LichHocLoading;
                     return SizedBox(
                       width: double.infinity,
-                      height: 50,
+                      height: 52,
                       child: ElevatedButton(
-                        // [CHỈNH SỬA] Gọi hàm mới _handleThanhToanVaTaoLich
                         onPressed:
-                            (isLoading || totalBuoi == 0)
-                                ? null
-                                : _handleThanhToanVaTaoLich,
+                            (isLoading || totalBuoi == 0) ? null : _taoLichHoc,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
+                          elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          disabledBackgroundColor: Colors.grey[400],
                         ),
                         child:
                             isLoading
-                                ? const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              Colors.white,
-                                            ),
-                                      ),
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text('Đang tạo...'),
-                                  ],
+                                ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
                                 )
-                                : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    // [CHỈNH SỬA] Thay icon Add thành Payment
-                                    const Icon(Icons.payment, size: 20),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      totalBuoi > 0
-                                          ? 'THANH TOÁN & TẠO LỊCH'
-                                          : 'THANH TOÁN & TẠO LỊCH',
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
+                                : Text(
+                                  'Xác nhận tạo ($totalBuoi buổi)',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                       ),
                     );
@@ -742,31 +439,129 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
     );
   }
 
-  Widget _buildInfoRow(
-    IconData icon,
-    String label,
-    String value, {
-    bool isWarning = false,
-    bool isOnline = false,
-  }) {
-    Color valueColor = Colors.black87;
-    if (isWarning) valueColor = Colors.red;
-    if (isOnline) valueColor = Colors.green.shade700;
-
+  Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey.shade500,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: Colors.black54),
+          Icon(icon, size: 18, color: Colors.grey.shade400),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+          ),
           const SizedBox(width: 8),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-          const SizedBox(width: 4),
           Expanded(
             child: Text(
               value,
-              style: TextStyle(fontWeight: FontWeight.bold, color: valueColor),
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: Colors.black87,
+              ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBuoiHocItem(BuoiHocUI buoi, int index) {
+    List<int> availableDays =
+        List.generate(7, (i) => i)
+            .where(
+              (i) =>
+                  i == buoi.ngayThu || !_cacBuoiHoc.any((b) => b.ngayThu == i),
+            )
+            .toList();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          // Day Dropdown
+          Expanded(
+            flex: 3,
+            child: DropdownButtonHideUnderline(
+              child: ButtonTheme(
+                alignedDropdown: true,
+                child: DropdownButton<int>(
+                  value: buoi.ngayThu,
+                  isExpanded: true,
+                  icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
+                  items:
+                      availableDays
+                          .map(
+                            (d) => DropdownMenuItem(
+                              value: d,
+                              child: Text(
+                                _weekdayNames[d],
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (val) => setState(() => buoi.ngayThu = val!),
+                ),
+              ),
+            ),
+          ),
+          Container(width: 1, height: 24, color: Colors.grey.shade300),
+          // Time Picker
+          Expanded(
+            flex: 2,
+            child: InkWell(
+              onTap: () async {
+                final picked = await showTimePicker(
+                  context: context,
+                  initialTime: buoi.thoiGianBatDau,
+                );
+                if (picked != null) {
+                  setState(() => buoi.thoiGianBatDau = picked);
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Center(
+                  child: Text(
+                    _formatTimeOfDay(buoi.thoiGianBatDau),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Delete Button
+          IconButton(
+            icon: Icon(
+              Icons.remove_circle_outline,
+              color: Colors.red.shade300,
+              size: 20,
+            ),
+            onPressed: () => setState(() => _cacBuoiHoc.removeAt(index)),
           ),
         ],
       ),
