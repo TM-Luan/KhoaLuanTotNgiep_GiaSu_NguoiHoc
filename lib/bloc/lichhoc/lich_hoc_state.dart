@@ -6,13 +6,12 @@ class LichHocInitial extends LichHocState {}
 
 class LichHocLoading extends LichHocState {}
 
-// State cho 2 màn hình Lịch chính (Gia Sư, Học Sinh)
 class LichHocCalendarLoaded extends LichHocState {
-  final Set<String> ngayCoLich; // Dùng Set để tra cứu O(1)
+  final Set<String> ngayCoLich;
   final List<LichHoc> lichHocNgayChon;
   final DateTime thangHienTai;
   final DateTime ngayChon;
-  final bool isLoadingDetails; // Cờ loading khi chỉ đổi ngày
+  final bool isLoadingDetails;
 
   LichHocCalendarLoaded({
     required this.ngayCoLich,
@@ -39,13 +38,10 @@ class LichHocCalendarLoaded extends LichHocState {
   }
 }
 
-// [THÊM MỚI] State riêng cho màn hình "Lịch học theo lớp"
 class LichHocLopLoaded extends LichHocState {
   final LichHocTheoThangResponse response;
   LichHocLopLoaded(this.response);
 }
-
-// === Các state khác giữ nguyên ===
 
 class LichHocCreated extends LichHocState {
   final List<LichHoc> danhSachLichHoc;

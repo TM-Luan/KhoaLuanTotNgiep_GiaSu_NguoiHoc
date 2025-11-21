@@ -65,7 +65,19 @@ class _TutorHomePageState extends State<TutorHomePage> {
     _yeuCauRepo ??= context.read<YeuCauNhanLopRepository>();
   }
 
-  // ... Giữ nguyên logic _loadFilterOptions, _performSearch, _clearSearch, _fetchLopHocChuaGiao, _handleDeNghiDay ...
+  // [THÊM MỚI] Hàm xử lý khi kéo làm mới
+  Future<void> _onRefresh() async {
+    // Gọi lại API lấy danh sách lớp
+    await _fetchLopHocChuaGiao();
+    // Gọi lại API lấy thông báo (nếu cần)
+    if (mounted) context.read<NotificationBloc>().add(LoadNotifications());
+
+    // Nếu đang có filter thì search lại
+    if (_searchQuery != null || _currentFilter.hasActiveFilters) {
+      await _performSearch(query: _searchQuery);
+    }
+  }
+
   Future<void> _loadFilterOptions() async {
     final response = await _searchRepo.getFilterOptions();
     if (response.isSuccess && mounted) {
@@ -105,12 +117,18 @@ class _TutorHomePageState extends State<TutorHomePage> {
   }
 
   Future<void> _fetchLopHocChuaGiao() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    // Lưu ý: Khi refresh (kéo xuống), ta không set _isLoading = true để tránh mất UI hiện tại
+    // Trừ khi là lần load đầu tiên (khi list đang rỗng)
+    if (_lopHocList.isEmpty) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
+
     final ApiResponse<List<LopHoc>> response = await _lopHocRepo
         .getLopHocByTrangThai('TimGiaSu');
+
     if (mounted) {
       if (response.isSuccess && response.data != null) {
         setState(() {
@@ -189,192 +207,204 @@ class _TutorHomePageState extends State<TutorHomePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: NestedScrollView(
-          headerSliverBuilder:
-              (context, innerBoxIsScrolled) => [
-                SliverAppBar(
-                  backgroundColor: Colors.white,
-                  floating: true,
-                  pinned: false,
-                  snap: true,
-                  elevation: 0,
-                  title: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Xin chào, ${currentProfile?.hoTen ?? "Gia sư"}!',
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                      ),
-                      Text(
-                        'Tìm lớp học phù hợp ngay',
-                        style: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontSize: 12,
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ),
-                    ],
-                  ),
-                  actions: [
-                    BlocBuilder<NotificationBloc, NotificationState>(
-                      builder: (context, state) {
-                        int unread =
-                            (state is NotificationLoaded)
-                                ? state.unreadCount
-                                : 0;
-                        return Stack(
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                Icons.notifications_outlined,
-                                color: Colors.grey.shade700,
-                              ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const NotificationScreen(),
-                                  ),
-                                );
-                                context.read<NotificationBloc>().add(
-                                  LoadNotifications(),
-                                );
-                              },
-                            ),
-                            if (unread > 0)
-                              Positioned(
-                                right: 8,
-                                top: 8,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Text(
-                                    '$unread',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    child: Column(
+        // [SỬA] Bọc NestedScrollView bằng RefreshIndicator
+        child: RefreshIndicator(
+          onRefresh: _onRefresh,
+          color: AppColors.primary,
+          backgroundColor: Colors.white,
+          child: NestedScrollView(
+            headerSliverBuilder:
+                (context, innerBoxIsScrolled) => [
+                  SliverAppBar(
+                    backgroundColor: Colors.white,
+                    floating: true,
+                    pinned: false,
+                    snap: true,
+                    elevation: 0,
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Search Bar Modern
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade100,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: TextField(
-                                  controller: _searchController,
-                                  textAlignVertical: TextAlignVertical.center,
-                                  decoration: InputDecoration(
-                                    hintText: 'Tìm lớp theo môn, tên...',
-                                    hintStyle: TextStyle(
-                                      color: Colors.grey.shade400,
-                                    ),
-                                    prefixIcon: Icon(
-                                      Icons.search,
-                                      color: Colors.grey.shade400,
-                                    ),
-                                    suffixIcon:
-                                        _searchQuery != null
-                                            ? IconButton(
-                                              icon: const Icon(
-                                                Icons.clear,
-                                                size: 18,
-                                              ),
-                                              onPressed: _clearSearch,
-                                            )
-                                            : null,
-                                    border: InputBorder.none,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                    ),
-                                  ),
-                                  onSubmitted:
-                                      (q) =>
-                                          q.trim().isNotEmpty
-                                              ? _performSearch(query: q.trim())
-                                              : _clearSearch(),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            GestureDetector(
-                              onTap:
-                                  () => setState(
-                                    () => _showFilters = !_showFilters,
-                                  ),
-                              child: Container(
-                                height: 48,
-                                width: 48,
-                                decoration: BoxDecoration(
-                                  color:
-                                      (_showFilters ||
-                                              _currentFilter.hasActiveFilters)
-                                          ? AppColors.primary
-                                          : Colors.grey.shade100,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.tune_rounded,
-                                  color:
-                                      (_showFilters ||
-                                              _currentFilter.hasActiveFilters)
-                                          ? Colors.white
-                                          : Colors.grey.shade600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        if (_showFilters)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 16),
-                            child: ClassFilterWidget(
-                              initialFilter: _currentFilter,
-                              filterOptions: _filterOptions,
-                              onFilterChanged: (filter) {
-                                setState(() => _currentFilter = filter);
-                                if (filter.hasActiveFilters ||
-                                    _searchQuery != null) {
-                                  _performSearch(query: _searchQuery);
-                                }
-                              },
-                            ),
+                        Text(
+                          'Xin chào, ${currentProfile?.hoTen ?? "Gia sư"}!',
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
                           ),
+                        ),
+                        Text(
+                          'Tìm lớp học phù hợp ngay',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 12,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
                       ],
                     ),
+                    actions: [
+                      BlocBuilder<NotificationBloc, NotificationState>(
+                        builder: (context, state) {
+                          int unread =
+                              (state is NotificationLoaded)
+                                  ? state.unreadCount
+                                  : 0;
+                          return Stack(
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  Icons.notifications_outlined,
+                                  color: Colors.grey.shade700,
+                                ),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => const NotificationScreen(),
+                                    ),
+                                  );
+                                  context.read<NotificationBloc>().add(
+                                    LoadNotifications(),
+                                  );
+                                },
+                              ),
+                              if (unread > 0)
+                                Positioned(
+                                  right: 8,
+                                  top: 8,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Text(
+                                      '$unread',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                   ),
-                ),
-              ],
-          body: _buildClassList(),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      child: Column(
+                        children: [
+                          // Search Bar Modern
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: TextField(
+                                    controller: _searchController,
+                                    textAlignVertical: TextAlignVertical.center,
+                                    decoration: InputDecoration(
+                                      hintText: 'Tìm lớp theo môn, tên...',
+                                      hintStyle: TextStyle(
+                                        color: Colors.grey.shade400,
+                                      ),
+                                      prefixIcon: Icon(
+                                        Icons.search,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                      suffixIcon:
+                                          _searchQuery != null
+                                              ? IconButton(
+                                                icon: const Icon(
+                                                  Icons.clear,
+                                                  size: 18,
+                                                ),
+                                                onPressed: _clearSearch,
+                                              )
+                                              : null,
+                                      border: InputBorder.none,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                          ),
+                                    ),
+                                    onSubmitted:
+                                        (q) =>
+                                            q.trim().isNotEmpty
+                                                ? _performSearch(
+                                                  query: q.trim(),
+                                                )
+                                                : _clearSearch(),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              GestureDetector(
+                                onTap:
+                                    () => setState(
+                                      () => _showFilters = !_showFilters,
+                                    ),
+                                child: Container(
+                                  height: 48,
+                                  width: 48,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        (_showFilters ||
+                                                _currentFilter.hasActiveFilters)
+                                            ? AppColors.primary
+                                            : Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Icons.tune_rounded,
+                                    color:
+                                        (_showFilters ||
+                                                _currentFilter.hasActiveFilters)
+                                            ? Colors.white
+                                            : Colors.grey.shade600,
+                                  ),
+                                ),
+                              ),
+                              
+                            ],
+                          ),
+
+                          if (_showFilters)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 16),
+                              child: ClassFilterWidget(
+                                initialFilter: _currentFilter,
+                                filterOptions: _filterOptions,
+                                onFilterChanged: (filter) {
+                                  setState(() => _currentFilter = filter);
+                                  if (filter.hasActiveFilters ||
+                                      _searchQuery != null) {
+                                    _performSearch(query: _searchQuery);
+                                  }
+                                },
+                              ),
+                            ),
+                            
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+            body: _buildClassList(),
+          ),
         ),
       ),
     );
@@ -390,18 +420,10 @@ class _TutorHomePageState extends State<TutorHomePage> {
   Widget _buildSearchResults() {
     if (_isSearching) return const Center(child: CircularProgressIndicator());
     if (_searchResults.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.search_off, size: 64, color: Colors.grey.shade300),
-            const SizedBox(height: 16),
-            Text(
-              'Không tìm thấy lớp học',
-              style: TextStyle(color: Colors.grey.shade500),
-            ),
-          ],
-        ),
+      // [SỬA] Chuyển Center thành ListView để có thể kéo refresh khi danh sách trống
+      return _buildScrollableEmptyState(
+        icon: Icons.search_off,
+        message: 'Không tìm thấy lớp học',
       );
     }
     return _buildListView(_searchResults);
@@ -410,16 +432,56 @@ class _TutorHomePageState extends State<TutorHomePage> {
   Widget _buildDefaultClassList() {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (_errorMessage != null) {
-      return Center(child: Text('Lỗi: $_errorMessage'));
+      // [SỬA] Cho phép kéo refresh khi lỗi
+      return _buildScrollableEmptyState(
+        icon: Icons.error_outline,
+        message: 'Lỗi: $_errorMessage',
+        isError: true,
+      );
     }
     if (_lopHocList.isEmpty) {
-      return const Center(child: Text('Không có lớp nào cần tìm gia sư.'));
+      return _buildScrollableEmptyState(
+        icon: Icons.class_outlined,
+        message: 'Không có lớp nào cần tìm gia sư.',
+      );
     }
     return _buildListView(_lopHocList);
   }
 
+  // [THÊM MỚI] Widget hiển thị trạng thái trống nhưng vẫn kéo refresh được
+  Widget _buildScrollableEmptyState({
+    required IconData icon,
+    required String message,
+    bool isError = false,
+  }) {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(20),
+      children: [
+        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+        Icon(
+          icon,
+          size: 64,
+          color: isError ? Colors.red.shade300 : Colors.grey.shade300,
+        ),
+        const SizedBox(height: 16),
+        Center(
+          child: Text(
+            message,
+            style: TextStyle(
+              color: isError ? Colors.red : Colors.grey.shade500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildListView(List<LopHoc> list) {
     return ListView.builder(
+      // [SỬA] Thêm physics để luôn kéo được
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
       itemCount: list.length,
       itemBuilder: (context, index) {
@@ -444,6 +506,7 @@ class _NoteDialogWidgetState extends State<_NoteDialogWidget> {
 
   @override
   Widget build(BuildContext context) {
+    // ... (Giữ nguyên NoteDialogWidget)
     return AlertDialog(
       title: const Text(
         'Gửi đề nghị dạy',
