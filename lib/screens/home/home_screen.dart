@@ -98,11 +98,7 @@ class HomeScreenState extends State<HomeScreen> {
 
         return Scaffold(
           backgroundColor: Colors.white, // Nền sạch
-          body: IndexedStack(
-            // Dùng IndexedStack để giữ trạng thái các trang
-            index: pageIndex,
-            children: pages,
-          ),
+          body: pages[pageIndex],
           bottomNavigationBar: _buildModernNavBar(context),
         );
       },
