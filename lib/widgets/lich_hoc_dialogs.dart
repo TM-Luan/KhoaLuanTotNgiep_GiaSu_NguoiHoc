@@ -27,6 +27,7 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
   late TextEditingController _duongDanController;
   final _formKey = GlobalKey<FormState>();
 
+  // Danh sách mặc định
   final List<Map<String, dynamic>> _cacTrangThai = [
     {'value': 'SapToi', 'text': 'Sắp Tới'},
     {'value': 'Huy', 'text': 'Hủy buổi học'},
@@ -35,16 +36,47 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
   @override
   void initState() {
     super.initState();
-    _selectedTrangThai = widget.lichHoc.trangThai;
+
+    // --- [BẮT ĐẦU SỬA LỖI LOGIC KHỞI TẠO] ---
+
+    // 1. Lấy trạng thái gốc từ model
+    String trangThaiGoc = widget.lichHoc.trangThai;
+
+    // 2. Map dữ liệu: Nếu DB trả về 'ChuaDienRa' (hoặc 'DangDay'),
+    // gán tạm thành 'SapToi' để khớp với Dropdown
+    if (trangThaiGoc == 'ChuaDienRa' || trangThaiGoc == 'DangDay') {
+      _selectedTrangThai = 'SapToi';
+    } else {
+      _selectedTrangThai = trangThaiGoc;
+    }
+
+    // 3. Xử lý các trường hợp đặc biệt (Đã học / Hủy) thì khóa danh sách lại
+    if (_selectedTrangThai == 'Huy') {
+      // Nếu đã Hủy, chỉ hiện option Hủy (hoặc thêm logic cho phép mở lại nếu muốn)
+      // Ở đây ta giữ logic cũ: chỉ giữ lại item trùng khớp
+      _cacTrangThai.removeWhere((item) => item['value'] != 'Huy');
+    } else if (_selectedTrangThai == 'DaHoc') {
+      // Nếu Đã Học, drop down chỉ hiện Đã Học (cần thêm option này vào list nếu chưa có)
+      // Vì list gốc không có 'DaHoc', ta phải thêm vào để hiển thị đúng
+      _cacTrangThai.add({'value': 'DaHoc', 'text': 'Đã dạy'});
+      _cacTrangThai.removeWhere((item) => item['value'] != 'DaHoc');
+    } else {
+      // 4. CHECK AN TOÀN CUỐI CÙNG:
+      // Đảm bảo giá trị được chọn thực sự có trong danh sách
+      bool exists = _cacTrangThai.any(
+        (item) => item['value'] == _selectedTrangThai,
+      );
+      if (!exists) {
+        // Nếu vẫn không tìm thấy, force về item đầu tiên (SapToi) để tránh Crash
+        _selectedTrangThai = _cacTrangThai.first['value'];
+      }
+    }
+
+    // --- [KẾT THÚC SỬA LỖI] ---
+
     _duongDanController = TextEditingController(
       text: widget.lichHoc.duongDan ?? '',
     );
-
-    if (_selectedTrangThai == 'Huy') {
-      _cacTrangThai.removeWhere((item) => item['value'] != 'Huy');
-    } else if (_selectedTrangThai == 'DaHoc') {
-      _cacTrangThai.removeWhere((item) => item['value'] != 'DaHoc');
-    }
   }
 
   @override
@@ -68,6 +100,10 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
           (widget.isOnlineClass && _duongDanController.text.trim().isNotEmpty)
               ? _duongDanController.text.trim()
               : null;
+
+      // Lưu ý: Nếu lúc đầu map 'ChuaDienRa' -> 'SapToi',
+      // khi lưu xuống server sẽ gửi lên là 'SapToi'.
+      // Nếu server cần phân biệt 'ChuaDienRa', bạn cần xử lý lại ở Bloc/API.
       widget.onUpdate(_selectedTrangThai, finalDuongDan);
       Navigator.pop(context);
     }
@@ -98,9 +134,9 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
 
   @override
   Widget build(BuildContext context) {
+    // Logic khóa dropdown
     final bool isLocked =
-        (widget.lichHoc.trangThai == 'DaHoc' ||
-            widget.lichHoc.trangThai == 'Huy');
+        (_selectedTrangThai == 'DaHoc' || _selectedTrangThai == 'Huy');
 
     return Dialog(
       backgroundColor: Colors.white,
@@ -127,27 +163,28 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
               DropdownButtonFormField<String>(
                 value: _selectedTrangThai,
                 items:
-                    _cacTrangThai
-                        .map(
-                          (item) => DropdownMenuItem<String>(
-                            value: item['value'],
-                            child: Text(
-                              item['text'],
-                              style: TextStyle(
-                                color:
-                                    item['value'] == 'Huy'
-                                        ? Colors.red
-                                        : Colors.black87,
-                              ),
-                            ),
+                    _cacTrangThai.map((item) {
+                      return DropdownMenuItem<String>(
+                        value: item['value'],
+                        child: Text(
+                          item['text'],
+                          style: TextStyle(
+                            color:
+                                item['value'] == 'Huy'
+                                    ? Colors.red
+                                    : Colors.black87,
                           ),
-                        )
-                        .toList(),
+                        ),
+                      );
+                    }).toList(),
                 onChanged:
                     isLocked
                         ? null
-                        : (value) =>
-                            setState(() => _selectedTrangThai = value!),
+                        : (value) {
+                          if (value != null) {
+                            setState(() => _selectedTrangThai = value);
+                          }
+                        },
                 decoration: _inputDecoration("Chọn trạng thái"),
                 style: const TextStyle(fontSize: 15, color: Colors.black87),
                 icon: Icon(
@@ -371,6 +408,7 @@ class ChiTietLichHocDialog extends StatelessWidget {
     Color color;
     switch (status) {
       case 'SapToi':
+      case 'ChuaDienRa': // Thêm case này cho đồng bộ hiển thị
         text = 'Sắp tới';
         color = Colors.blue;
         break;
@@ -393,7 +431,9 @@ class ChiTietLichHocDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(
+          0.1,
+        ), // Dùng withOpacity thay vì withValues nếu flutter bản cũ
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(

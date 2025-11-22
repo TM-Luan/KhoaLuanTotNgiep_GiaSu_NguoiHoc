@@ -22,7 +22,6 @@ class LopHoc {
   final String? tenKhoiLop;
   final String? tenGiaSu;
   final int? doiTuongID;
-  // NEW: Thêm trường trạng thái thanh toán
   final String? trangThaiThanhToan;
 
   LopHoc({
