@@ -1,7 +1,7 @@
 // api_config.dart - ĐÃ CẬP NHẬT
 class ApiConfig {
-  static const String baseUrl = 'https://tutorconectstudent.online/api';
-  //static const String baseUrl = 'http://10.0.2.2:8000/api';
+  // static const String baseUrl = 'https://tutorconectstudent.online/api';
+  static const String baseUrl = 'http://10.0.2.2:8000/api';
   static const Duration connectTimeout = Duration(seconds: 60);
   static const Duration receiveTimeout = Duration(seconds: 60);
 
@@ -15,6 +15,9 @@ class ApiConfig {
   static const String changePassword = '/changepassword';
   static const String resetPassword = '/resetpassword';
   static const String routeName = '/tutor-detail';
+
+  //Khiếu nại
+  static const String khieuNai = '/khieunai';
 
   // Lịch học (Quản lý)
   static const String lichHocTheoLop =
