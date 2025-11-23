@@ -13,12 +13,13 @@ class LopHocRepository {
     String trangThai,
   ) async {
     final String endpoint = '${ApiConfig.lopHocYeuCau}?trang_thai=$trangThai';
-    
+
     // SỬA: Đơn giản hóa. ApiService tự động mở gói 'data' (là một List)
     return await _apiService.get(
       endpoint,
-      fromJsonT: (data) =>
-          (data as List).map((item) => LopHoc.fromJson(item)).toList(),
+      fromJsonT:
+          (data) =>
+              (data as List).map((item) => LopHoc.fromJson(item)).toList(),
     );
   }
 
@@ -54,8 +55,9 @@ class LopHocRepository {
     // SỬA: ApiService tự động mở gói 'data' (là một List)
     return await _apiService.get(
       endpoint,
-      fromJsonT: (data) =>
-          (data as List).map((item) => LopHoc.fromJson(item)).toList(),
+      fromJsonT:
+          (data) =>
+              (data as List).map((item) => LopHoc.fromJson(item)).toList(),
     );
   }
 
@@ -77,7 +79,7 @@ class LopHocRepository {
   /// Xóa lớp học
   Future<ApiResponse<void>> deleteLopHoc(int classId) async {
     final String endpoint = '${ApiConfig.lopHocYeuCau}/$classId';
-    
+
     // SỬA: Chuyển đổi kiểu trả về từ ApiService
     final response = await _apiService.delete(endpoint);
     return ApiResponse<void>(

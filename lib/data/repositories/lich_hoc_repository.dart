@@ -223,17 +223,4 @@ class LichHocRepository {
       },
     );
   }
-
-  Future<ApiResponse<void>> deleteLopHoc(int classId) async {
-    final String endpoint = '${ApiConfig.lopHocYeuCau}/$classId';
-
-    // Gọi DELETE /api/lophocyeucau/{id}
-    final response = await _apiService.delete(endpoint);
-
-    return ApiResponse<void>(
-      success: response.success,
-      message: response.message,
-      statusCode: response.statusCode,
-    );
-  }
 }
