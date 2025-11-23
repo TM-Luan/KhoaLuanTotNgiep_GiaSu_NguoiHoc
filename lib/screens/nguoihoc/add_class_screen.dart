@@ -407,6 +407,7 @@ class _AddClassPageState extends State<AddClassPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: DropdownButtonFormField<int>(
+        isExpanded: true,
         value: value,
         decoration: _cleanInputDecoration(label, icon),
         icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey),
