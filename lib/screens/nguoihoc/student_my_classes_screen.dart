@@ -10,7 +10,10 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notificatio
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/utils/format_vnd.dart';
 
 class StudentMyClassesPage extends StatefulWidget {
-  const StudentMyClassesPage({super.key});
+  // [THÊM] Tham số chọn tab mặc định: 0=Đang học, 1=Đã học, 2=Tìm gia sư
+  final int initialTabIndex;
+
+  const StudentMyClassesPage({super.key, this.initialTabIndex = 0});
 
   @override
   State<StudentMyClassesPage> createState() => _StudentMyClassesPageState();
@@ -32,7 +35,12 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    // [SỬA] Khởi tạo với initialIndex
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.initialTabIndex,
+    );
 
     _proposalUpdateSubscription = GlobalNotificationService()
         .proposalUpdateStream
@@ -48,6 +56,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
     super.dispose();
   }
 
+  // ... (Phần còn lại của file giữ nguyên)
   Future<void> _fetchClasses() async {
     setState(() {
       _isLoading = true;
@@ -56,7 +65,6 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
       _lopHocDangDay = [];
       _lopHocDaHoc = [];
     });
-
     try {
       final response = await _lopHocRepo.getLopHocCuaNguoiHoc();
       if (mounted && response.isSuccess && response.data != null) {
@@ -70,10 +78,8 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                         lop.trangThai == 'ChoDuyet',
                   )
                   .toList();
-
           _lopHocDangDay =
               all.where((lop) => lop.trangThai == 'DangHoc').toList();
-
           _lopHocDaHoc =
               all
                   .where(
@@ -180,7 +186,6 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
   }
 
   Widget _buildClassCard(LopHoc lop) {
-    // [UPDATED] Sử dụng hàm từ format_vnd.dart để lấy text và style
     final statusText = getTrangThaiVietNam(lop.trangThai);
     final style = getTrangThaiStyle(lop.trangThai);
 
@@ -205,7 +210,6 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                // [UPDATED] Badge hiển thị trạng thái tiếng Việt
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
@@ -278,7 +282,6 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
         ),
       ];
     }
-
     return [
       TextButton(
         onPressed:

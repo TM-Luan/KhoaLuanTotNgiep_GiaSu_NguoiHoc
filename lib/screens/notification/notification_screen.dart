@@ -3,8 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/notification/notification_bloc.dart';
 import '../../bloc/notification/notification_state.dart';
 import '../../bloc/notification/notification_event.dart';
+import '../../bloc/auth/auth_bloc.dart';
+import '../../bloc/auth/auth_state.dart';
 import '../nguoihoc/student_class_proposals_screen.dart';
 import '../nguoihoc/class_detail_screen.dart';
+import '../giasu/tutor_my_classes_screen.dart';
+import '../nguoihoc/student_my_classes_screen.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({super.key});
@@ -12,7 +16,7 @@ class NotificationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Nền trắng sạch
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
           'Thông báo',
@@ -22,7 +26,7 @@ class NotificationScreen extends StatelessWidget {
             color: Colors.black87,
           ),
         ),
-        centerTitle: false, // Căn trái kiểu hiện đại (như Facebook/Insta)
+        centerTitle: false,
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
@@ -54,7 +58,6 @@ class NotificationScreen extends StatelessWidget {
   }
 
   Widget _buildNotificationItem(BuildContext context, dynamic notif) {
-    // Màu nền: Chưa đọc thì xanh rất nhạt, Đã đọc thì trắng
     final backgroundColor =
         notif.isRead ? Colors.white : const Color(0xFFF0F9FF);
     final titleColor = notif.isRead ? Colors.black87 : Colors.black;
@@ -63,15 +66,19 @@ class NotificationScreen extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        // --- GIỮ NGUYÊN LOGIC CŨ CỦA BẠN ---
-
         // 1. Đánh dấu đã đọc
         if (!notif.isRead) {
           context.read<NotificationBloc>().add(MarkAsRead(notif.id));
         }
 
-        // 2. XỬ LÝ ĐIỀU HƯỚNG
+        // 2. XỬ LÝ ĐIỀU HƯỚNG (NAVIGATION)
         if (notif.relatedId != null) {
+          final authState = context.read<AuthBloc>().state;
+          final isGiaSu =
+              (authState is AuthAuthenticated && authState.user.vaiTro == 2);
+
+          // === TRƯỜNG HỢP 1: "Yêu cầu dạy mới" (Hình ảnh 1) ===
+          // Người học nhận được thông báo có Gia sư đăng ký
           if (notif.type == 'request_received') {
             Navigator.push(
               context,
@@ -81,25 +88,75 @@ class NotificationScreen extends StatelessWidget {
                         StudentClassProposalsScreen(lopHocId: notif.relatedId!),
               ),
             );
-          } else if (notif.type == 'invitation_received') {
+          }
+          // === TRƯỜNG HỢP 2: "Yêu cầu bị từ chối" (Hình ảnh 2) ===
+          // Gia sư từ chối lời mời -> Người học vào xem lại chi tiết lớp
+          else if (notif.type == 'request_rejected') {
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder:
                     (context) => ClassDetailScreen(
                       classId: notif.relatedId!,
-                      userRole: UserRole.tutor,
+                      userRole: isGiaSu ? UserRole.tutor : UserRole.student,
                     ),
               ),
             );
+          }
+          // === CÁC TRƯỜNG HỢP KHÁC (Giữ nguyên logic cũ) ===
+          else if (notif.type == 'invitation_received') {
+            // Gia sư nhận lời mời từ học viên -> Vào tab "Lời mời"
+            if (isGiaSu) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) =>
+                          const TutorMyClassesScreen(initialTabIndex: 2),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => ClassDetailScreen(
+                        classId: notif.relatedId!,
+                        userRole: UserRole.tutor,
+                      ),
+                ),
+              );
+            }
+          } else if (notif.type == 'request_accepted') {
+            // Chấp nhận -> Vào tab "Đang dạy/Đang học" (Index 0)
+            if (isGiaSu) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) =>
+                          const TutorMyClassesScreen(initialTabIndex: 0),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) =>
+                          const StudentMyClassesPage(initialTabIndex: 0),
+                ),
+              );
+            }
           } else {
+            // Mặc định: Vào trang chi tiết lớp
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder:
                     (context) => ClassDetailScreen(
                       classId: notif.relatedId!,
-                      userRole: UserRole.tutor,
+                      userRole: isGiaSu ? UserRole.tutor : UserRole.student,
                     ),
               ),
             );
@@ -117,7 +174,6 @@ class NotificationScreen extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ICON BÊN TRÁI
             Container(
               width: 48,
               height: 48,
@@ -133,13 +189,10 @@ class NotificationScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 16),
-
-            // NỘI DUNG Ở GIỮA
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Dòng 1: Tiêu đề + Thời gian
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -157,7 +210,7 @@ class NotificationScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        _formatTime(notif.createdAt), // Hàm format đơn giản
+                        _formatTime(notif.createdAt),
                         style: TextStyle(
                           fontSize: 12,
                           color:
@@ -173,14 +226,12 @@ class NotificationScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-
-                  // Dòng 2: Nội dung tin nhắn
                   Text(
                     notif.message,
                     style: TextStyle(
                       fontSize: 14,
                       color: messageColor,
-                      height: 1.4, // Tăng chiều cao dòng cho dễ đọc
+                      height: 1.4,
                     ),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
@@ -188,8 +239,6 @@ class NotificationScreen extends StatelessWidget {
                 ],
               ),
             ),
-
-            // DOT CHẤM XANH (Nếu chưa đọc)
             if (!notif.isRead)
               Padding(
                 padding: const EdgeInsets.only(left: 12, top: 18),
@@ -228,16 +277,17 @@ class NotificationScreen extends StatelessWidget {
     );
   }
 
+  // Cập nhật icon phù hợp với hình ảnh của bạn
   IconData _getIconForType(String type) {
     switch (type) {
       case 'request_received':
-        return Icons.person_add_rounded;
+        return Icons.person_add_rounded; // Icon người cộng (Hình 1)
       case 'request_accepted':
         return Icons.check_circle_rounded;
       case 'invitation_received':
         return Icons.mark_email_unread_rounded;
       case 'request_rejected':
-        return Icons.cancel_rounded;
+        return Icons.cancel_rounded; // Icon dấu x (Hình 2)
       default:
         return Icons.notifications_rounded;
     }
@@ -245,9 +295,8 @@ class NotificationScreen extends StatelessWidget {
 
   String _formatTime(String createdAt) {
     try {
-
       if (createdAt.length > 10) {
-        return createdAt.substring(0, 10); 
+        return createdAt.substring(0, 10);
       }
       return createdAt;
     } catch (e) {

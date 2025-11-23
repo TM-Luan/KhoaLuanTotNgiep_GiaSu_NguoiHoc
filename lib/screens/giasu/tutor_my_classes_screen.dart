@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_bloc.dart'; // Import LichHocBloc
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor_classes/tutor_classes_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor_classes/tutor_classes_event.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor_classes/tutor_classes_state.dart';
@@ -18,7 +18,11 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notificatio
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/utils/format_vnd.dart';
 
 class TutorMyClassesScreen extends StatefulWidget {
-  const TutorMyClassesScreen({super.key});
+  // [THÊM] index tab mặc định: 0=Đang dạy, 1=Đã dạy, 2=Lời mời
+  final int initialTabIndex;
+
+  const TutorMyClassesScreen({super.key, this.initialTabIndex = 0});
+
   static const String routeName = '/tutor-my-classes';
 
   @override
@@ -35,7 +39,13 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    // [SỬA] Sử dụng widget.initialTabIndex
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.initialTabIndex, // <-- Quan trọng
+    );
+
     _proposalUpdateSubscription = GlobalNotificationService()
         .proposalUpdateStream
         .listen((event) {
@@ -50,6 +60,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
     super.dispose();
   }
 
+  // ... (Phần còn lại của file giữ nguyên như cũ)
   @override
   Widget build(BuildContext context) {
     final authState = context.read<AuthBloc>().state;
@@ -136,6 +147,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
             if (state is TutorClassesLoadSuccess) _latestSuccessState = state;
             if (_latestSuccessState != null) {
               return BlocListener<LichHocBloc, LichHocState>(
+                // Thêm listener LichHocBloc ở đây
                 listener: (ctx, lichState) {
                   if (lichState is LichHocDeleted ||
                       lichState is LichHocCreated) {
@@ -171,7 +183,10 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
     );
   }
 
-  // --- LỚP ĐANG DẠY ---
+  // ... (Các hàm _buildLopDangDayList, _buildLopDaDayList, _buildLopDeNghiList, _buildClassCard, _buildRequestCard, _buildInfoRow, _buildActionButton, _buildEmptyState, _showSnack, _navigateToClassDetail, _navigateToAddSchedule, _navigateToPayment, _showDeleteAllSchedulesDialog, _showCompleteClassDialog giữ nguyên)
+
+  // Copy lại các hàm phụ trợ từ file gốc của bạn vào đây để code chạy được nhé.
+  // Tôi rút gọn để tập trung vào logic initialTabIndex.
   Widget _buildLopDangDayList(BuildContext context, List<LopHoc> list) {
     if (list.isEmpty)
       return _buildEmptyState('Bạn chưa có lớp học nào đang dạy');
@@ -191,7 +206,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
     );
   }
 
-  // --- LỚP ĐÃ DẠY ---
   Widget _buildLopDaDayList(BuildContext context, List<LopHoc> list) {
     if (list.isEmpty) return _buildEmptyState('Bạn chưa có lớp đã dạy nào');
     return RefreshIndicator(
@@ -210,11 +224,37 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
     );
   }
 
+  Widget _buildLopDeNghiList(
+    BuildContext context,
+    TutorClassesLoadSuccess state,
+  ) {
+    final list = state.lopDeNghi;
+    if (list.isEmpty)
+      return _buildEmptyState('Không có lời mời hay đề nghị nào');
+    return RefreshIndicator(
+      onRefresh:
+          () async => context.read<TutorClassesBloc>().add(
+            TutorClassesRefreshRequested(),
+          ),
+      child: ListView.separated(
+        padding: const EdgeInsets.all(20),
+        itemCount: list.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 16),
+        itemBuilder:
+            (context, index) => _buildRequestCard(context, list[index]),
+      ),
+    );
+  }
+
+  // ... (Giữ nguyên các widget khác: _buildClassCard, _buildRequestCard, helper methods...)
+  // Bạn hãy đảm bảo giữ lại toàn bộ các hàm _build... và logic xử lý bên dưới từ file gốc của bạn
+
   Widget _buildClassCard(
     BuildContext context,
     LopHoc lop, {
     required bool isActive,
   }) {
+    // ... Code cũ từ file uploaded:lib/screens/giasu/tutor_my_classes_screen.dart
     final isPaid = lop.trangThaiThanhToan == 'DaThanhToan';
     final statusColor =
         isActive ? (isPaid ? Colors.green : Colors.orange) : Colors.grey;
@@ -298,8 +338,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
                           ),
                         ],
                         const SizedBox(height: 16),
-
-                        // CHỨC NĂNG
                         if (isActive)
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
@@ -351,30 +389,8 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
     );
   }
 
-  // --- LỜI MỜI ---
-  Widget _buildLopDeNghiList(
-    BuildContext context,
-    TutorClassesLoadSuccess state,
-  ) {
-    final list = state.lopDeNghi;
-    if (list.isEmpty)
-      return _buildEmptyState('Không có lời mời hay đề nghị nào');
-    return RefreshIndicator(
-      onRefresh:
-          () async => context.read<TutorClassesBloc>().add(
-            TutorClassesRefreshRequested(),
-          ),
-      child: ListView.separated(
-        padding: const EdgeInsets.all(20),
-        itemCount: list.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 16),
-        itemBuilder:
-            (context, index) => _buildRequestCard(context, list[index]),
-      ),
-    );
-  }
-
   Widget _buildRequestCard(BuildContext context, YeuCauNhanLop yc) {
+    // ... Code cũ
     final isSentByMe = yc.vaiTroNguoiGui == 'GiaSu';
     final bloc = context.read<TutorClassesBloc>();
     return Container(
@@ -481,23 +497,22 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text, {Color? textColor}) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.grey.shade400),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              color: textColor ?? Colors.grey.shade700,
-              fontSize: 13,
-            ),
+  // Helpers
+  Widget _buildInfoRow(IconData icon, String text, {Color? textColor}) => Row(
+    children: [
+      Icon(icon, size: 16, color: Colors.grey.shade400),
+      const SizedBox(width: 8),
+      Expanded(
+        child: Text(
+          text,
+          style: TextStyle(
+            color: textColor ?? Colors.grey.shade700,
+            fontSize: 13,
           ),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
 
   Widget _buildActionButton(
     String label,
@@ -505,50 +520,45 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
     Color color,
     VoidCallback onTap, {
     bool isPrimary = false,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isPrimary ? color : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color:
-                isPrimary ? Colors.transparent : color.withValues(alpha: 0.5),
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 14, color: isPrimary ? Colors.white : color),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: isPrimary ? Colors.white : color,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
+  }) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(8),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isPrimary ? color : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isPrimary ? Colors.transparent : color.withValues(alpha: 0.5),
         ),
       ),
-    );
-  }
-
-  Widget _buildEmptyState(String msg) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
         children: [
-          Icon(Icons.inbox_outlined, size: 48, color: Colors.grey.shade300),
-          const SizedBox(height: 16),
-          Text(msg, style: TextStyle(color: Colors.grey.shade500)),
+          Icon(icon, size: 14, color: isPrimary ? Colors.white : color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: isPrimary ? Colors.white : color,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
-    );
-  }
+    ),
+  );
+
+  Widget _buildEmptyState(String msg) => Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.inbox_outlined, size: 48, color: Colors.grey.shade300),
+        const SizedBox(height: 16),
+        Text(msg, style: TextStyle(color: Colors.grey.shade500)),
+      ],
+    ),
+  );
 
   void _showSnack(BuildContext context, String msg, Color color) =>
       ScaffoldMessenger.of(
@@ -564,7 +574,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
     ctx,
     MaterialPageRoute(builder: (_) => TaoLichHocPage(lopHoc: lop)),
   );
-
   void _navigateToPayment(BuildContext context, LopHoc lop) async {
     final authState = context.read<AuthBloc>().state;
     if (authState is! AuthAuthenticated) return;
@@ -638,7 +647,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
                   foregroundColor: Colors.white,
                 ),
                 onPressed: () {
-                  // Sửa: Chỉ truyền ID (maLop)
                   context.read<TutorClassesBloc>().add(
                     TutorClassCompleted(lop.maLop),
                   );
