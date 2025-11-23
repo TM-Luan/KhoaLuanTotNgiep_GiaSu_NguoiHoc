@@ -1,8 +1,7 @@
-// file: api_service.dart (PHIÊN BẢN SỬA LỖI DELETE)
-
 import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart'; // Bắt buộc có import này
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_config.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/flutter_secure_storage_model.dart';
@@ -23,6 +22,23 @@ class ApiService {
       ),
     );
 
+    // === ⭐️ CẤU HÌNH SỬA LỖI KẾT NỐI (BẢN MẠNH NHẤT) ⭐️ ===
+    _dio.httpClientAdapter = IOHttpClientAdapter(
+      createHttpClient: () {
+        final client = HttpClient();
+
+        // QUAN TRỌNG: Đặt thời gian giữ kết nối nhàn rỗi về 0.
+        // Điều này đồng nghĩa với việc TẮT Keep-Alive.
+        // Mỗi request sẽ dùng một kết nối mới -> Tránh hoàn toàn lỗi "Unexpected response".
+        client.idleTimeout = Duration.zero;
+
+        // Giới hạn số kết nối đồng thời để giảm tải cho Emulator
+        client.maxConnectionsPerHost = 5;
+
+        return client;
+      },
+    );
+
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -38,6 +54,8 @@ class ApiService {
       ),
     );
   }
+
+  // ... (Các hàm get, post, put, delete GIỮ NGUYÊN như cũ) ...
 
   Future<ApiResponse<T>> get<T>(
     String endpoint, {
@@ -101,16 +119,12 @@ class ApiService {
     }
   }
 
-  // Xử lý response thành công (cho mã 2xx)
   ApiResponse<T> _handleResponse<T>(
     Response response,
     T Function(dynamic)? fromJsonT,
     bool unpackData,
   ) {
-    // === ⭐️ BẮT ĐẦU SỬA LỖI ⭐️ ===
-    // Kiểm tra xem data có phải là Map không
     if (response.data is Map<String, dynamic>) {
-      // Logic cũ (cho JSON Objects)
       final Map<String, dynamic> responseData = response.data;
       final dynamic dataToParse;
       if (unpackData) {
@@ -138,7 +152,6 @@ class ApiService {
     }
   }
 
-  // Xử lý lỗi (cho mã 4xx, 5xx, và lỗi mạng)
   ApiResponse<T> _errorResponse<T>(DioException? e, [String? customMessage]) {
     if (customMessage != null) {
       return ApiResponse<T>(
@@ -147,7 +160,6 @@ class ApiService {
         statusCode: 0,
       );
     }
-
     if (e == null) {
       return ApiResponse<T>(
         success: false,
@@ -156,7 +168,6 @@ class ApiService {
       );
     }
 
-    // Xử lý các loại lỗi của Dio
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
@@ -166,9 +177,7 @@ class ApiService {
           message: 'Kết nối quá thời gian',
           statusCode: e.response?.statusCode ?? 0,
         );
-
       case DioExceptionType.badResponse:
-        // Đây là nơi xử lý lỗi 4xx, 5xx
         if (e.response != null && e.response!.data is Map) {
           final errorData = e.response!.data as Map<String, dynamic>;
           return ApiResponse<T>(
@@ -182,22 +191,13 @@ class ApiService {
           message: 'Lỗi máy chủ: ${e.response?.statusCode}',
           statusCode: e.response?.statusCode ?? 0,
         );
-
-      case DioExceptionType.cancel:
-        return ApiResponse<T>(
-          success: false,
-          message: 'Yêu cầu đã bị hủy',
-          statusCode: 0,
-        );
-
       case DioExceptionType.connectionError:
+        // Sửa lỗi hiển thị khi mất mạng
         return ApiResponse<T>(
           success: false,
-          message: 'Không có kết nối internet',
+          message: 'Lỗi kết nối mạng. Vui lòng kiểm tra internet.',
           statusCode: 0,
         );
-
-      case DioExceptionType.unknown:
       default:
         if (e.error is SocketException) {
           return ApiResponse<T>(

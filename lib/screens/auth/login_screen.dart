@@ -7,6 +7,8 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_imgs.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/auth/forgot_password_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/home/home_screen.dart';
+// Import file Storage vừa sửa
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/flutter_secure_storage_model.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,19 +24,50 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePass = true;
 
   @override
+  void initState() {
+    super.initState();
+    // 1. Tự động load thông tin đã lưu khi mở màn hình
+    _loadSavedCredentials();
+  }
+
+  // Hàm load thông tin từ SecureStorage
+  Future<void> _loadSavedCredentials() async {
+    final info = await SecureStorage.getLoginInfo();
+    if (info['isRemember'] == true && mounted) {
+      setState(() {
+        rememberMe = true;
+        emailCtrl.text = info['email'];
+        passCtrl.text = info['password'];
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
+            // 2. Đăng nhập thành công -> Lưu (hoặc xóa) thông tin dựa vào checkbox
+            SecureStorage.saveLoginInfo(
+              emailCtrl.text.trim(),
+              passCtrl.text.trim(),
+              rememberMe,
+            );
+
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const HomeScreen()),
               (_) => false,
             );
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.red));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
           }
         },
         builder: (context, state) {
@@ -51,46 +84,88 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 24),
                   const Text(
                     'Chào mừng trở lại!',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
                   const SizedBox(height: 8),
-                  Text('Vui lòng đăng nhập để tiếp tục', style: TextStyle(color: Colors.grey.shade500)),
+                  Text(
+                    'Vui lòng đăng nhập để tiếp tục',
+                    style: TextStyle(color: Colors.grey.shade500),
+                  ),
                   const SizedBox(height: 40),
 
                   // Email
-                  _buildTextField(controller: emailCtrl, label: 'Email', icon: Icons.email_outlined, keyboardType: TextInputType.emailAddress),
+                  _buildTextField(
+                    controller: emailCtrl,
+                    label: 'Email',
+                    icon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
                   const SizedBox(height: 16),
-                  
+
                   // Password
                   _buildTextField(
-                    controller: passCtrl, 
-                    label: 'Mật khẩu', 
-                    icon: Icons.lock_outline, 
+                    controller: passCtrl,
+                    label: 'Mật khẩu',
+                    icon: Icons.lock_outline,
                     obscureText: _obscurePass,
                     suffixIcon: IconButton(
-                      icon: Icon(_obscurePass ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: Colors.grey),
-                      onPressed: () => setState(() => _obscurePass = !_obscurePass),
-                    )
+                      icon: Icon(
+                        _obscurePass
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: Colors.grey,
+                      ),
+                      onPressed:
+                          () => setState(() => _obscurePass = !_obscurePass),
+                    ),
                   ),
 
                   const SizedBox(height: 12),
                   Row(
                     children: [
                       SizedBox(
-                        height: 24, width: 24,
+                        height: 24,
+                        width: 24,
                         child: Checkbox(
                           value: rememberMe,
-                          onChanged: (v) => setState(() => rememberMe = v ?? false),
+                          onChanged:
+                              (v) => setState(() => rememberMe = v ?? false),
                           activeColor: AppColors.primaryBlue,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text('Ghi nhớ', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                      Text(
+                        'Ghi nhớ',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 13,
+                        ),
+                      ),
                       const Spacer(),
                       GestureDetector(
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ForgotPasswordPage())),
-                        child: Text('Quên mật khẩu?', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w600, fontSize: 13)),
+                        onTap:
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => const ForgotPasswordPage(),
+                              ),
+                            ),
+                        child: Text(
+                          'Quên mật khẩu?',
+                          style: TextStyle(
+                            color: AppColors.primaryBlue,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -105,11 +180,27 @@ class _LoginScreenState extends State<LoginScreen> {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      child: isLoading 
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text('ĐĂNG NHẬP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      child:
+                          isLoading
+                              ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : const Text(
+                                'ĐĂNG NHẬP',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                     ),
                   ),
 
@@ -117,10 +208,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Chưa có tài khoản? ', style: TextStyle(color: Colors.grey.shade600)),
+                      Text(
+                        'Chưa có tài khoản? ',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
                       GestureDetector(
                         onTap: () => Navigator.pushNamed(context, '/register'),
-                        child: Text('Đăng ký ngay', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
+                        child: Text(
+                          'Đăng ký ngay',
+                          style: TextStyle(
+                            color: AppColors.primaryBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -152,18 +252,31 @@ class _LoginScreenState extends State<LoginScreen> {
         suffixIcon: suffixIcon,
         filled: true,
         fillColor: Colors.grey.shade50,
-        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.primaryBlue, width: 1.5)),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 16,
+          horizontal: 16,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.primaryBlue, width: 1.5),
+        ),
       ),
     );
   }
 
   void _onLoginPressed() {
     if (emailCtrl.text.isEmpty || passCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng nhập đầy đủ thông tin')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập đầy đủ thông tin')),
+      );
       return;
     }
-    context.read<AuthBloc>().add(LoginRequested(emailCtrl.text.trim(), passCtrl.text.trim()));
+    context.read<AuthBloc>().add(
+      LoginRequested(emailCtrl.text.trim(), passCtrl.text.trim()),
+    );
   }
 }

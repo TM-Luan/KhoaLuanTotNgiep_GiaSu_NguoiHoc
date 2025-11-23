@@ -27,9 +27,7 @@ class AuthRepository {
 
       if (response.success && response.data != null) {
         final responseData = response.data!;
-
-        // Bây giờ 'responseData' là toàn bộ JSON,
-        // và kiểm tra này sẽ thành công
+       
         if (!responseData.containsKey('token') ||
             !responseData.containsKey('data')) {
           return ApiResponse<LoginResponse>(
