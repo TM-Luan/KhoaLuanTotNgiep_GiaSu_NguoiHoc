@@ -15,14 +15,15 @@ class TutorClassesBloc extends Bloc<TutorClassesEvent, TutorClassesState> {
     required YeuCauNhanLopRepository yeuCauNhanLopRepository,
     required this.giaSuId,
     required this.taiKhoanId,
-  })  : _yeuCauNhanLopRepository = yeuCauNhanLopRepository,
-        super(TutorClassesLoadInProgress()) {
+  }) : _yeuCauNhanLopRepository = yeuCauNhanLopRepository,
+       super(TutorClassesLoadInProgress()) {
     on<TutorClassesLoadStarted>(_onLoadStarted);
     on<TutorClassesRefreshRequested>(_onLoadStarted);
     on<TutorClassRequestCancelled>(_onRequestCancelled);
     on<TutorClassRequestConfirmed>(_onRequestConfirmed);
     on<TutorClassRequestRejected>(_onRequestRejected);
     on<TutorClassRequestUpdated>(_onRequestUpdated);
+    on<TutorClassCompleted>(_onClassCompleted);
   }
 
   Future<void> _onLoadStarted(
@@ -33,33 +34,43 @@ class TutorClassesBloc extends Bloc<TutorClassesEvent, TutorClassesState> {
   }
 
   Future<void> _reloadClasses(Emitter<TutorClassesState> emit) async {
-    emit(TutorClassesLoadInProgress());
-
     try {
       final result = await _yeuCauNhanLopRepository.getLopCuaGiaSu(giaSuId);
-
       if (result.success && result.data != null) {
         final data = result.data!;
 
-        final lopDangDay = (data['lopDangDay'] as List? ?? [])
-            .whereType<Map<String, dynamic>>()
-            .map(LopHoc.fromJson)
-            .toList();
+        final lopDangDay =
+            (data['lopDangDay'] as List? ?? [])
+                .whereType<Map<String, dynamic>>()
+                .map(LopHoc.fromJson)
+                .toList();
 
-        final lopDeNghi = (data['lopDeNghi'] as List? ?? [])
-            .whereType<Map<String, dynamic>>()
-            .map(YeuCauNhanLop.fromJson)
-            .toList();
+        // Handle lopDaDay safely
+        final lopDaDay =
+            (data['lopDaDay'] as List? ?? [])
+                .whereType<Map<String, dynamic>>()
+                .map(LopHoc.fromJson)
+                .toList();
+
+        final lopDeNghi =
+            (data['lopDeNghi'] as List? ?? [])
+                .whereType<Map<String, dynamic>>()
+                .map(YeuCauNhanLop.fromJson)
+                .toList();
+
         emit(
           TutorClassesLoadSuccess(
             lopDangDay: lopDangDay,
+            lopDaDay: lopDaDay,
             lopDeNghi: lopDeNghi,
           ),
         );
       } else {
         emit(
           TutorClassesLoadFailure(
-            result.message.isNotEmpty ? result.message : 'Không thể tải dữ liệu.',
+            result.message.isNotEmpty
+                ? result.message
+                : 'Không thể tải dữ liệu.',
           ),
         );
       }
@@ -68,6 +79,28 @@ class TutorClassesBloc extends Bloc<TutorClassesEvent, TutorClassesState> {
     }
   }
 
+  Future<void> _onClassCompleted(
+    TutorClassCompleted event,
+    Emitter<TutorClassesState> emit,
+  ) async {
+    try {
+      // Gọi repository, repository sẽ tự fetch data đầy đủ
+      final response = await _yeuCauNhanLopRepository.hoanThanhLop(event.lopId);
+
+      if (response.isSuccess) {
+        emit(
+          const TutorClassesActionSuccess("Đã cập nhật trạng thái hoàn thành"),
+        );
+        add(TutorClassesLoadStarted());
+      } else {
+        emit(TutorClassesActionFailure(response.message));
+      }
+    } catch (e) {
+      emit(TutorClassesActionFailure('Lỗi: $e'));
+    }
+  }
+
+  // ... (Các hàm _onRequest... giữ nguyên như cũ, không thay đổi)
   Future<void> _onRequestCancelled(
     TutorClassRequestCancelled event,
     Emitter<TutorClassesState> emit,
@@ -75,10 +108,11 @@ class TutorClassesBloc extends Bloc<TutorClassesEvent, TutorClassesState> {
     await _handleAction(
       emit,
       yeuCauId: event.yeuCauId,
-      action: () => _yeuCauNhanLopRepository.huyYeuCau(
-        yeuCauId: event.yeuCauId,
-        nguoiGuiTaiKhoanId: taiKhoanId,
-      ),
+      action:
+          () => _yeuCauNhanLopRepository.huyYeuCau(
+            yeuCauId: event.yeuCauId,
+            nguoiGuiTaiKhoanId: taiKhoanId,
+          ),
       successMessage: 'Đã hủy đề nghị.',
     );
   }
@@ -114,11 +148,12 @@ class TutorClassesBloc extends Bloc<TutorClassesEvent, TutorClassesState> {
     await _handleAction(
       emit,
       yeuCauId: event.yeuCauId,
-      action: () => _yeuCauNhanLopRepository.capNhatYeuCau(
-        yeuCauId: event.yeuCauId,
-        nguoiGuiTaiKhoanId: taiKhoanId,
-        ghiChu: event.ghiChu,
-      ),
+      action:
+          () => _yeuCauNhanLopRepository.capNhatYeuCau(
+            yeuCauId: event.yeuCauId,
+            nguoiGuiTaiKhoanId: taiKhoanId,
+            ghiChu: event.ghiChu,
+          ),
       successMessage: 'Đã cập nhật đề nghị.',
     );
   }
@@ -129,28 +164,16 @@ class TutorClassesBloc extends Bloc<TutorClassesEvent, TutorClassesState> {
     required Future<ApiResponse<dynamic>> Function() action,
     required String successMessage,
   }) async {
-    if (state is! TutorClassesLoadSuccess) {
-      return;
-    }
-
+    if (state is! TutorClassesLoadSuccess) return;
     _setActionProgress(emit, yeuCauId, true);
-
     try {
       final response = await action();
-
       _setActionProgress(emit, yeuCauId, false);
-
       if (response.isSuccess) {
         emit(TutorClassesActionSuccess(successMessage));
         add(TutorClassesLoadStarted());
       } else {
-        emit(
-          TutorClassesActionFailure(
-            response.message.isNotEmpty
-                ? response.message
-                : 'Không thể thực hiện hành động.',
-          ),
-        );
+        emit(TutorClassesActionFailure(response.message));
       }
     } catch (e) {
       _setActionProgress(emit, yeuCauId, false);
@@ -164,17 +187,12 @@ class TutorClassesBloc extends Bloc<TutorClassesEvent, TutorClassesState> {
     bool inProgress,
   ) {
     final current = state;
-    if (current is! TutorClassesLoadSuccess) {
-      return;
-    }
-
+    if (current is! TutorClassesLoadSuccess) return;
     final updated = Map<int, bool>.from(current.actionInProgress);
-    if (inProgress) {
+    if (inProgress)
       updated[yeuCauId] = true;
-    } else {
+    else
       updated.remove(yeuCauId);
-    }
-
     emit(current.copyWith(actionInProgress: updated));
   }
 }

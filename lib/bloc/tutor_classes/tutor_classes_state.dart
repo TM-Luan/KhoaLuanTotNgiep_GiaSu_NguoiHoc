@@ -8,38 +8,44 @@ abstract class TutorClassesState extends Equatable {
   List<Object?> get props => [];
 }
 
-// Đang tải dữ liệu
 class TutorClassesLoadInProgress extends TutorClassesState {}
 
-// Tải dữ liệu thành công
 class TutorClassesLoadSuccess extends TutorClassesState {
   final List<LopHoc> lopDangDay;
+  final List<LopHoc> lopDaDay; // THÊM BIẾN NÀY
   final List<YeuCauNhanLop> lopDeNghi;
   final Map<int, bool> actionInProgress;
 
   const TutorClassesLoadSuccess({
     required this.lopDangDay,
+    required this.lopDaDay, // BẮT BUỘC TRUYỀN VÀO
     required this.lopDeNghi,
     this.actionInProgress = const {},
   });
 
   TutorClassesLoadSuccess copyWith({
     List<LopHoc>? lopDangDay,
+    List<LopHoc>? lopDaDay,
     List<YeuCauNhanLop>? lopDeNghi,
     Map<int, bool>? actionInProgress,
   }) {
     return TutorClassesLoadSuccess(
       lopDangDay: lopDangDay ?? this.lopDangDay,
+      lopDaDay: lopDaDay ?? this.lopDaDay,
       lopDeNghi: lopDeNghi ?? this.lopDeNghi,
       actionInProgress: actionInProgress ?? this.actionInProgress,
     );
   }
 
   @override
-  List<Object?> get props => [lopDangDay, lopDeNghi, actionInProgress];
+  List<Object?> get props => [
+    lopDangDay,
+    lopDaDay,
+    lopDeNghi,
+    actionInProgress,
+  ];
 }
 
-// Lỗi khi tải
 class TutorClassesLoadFailure extends TutorClassesState {
   final String message;
   const TutorClassesLoadFailure(this.message);
@@ -47,7 +53,6 @@ class TutorClassesLoadFailure extends TutorClassesState {
   List<Object?> get props => [message];
 }
 
-// Hành động thành công (để hiện SnackBar)
 class TutorClassesActionSuccess extends TutorClassesState {
   final String message;
   const TutorClassesActionSuccess(this.message);
@@ -55,7 +60,6 @@ class TutorClassesActionSuccess extends TutorClassesState {
   List<Object?> get props => [message];
 }
 
-// Hành động thất bại
 class TutorClassesActionFailure extends TutorClassesState {
   final String message;
   const TutorClassesActionFailure(this.message);

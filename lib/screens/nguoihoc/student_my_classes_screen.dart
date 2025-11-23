@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc_model.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/add_class_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/class_detail_screen.dart';
@@ -25,13 +26,15 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
   late StreamSubscription _proposalUpdateSubscription;
   bool _isLoading = true;
   String? _errorMessage;
+
   List<LopHoc> _lopHocTimGiaSu = [];
   List<LopHoc> _lopHocDangDay = [];
+  List<LopHoc> _lopHocDaHoc = [];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _proposalUpdateSubscription = GlobalNotificationService()
         .proposalUpdateStream
         .listen((event) => _fetchClasses());
@@ -51,6 +54,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
       _errorMessage = null;
       _lopHocTimGiaSu = [];
       _lopHocDangDay = [];
+      _lopHocDaHoc = [];
     });
     try {
       final response = await _lopHocRepo.getLopHocCuaNguoiHoc();
@@ -61,6 +65,15 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
               all.where((lop) => lop.trangThai == 'TimGiaSu').toList();
           _lopHocDangDay =
               all.where((lop) => lop.trangThai == 'DangHoc').toList();
+          // LỌC LỚP ĐÃ HỌC
+          _lopHocDaHoc =
+              all
+                  .where(
+                    (lop) =>
+                        lop.trangThai == 'DaKetThuc' ||
+                        lop.trangThai == 'DaHoc',
+                  )
+                  .toList();
         });
       } else {
         _errorMessage = response.message;
@@ -100,7 +113,11 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
               labelColor: AppColors.primary,
               unselectedLabelColor: Colors.grey,
               labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-              tabs: const [Tab(text: 'Đang Học'), Tab(text: 'Tìm Gia Sư')],
+              tabs: const [
+                Tab(text: 'Đang Học'),
+                Tab(text: 'Đã Học'),
+                Tab(text: 'Tìm Gia Sư'),
+              ],
             ),
           ),
         ),
@@ -133,30 +150,50 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                   _buildClassListView(
                     _lopHocDangDay,
                     'Bạn chưa có lớp nào đang học.',
+                    isActive: true,
+                  ),
+                  _buildClassListView(
+                    _lopHocDaHoc,
+                    'Bạn chưa có lớp nào đã học.',
+                    isActive: false,
                   ),
                   _buildClassListView(
                     _lopHocTimGiaSu,
                     'Không có lớp nào đang tìm gia sư.',
+                    isActive: true,
                   ),
                 ],
               ),
     );
   }
 
-  Widget _buildClassListView(List<LopHoc> list, String emptyMsg) {
+  Widget _buildClassListView(
+    List<LopHoc> list,
+    String emptyMsg, {
+    required bool isActive,
+  }) {
     if (list.isEmpty) return _buildEmptyState(emptyMsg);
     return ListView.separated(
       padding: const EdgeInsets.all(20),
       itemCount: list.length,
       separatorBuilder: (_, __) => const SizedBox(height: 16),
-      itemBuilder: (context, index) => _buildClassCard(context, list[index]),
+      itemBuilder:
+          (context, index) =>
+              _buildClassCard(context, list[index], isActive: isActive),
     );
   }
 
-  Widget _buildClassCard(BuildContext context, LopHoc lopHoc) {
+  Widget _buildClassCard(
+    BuildContext context,
+    LopHoc lopHoc, {
+    required bool isActive,
+  }) {
     final status = lopHoc.trangThai ?? 'N/A';
     final isLearning = status == 'DangHoc';
-    final accentColor = isLearning ? Colors.green : Colors.orange;
+    final accentColor =
+        isActive
+            ? (isLearning ? Colors.green : Colors.orange)
+            : Colors.grey.shade500;
 
     return GestureDetector(
       onTap:
@@ -188,7 +225,7 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
           child: IntrinsicHeight(
             child: Row(
               children: [
-                Container(width: 6, color: accentColor), // Colored Strip
+                Container(width: 6, color: accentColor),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -220,7 +257,9 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                isLearning ? 'Đang học' : 'Tìm gia sư',
+                                isActive
+                                    ? (isLearning ? 'Đang học' : 'Tìm gia sư')
+                                    : 'Đã học',
                                 style: TextStyle(
                                   color: accentColor,
                                   fontSize: 11,
@@ -240,16 +279,15 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                           Icons.attach_money,
                           '${formatNumber(toNumber(lopHoc.hocPhi))} đ/Buổi',
                         ),
-
                         const SizedBox(height: 16),
-                        Divider(height: 1, color: Colors.grey.shade100),
-                        const SizedBox(height: 12),
-
-                        // Action Buttons
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: _buildActions(context, lopHoc, status),
-                        ),
+                        if (isActive) ...[
+                          Divider(height: 1, color: Colors.grey.shade100),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: _buildActions(context, lopHoc, status),
+                          ),
+                        ],
                       ],
                     ),
                   ),

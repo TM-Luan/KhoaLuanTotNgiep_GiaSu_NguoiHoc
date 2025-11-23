@@ -46,11 +46,10 @@ class _AddClassPageState extends State<AddClassPage> {
   final List<int> _thoiLuongOptions = [60, 90, 120];
   final List<int> _soBuoiOptions = [1, 2, 3, 4, 5];
 
-  // --- THEME COLORS ---
-  final Color _primaryColor = AppColors.primaryBlue; // Xanh hiện đại
-  final Color _backgroundColor = const Color(0xFFF9FAFB); // Xám rất nhạt
+  final Color _primaryColor = AppColors.primaryBlue;
+  final Color _backgroundColor = const Color(0xFFF9FAFB);
   final Color _inputFillColor = Colors.white;
-  final Color _borderColor = const Color(0xFFE5E7EB); // Xám viền
+  final Color _borderColor = const Color(0xFFE5E7EB);
 
   @override
   void initState() {
@@ -119,13 +118,21 @@ class _AddClassPageState extends State<AddClassPage> {
     }
   }
 
+  // [SỬA LỖI] Logic submit form an toàn hơn
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
     try {
       final nguoiHocId = await _getNguoiHocIDFromProfile();
-      if (nguoiHocId == null) throw Exception('Không tìm thấy người học.');
+      if (nguoiHocId == null)
+        throw Exception('Không tìm thấy thông tin người học.');
+
+      // Làm sạch chuỗi học phí (chỉ giữ lại số)
+      final cleanHocPhi = _hocPhiController.text.replaceAll(
+        RegExp(r'[^0-9]'),
+        '',
+      );
 
       final data = {
         'NguoiHocID': nguoiHocId,
@@ -133,7 +140,7 @@ class _AddClassPageState extends State<AddClassPage> {
         'KhoiLopID': _selectedKhoiLopID,
         'DoiTuongID': _selectedDoiTuongID,
         'HinhThuc': _selectedHinhThuc,
-        'HocPhi': double.tryParse(_hocPhiController.text) ?? 0,
+        'HocPhi': double.tryParse(cleanHocPhi) ?? 0, // Parse số an toàn
         'ThoiLuong': _selectedThoiLuong,
         'SoLuong': int.tryParse(_soLuongController.text) ?? 1,
         'MoTa': _moTaController.text,
@@ -173,7 +180,6 @@ class _AddClassPageState extends State<AddClassPage> {
     }
   }
 
-  // --- UI HELPERS FOR CLEAN LOOK ---
   InputDecoration _cleanInputDecoration(
     String label,
     IconData icon, {
@@ -375,7 +381,7 @@ class _AddClassPageState extends State<AddClassPage> {
 
             const SizedBox(height: 32),
             _buildSubmitButton(),
-            const SizedBox(height: 20), // Bottom padding
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -502,7 +508,7 @@ class _AddClassPageState extends State<AddClassPage> {
                 )
                 .toList(),
         onChanged: onChanged,
-        validator: (v) => null, // Optional
+        validator: (v) => null,
         style: const TextStyle(color: Colors.black87, fontSize: 15),
       ),
     );
@@ -555,7 +561,7 @@ class _AddClassPageState extends State<AddClassPage> {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          elevation: 0, // Flat style
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

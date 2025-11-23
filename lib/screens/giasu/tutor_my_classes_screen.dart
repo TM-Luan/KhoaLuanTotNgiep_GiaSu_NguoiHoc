@@ -35,7 +35,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _proposalUpdateSubscription = GlobalNotificationService()
         .proposalUpdateStream
         .listen((event) {
@@ -115,8 +115,9 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
                 ),
                 indicatorPadding: const EdgeInsets.all(4),
                 tabs: const [
-                  Tab(text: 'LỚP ĐANG DẠY'),
-                  Tab(text: 'LỜI MỜI & ĐỀ NGHỊ'),
+                  Tab(text: 'ĐANG DẠY'),
+                  Tab(text: 'ĐÃ DẠY'),
+                  Tab(text: 'LỜI MỜI'),
                 ],
               ),
             ),
@@ -124,16 +125,15 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
         ),
         body: BlocConsumer<TutorClassesBloc, TutorClassesState>(
           listener: (context, state) {
-            if (state is TutorClassesActionSuccess) {
+            if (state is TutorClassesActionSuccess)
               _showSnack(context, state.message, Colors.green);
-            } else if (state is TutorClassesActionFailure)
+            else if (state is TutorClassesActionFailure)
               _showSnack(context, state.message, Colors.red);
             else if (state is TutorClassesLoadFailure)
               _showSnack(context, state.message, Colors.red);
           },
           builder: (context, state) {
             if (state is TutorClassesLoadSuccess) _latestSuccessState = state;
-
             if (_latestSuccessState != null) {
               return BlocListener<LichHocBloc, LichHocState>(
                 listener: (ctx, lichState) {
@@ -158,6 +158,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
                       context,
                       _latestSuccessState!.lopDangDay,
                     ),
+                    _buildLopDaDayList(context, _latestSuccessState!.lopDaDay),
                     _buildLopDeNghiList(context, _latestSuccessState!),
                   ],
                 ),
@@ -172,9 +173,8 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
 
   // --- LỚP ĐANG DẠY ---
   Widget _buildLopDangDayList(BuildContext context, List<LopHoc> list) {
-    if (list.isEmpty) {
+    if (list.isEmpty)
       return _buildEmptyState('Bạn chưa có lớp học nào đang dạy');
-    }
     return RefreshIndicator(
       onRefresh:
           () async => context.read<TutorClassesBloc>().add(
@@ -184,14 +184,40 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
         padding: const EdgeInsets.all(20),
         itemCount: list.length,
         separatorBuilder: (_, __) => const SizedBox(height: 16),
-        itemBuilder: (context, index) => _buildClassCard(context, list[index]),
+        itemBuilder:
+            (context, index) =>
+                _buildClassCard(context, list[index], isActive: true),
       ),
     );
   }
 
-  Widget _buildClassCard(BuildContext context, LopHoc lop) {
+  // --- LỚP ĐÃ DẠY ---
+  Widget _buildLopDaDayList(BuildContext context, List<LopHoc> list) {
+    if (list.isEmpty) return _buildEmptyState('Bạn chưa có lớp đã dạy nào');
+    return RefreshIndicator(
+      onRefresh:
+          () async => context.read<TutorClassesBloc>().add(
+            TutorClassesRefreshRequested(),
+          ),
+      child: ListView.separated(
+        padding: const EdgeInsets.all(20),
+        itemCount: list.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 16),
+        itemBuilder:
+            (context, index) =>
+                _buildClassCard(context, list[index], isActive: false),
+      ),
+    );
+  }
+
+  Widget _buildClassCard(
+    BuildContext context,
+    LopHoc lop, {
+    required bool isActive,
+  }) {
     final isPaid = lop.trangThaiThanhToan == 'DaThanhToan';
-    final statusColor = isPaid ? Colors.green : Colors.orange;
+    final statusColor =
+        isActive ? (isPaid ? Colors.green : Colors.orange) : Colors.grey;
 
     return GestureDetector(
       onTap: () => _navigateToClassDetail(context, lop.maLop),
@@ -244,7 +270,9 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                isPaid ? 'Đang dạy' : 'Chưa thanh toán',
+                                isActive
+                                    ? (isPaid ? 'Đang dạy' : 'Chưa thanh toán')
+                                    : 'Đã kết thúc',
                                 style: TextStyle(
                                   color: statusColor,
                                   fontSize: 11,
@@ -255,16 +283,13 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
                           ],
                         ),
                         const SizedBox(height: 12),
-                        _buildInfoRow(
-                          Icons.person_outline,
-                          lop.tenNguoiHoc,
-                        ),
+                        _buildInfoRow(Icons.person_outline, lop.tenNguoiHoc),
                         const SizedBox(height: 4),
                         _buildInfoRow(
                           Icons.attach_money,
                           '${formatNumber(toNumber(lop.hocPhi))} đ/Buổi',
                         ),
-                        if (!isPaid) ...[
+                        if (isActive && !isPaid) ...[
                           const SizedBox(height: 4),
                           _buildInfoRow(
                             Icons.warning_amber_rounded,
@@ -274,36 +299,46 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
                         ],
                         const SizedBox(height: 16),
 
-                        // Actions
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            if (isPaid) ...[
-                              _buildActionButton(
-                                'Hủy Lịch',
-                                Icons.delete_outline,
-                                Colors.red,
-                                () =>
-                                    _showDeleteAllSchedulesDialog(context, lop),
-                              ),
-                              const SizedBox(width: 8),
-                              _buildActionButton(
-                                'Tạo Lịch',
-                                Icons.calendar_month_outlined,
-                                Colors.green,
-                                () => _navigateToAddSchedule(context, lop),
-                                isPrimary: true,
-                              ),
-                            ] else
-                              _buildActionButton(
-                                'Thanh toán',
-                                Icons.payment,
-                                Colors.orange,
-                                () => _navigateToPayment(context, lop),
-                                isPrimary: true,
-                              ),
-                          ],
-                        ),
+                        // CHỨC NĂNG
+                        if (isActive)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              if (isPaid) ...[
+                                _buildActionButton(
+                                  'Hủy Lịch',
+                                  Icons.delete_outline,
+                                  Colors.red,
+                                  () => _showDeleteAllSchedulesDialog(
+                                    context,
+                                    lop,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                _buildActionButton(
+                                  'Tạo Lịch',
+                                  Icons.calendar_month_outlined,
+                                  Colors.blue,
+                                  () => _navigateToAddSchedule(context, lop),
+                                ),
+                                const SizedBox(width: 8),
+                                _buildActionButton(
+                                  'Hoàn thành',
+                                  Icons.check_circle_outline,
+                                  Colors.green,
+                                  () => _showCompleteClassDialog(context, lop),
+                                  isPrimary: true,
+                                ),
+                              ] else
+                                _buildActionButton(
+                                  'Thanh toán',
+                                  Icons.payment,
+                                  Colors.orange,
+                                  () => _navigateToPayment(context, lop),
+                                  isPrimary: true,
+                                ),
+                            ],
+                          ),
                       ],
                     ),
                   ),
@@ -316,15 +351,14 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
     );
   }
 
-  // --- LỚP ĐỀ NGHỊ ---
+  // --- LỜI MỜI ---
   Widget _buildLopDeNghiList(
     BuildContext context,
     TutorClassesLoadSuccess state,
   ) {
     final list = state.lopDeNghi;
-    if (list.isEmpty) {
+    if (list.isEmpty)
       return _buildEmptyState('Không có lời mời hay đề nghị nào');
-    }
     return RefreshIndicator(
       onRefresh:
           () async => context.read<TutorClassesBloc>().add(
@@ -343,7 +377,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
   Widget _buildRequestCard(BuildContext context, YeuCauNhanLop yc) {
     final isSentByMe = yc.vaiTroNguoiGui == 'GiaSu';
     final bloc = context.read<TutorClassesBloc>();
-
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -392,10 +425,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
             ],
           ),
           const SizedBox(height: 12),
-          _buildInfoRow(
-            Icons.person_outline,
-            yc.lopHoc.tenNguoiHoc ,
-          ),
+          _buildInfoRow(Icons.person_outline, yc.lopHoc.tenNguoiHoc),
           const SizedBox(height: 4),
           _buildInfoRow(
             Icons.attach_money,
@@ -410,7 +440,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
                 textColor: Colors.grey,
               ),
             ),
-
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -452,7 +481,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
     );
   }
 
-  // --- HELPERS ---
   Widget _buildInfoRow(IconData icon, String text, {Color? textColor}) {
     return Row(
       children: [
@@ -545,7 +573,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
       soBuoiMotTuan: lop.soBuoiTuan,
     );
     if (phi == null) return;
-
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -557,9 +584,8 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
             ),
       ),
     );
-    if (result == true && mounted) {
+    if (result == true && mounted)
       context.read<TutorClassesBloc>().add(TutorClassesRefreshRequested());
-    }
   }
 
   void _showDeleteAllSchedulesDialog(BuildContext context, LopHoc lop) {
@@ -586,6 +612,39 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
                   Navigator.pop(ctx);
                 },
                 child: const Text('Xác nhận hủy'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showCompleteClassDialog(BuildContext context, LopHoc lop) {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Hoàn thành lớp học?'),
+            content: const Text(
+              'Xác nhận bạn đã hoàn thành việc dạy lớp này. Lớp học sẽ được chuyển sang danh sách "Đã dạy".',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Hủy'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  // Sửa: Chỉ truyền ID (maLop)
+                  context.read<TutorClassesBloc>().add(
+                    TutorClassCompleted(lop.maLop),
+                  );
+                  Navigator.pop(ctx);
+                },
+                child: const Text('Xác nhận'),
               ),
             ],
           ),
