@@ -1,6 +1,7 @@
 // file: lich_hoc_repository.dart
 
 import 'package:intl/intl.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_config.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_service.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lichhoc_model.dart';
@@ -179,23 +180,26 @@ class LichHocRepository {
 
     return await _apiService.delete(endpoint);
   }
+
   Future<ApiResponse<dynamic>> xoaTatCaLichHocTheoLop({
     required int lopYeuCauId,
   }) async {
     String endpoint = '/lop/$lopYeuCauId/xoa-tat-ca-lich';
-    
+
     // Giả sử ApiService đã xử lý 'success' = true/false
-    return await _apiService.delete(endpoint); 
+    return await _apiService.delete(endpoint);
   }
-// [SỬA] Tạo lịch học thông minh theo tuần (với nhiều khung giờ)
+
+  // [SỬA] Tạo lịch học thông minh theo tuần (với nhiều khung giờ)
   Future<ApiResponse<List<LichHoc>>> taoLichHocTheoTuan({
     required int lopYeuCauId,
     required DateTime ngayBatDau,
     required int soTuan,
-    
+
     // [SỬA] Thay đổi tham số
-    required List<Map<String, dynamic>> buoiHocMau, // Ví dụ: [{'ngay_thu': 1, 'thoi_gian_bat_dau': '19:00:00'}, ...]
-    
+    required List<Map<String, dynamic>>
+    buoiHocMau, // Ví dụ: [{'ngay_thu': 1, 'thoi_gian_bat_dau': '19:00:00'}, ...]
+
     String? duongDan,
   }) async {
     final endpoint = '/lop/$lopYeuCauId/tao-lich-theo-tuan';
@@ -217,6 +221,19 @@ class LichHocRepository {
         final dataList = data as List;
         return dataList.map((item) => LichHoc.fromJson(item)).toList();
       },
+    );
+  }
+
+  Future<ApiResponse<void>> deleteLopHoc(int classId) async {
+    final String endpoint = '${ApiConfig.lopHocYeuCau}/$classId';
+
+    // Gọi DELETE /api/lophocyeucau/{id}
+    final response = await _apiService.delete(endpoint);
+
+    return ApiResponse<void>(
+      success: response.success,
+      message: response.message,
+      statusCode: response.statusCode,
     );
   }
 }

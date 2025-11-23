@@ -1,4 +1,3 @@
-// Giữ nguyên imports
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
@@ -58,18 +57,6 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
     }
   }
 
-  Color _getStatusColor(String? code) {
-    if (code == 'DangHoc') return Colors.green;
-    if (code == 'TimGiaSu') return Colors.orange;
-    return Colors.grey;
-  }
-
-  String _getStatusText(String? code) {
-    if (code == 'DangHoc') return 'Đang hoạt động';
-    if (code == 'TimGiaSu') return 'Đang tìm gia sư';
-    return 'Khác';
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,6 +94,10 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
 
     final bool isTutor = widget.userRole == UserRole.tutor;
 
+    // [UPDATED] Lấy style và text tiếng Việt từ utils
+    final String statusText = getTrangThaiVietNam(_lopHoc!.trangThai);
+    final Map<String, dynamic> style = getTrangThaiStyle(_lopHoc!.trangThai);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20.0),
       child: Column(
@@ -116,11 +107,9 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.05),
+              color: AppColors.primary.withOpacity(0.05),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.1),
-              ),
+              border: Border.all(color: AppColors.primary.withOpacity(0.1)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,21 +127,20 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
 
                 Row(
                   children: [
+                    // [UPDATED] Hiển thị Badge trạng thái
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(
-                          _lopHoc!.trangThai,
-                        ).withValues(alpha: 0.1),
+                        color: style['bgColor'],
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        _getStatusText(_lopHoc!.trangThai),
+                        statusText,
                         style: TextStyle(
-                          color: _getStatusColor(_lopHoc!.trangThai),
+                          color: style['color'],
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
