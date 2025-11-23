@@ -40,7 +40,7 @@ class ApiConfig {
   static const String lichHocNguoiHocTheoNgay =
       '/nguoihoc/lich-hoc-theo-ngay'; // GET (Chi tiết ngày)
   // === KẾT THÚC SỬA ĐỔI ===
-
+  static const String vnPayCreateUrl = '/vnpay/create-url';
   // Headers
   static Map<String, String> get headers => {
     'Content-Type': 'application/json',

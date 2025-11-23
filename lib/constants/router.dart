@@ -12,6 +12,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/giasu/tutor_schedul
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/student_my_classes_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/home/home_screen.dart'; // Có thể là màn hình chung?
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/auth/profile_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/payment/payment_return_screen.dart';
 
 
 class AppRouter {
@@ -49,6 +50,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const HomeScreen());
       case '/profile':
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
+        case '/return':
+        return MaterialPageRoute(builder: (_) => const PaymentReturnScreen());
       case TutorMyClassesScreen.routeName: // '/tutor-my-classes'
         return MaterialPageRoute(builder: (_) => const TutorMyClassesScreen());
 
