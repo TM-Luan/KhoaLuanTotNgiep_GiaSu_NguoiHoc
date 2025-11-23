@@ -514,6 +514,8 @@ class _AddClassPageState extends State<AddClassPage> {
     );
   }
 
+  // Tìm đến hàm _buildTextField và thay thế phần validator:
+
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -543,9 +545,38 @@ class _AddClassPageState extends State<AddClassPage> {
           hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
         ),
         validator: (v) {
-          if (!isOptional && (v == null || v.isEmpty)) {
+          final value = v?.trim();
+
+          // 1. Kiểm tra rỗng
+          if (!isOptional && (value == null || value.isEmpty)) {
             return 'Không được để trống';
           }
+
+          // 2. [MỚI] Validate dữ liệu số
+          if (keyboardType == TextInputType.number &&
+              value != null &&
+              value.isNotEmpty) {
+            // Loại bỏ ký tự không phải số (phòng trường hợp copy paste hoặc format tiền tệ)
+            final cleanValue = value.replaceAll(RegExp(r'[^0-9]'), '');
+            final number = int.tryParse(cleanValue);
+
+            if (number == null) {
+              return 'Vui lòng nhập số hợp lệ';
+            }
+
+            // Kiểm tra cụ thể từng trường
+            if (label.toLowerCase().contains('học phí')) {
+              if (number < 10000) {
+                return 'Học phí tối thiểu 10.000đ';
+              }
+            }
+
+            if (label.toLowerCase().contains('số học viên')) {
+              if (number < 1) return 'Tối thiểu 1 học viên';
+              if (number > 50) return 'Tối đa 50 học viên';
+            }
+          }
+
           return null;
         },
       ),

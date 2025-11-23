@@ -524,6 +524,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
+  // Tìm đến hàm _buildField và thay thế phần validator:
+
   Widget _buildField(
     String label,
     TextEditingController controller, {
@@ -538,12 +540,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         keyboardType: keyboard,
         maxLines: maxLines,
         style: TextStyle(fontSize: 15, color: _textPrimary),
-        validator:
-            (v) =>
-                (isRequired && (v == null || v.isEmpty))
-                    ? 'Không được để trống'
-                    : null,
         decoration: _cleanInputDecoration(label),
+        validator: (v) {
+          final value = v?.trim();
+
+          // 1. Kiểm tra rỗng
+          if (isRequired && (value == null || value.isEmpty)) {
+            return 'Không được để trống';
+          }
+
+          if (value != null && value.isNotEmpty) {
+            // 2. [MỚI] Validate Email
+            if (keyboard == TextInputType.emailAddress) {
+              final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+              if (!emailRegex.hasMatch(value)) {
+                return 'Email không hợp lệ';
+              }
+            }
+
+            // 3. [MỚI] Validate Số điện thoại
+            if (keyboard == TextInputType.phone) {
+              // Kiểm tra độ dài và đầu số 0
+              if (value.length != 10 || !value.startsWith('0')) {
+                return 'SĐT không hợp lệ (10 số, bắt đầu bằng 0)';
+              }
+              // Kiểm tra ký tự số
+              final isNumeric = int.tryParse(value) != null;
+              if (!isNumeric) return 'SĐT chỉ được chứa số';
+            }
+          }
+
+          return null;
+        },
       ),
     );
   }

@@ -297,20 +297,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  // Tìm đến hàm _onRegisterPressed và thay thế bằng đoạn code này:
+
   void _onRegisterPressed() {
+    // 1. Kiểm tra điều khoản
     if (!agreeTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng đồng ý điều khoản')),
       );
       return;
     }
-    // Giữ nguyên logic validate của bạn
+
     final name = nameCtrl.text.trim();
     final phone = phoneCtrl.text.trim();
     final email = emailCtrl.text.trim();
     final pass = passCtrl.text.trim();
     final confirm = confirmPassCtrl.text.trim();
 
+    // 2. Kiểm tra rỗng
     if (name.isEmpty ||
         phone.isEmpty ||
         email.isEmpty ||
@@ -322,13 +326,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    if (pass != confirm) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Mật khẩu không khớp')));
+    // 3. [MỚI] Kiểm tra định dạng Email
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Định dạng Email không hợp lệ')),
+      );
       return;
     }
 
+    // 4. [MỚI] Kiểm tra số điện thoại (VN: 10 số, bắt đầu bằng 0)
+    // Regex này chấp nhận các đầu số nhà mạng Việt Nam phổ biến
+    final phoneRegex = RegExp(r'^(03|05|07|08|09|01[2|6|8|9])+([0-9]{8})$');
+    // Hoặc đơn giản hơn: RegExp(r'0[0-9]{9}$')
+    if (phone.length != 10 || !phone.startsWith('0')) {
+      // Kiểm tra cơ bản trước
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Số điện thoại phải có 10 chữ số và bắt đầu bằng 0'),
+        ),
+      );
+      return;
+    }
+
+    // 5. [MỚI] Kiểm tra độ mạnh mật khẩu
+    if (pass.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Mật khẩu phải có ít nhất 6 ký tự')),
+      );
+      return;
+    }
+
+    // 6. Kiểm tra khớp mật khẩu
+    if (pass != confirm) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Mật khẩu xác nhận không khớp')),
+      );
+      return;
+    }
+
+    // Gọi Bloc xử lý đăng ký
     context.read<AuthBloc>().add(
       RegisterRequested(
         hoTen: name,
