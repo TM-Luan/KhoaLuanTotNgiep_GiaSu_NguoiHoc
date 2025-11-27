@@ -1,9 +1,11 @@
+// file: lib/screens/giasu/tutor_my_classes_screen.dart
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
-import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_bloc.dart'; // Import LichHocBloc
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor_classes/tutor_classes_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor_classes/tutor_classes_event.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/tutor_classes/tutor_classes_state.dart';
@@ -18,12 +20,10 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notificatio
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/utils/format_vnd.dart';
 
 class TutorMyClassesScreen extends StatefulWidget {
-  // [THÊM] index tab mặc định: 0=Đang dạy, 1=Đã dạy, 2=Lời mời
   final int initialTabIndex;
+  static const String routeName = '/tutor-my-classes';
 
   const TutorMyClassesScreen({super.key, this.initialTabIndex = 0});
-
-  static const String routeName = '/tutor-my-classes';
 
   @override
   State<TutorMyClassesScreen> createState() => _TutorMyClassesScreenState();
@@ -39,11 +39,10 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
   @override
   void initState() {
     super.initState();
-    // [SỬA] Sử dụng widget.initialTabIndex
     _tabController = TabController(
       length: 3,
       vsync: this,
-      initialIndex: widget.initialTabIndex, // <-- Quan trọng
+      initialIndex: widget.initialTabIndex,
     );
 
     _proposalUpdateSubscription = GlobalNotificationService()
@@ -60,7 +59,6 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
     super.dispose();
   }
 
-  // ... (Phần còn lại của file giữ nguyên như cũ)
   @override
   Widget build(BuildContext context) {
     final authState = context.read<AuthBloc>().state;
@@ -98,6 +96,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
           backgroundColor: Colors.white,
           elevation: 0,
           centerTitle: false,
+          // --- CUSTOM TAB BAR STYLE ---
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(50.0),
             child: Container(
@@ -115,6 +114,7 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 4,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
@@ -125,6 +125,8 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
                   fontSize: 13,
                 ),
                 indicatorPadding: const EdgeInsets.all(4),
+                indicatorSize: TabBarIndicatorSize.tab,
+                dividerColor: Colors.transparent,
                 tabs: const [
                   Tab(text: 'ĐANG DẠY'),
                   Tab(text: 'ĐÃ DẠY'),
@@ -136,18 +138,18 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
         ),
         body: BlocConsumer<TutorClassesBloc, TutorClassesState>(
           listener: (context, state) {
-            if (state is TutorClassesActionSuccess)
+            if (state is TutorClassesActionSuccess) {
               _showSnack(context, state.message, Colors.green);
-            else if (state is TutorClassesActionFailure)
+            } else if (state is TutorClassesActionFailure) {
               _showSnack(context, state.message, Colors.red);
-            else if (state is TutorClassesLoadFailure)
+            } else if (state is TutorClassesLoadFailure) {
               _showSnack(context, state.message, Colors.red);
+            }
           },
           builder: (context, state) {
             if (state is TutorClassesLoadSuccess) _latestSuccessState = state;
             if (_latestSuccessState != null) {
               return BlocListener<LichHocBloc, LichHocState>(
-                // Thêm listener LichHocBloc ở đây
                 listener: (ctx, lichState) {
                   if (lichState is LichHocDeleted ||
                       lichState is LichHocCreated) {
@@ -183,20 +185,18 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
     );
   }
 
-  // ... (Các hàm _buildLopDangDayList, _buildLopDaDayList, _buildLopDeNghiList, _buildClassCard, _buildRequestCard, _buildInfoRow, _buildActionButton, _buildEmptyState, _showSnack, _navigateToClassDetail, _navigateToAddSchedule, _navigateToPayment, _showDeleteAllSchedulesDialog, _showCompleteClassDialog giữ nguyên)
-
-  // Copy lại các hàm phụ trợ từ file gốc của bạn vào đây để code chạy được nhé.
-  // Tôi rút gọn để tập trung vào logic initialTabIndex.
   Widget _buildLopDangDayList(BuildContext context, List<LopHoc> list) {
     if (list.isEmpty)
-      return _buildEmptyState('Bạn chưa có lớp học nào đang dạy');
+      return _buildEmptyState('Bạn chưa có lớp học nào đang dạy', Icons.school);
     return RefreshIndicator(
       onRefresh:
           () async => context.read<TutorClassesBloc>().add(
             TutorClassesRefreshRequested(),
           ),
+      color: AppColors.primary,
+      backgroundColor: Colors.white,
       child: ListView.separated(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         itemCount: list.length,
         separatorBuilder: (_, __) => const SizedBox(height: 16),
         itemBuilder:
@@ -207,14 +207,17 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
   }
 
   Widget _buildLopDaDayList(BuildContext context, List<LopHoc> list) {
-    if (list.isEmpty) return _buildEmptyState('Bạn chưa có lớp đã dạy nào');
+    if (list.isEmpty)
+      return _buildEmptyState('Bạn chưa có lớp đã dạy nào', Icons.history);
     return RefreshIndicator(
       onRefresh:
           () async => context.read<TutorClassesBloc>().add(
             TutorClassesRefreshRequested(),
           ),
+      color: AppColors.primary,
+      backgroundColor: Colors.white,
       child: ListView.separated(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         itemCount: list.length,
         separatorBuilder: (_, __) => const SizedBox(height: 16),
         itemBuilder:
@@ -230,14 +233,19 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
   ) {
     final list = state.lopDeNghi;
     if (list.isEmpty)
-      return _buildEmptyState('Không có lời mời hay đề nghị nào');
+      return _buildEmptyState(
+        'Không có lời mời hay đề nghị nào',
+        Icons.mail_outline,
+      );
     return RefreshIndicator(
       onRefresh:
           () async => context.read<TutorClassesBloc>().add(
             TutorClassesRefreshRequested(),
           ),
+      color: AppColors.primary,
+      backgroundColor: Colors.white,
       child: ListView.separated(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         itemCount: list.length,
         separatorBuilder: (_, __) => const SizedBox(height: 16),
         itemBuilder:
@@ -246,143 +254,166 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
     );
   }
 
-  // ... (Giữ nguyên các widget khác: _buildClassCard, _buildRequestCard, helper methods...)
-  // Bạn hãy đảm bảo giữ lại toàn bộ các hàm _build... và logic xử lý bên dưới từ file gốc của bạn
+  // --- MODERN CARD STYLES ---
 
   Widget _buildClassCard(
     BuildContext context,
     LopHoc lop, {
     required bool isActive,
   }) {
-    // ... Code cũ từ file uploaded:lib/screens/giasu/tutor_my_classes_screen.dart
     final isPaid = lop.trangThaiThanhToan == 'DaThanhToan';
+    // Màu status: Nếu đang dạy (Active): Xanh (Paid) hoặc Cam (Unpaid). Nếu đã xong: Xám
     final statusColor =
         isActive ? (isPaid ? Colors.green : Colors.orange) : Colors.grey;
+    final statusText =
+        isActive ? (isPaid ? 'Đang dạy' : 'Chưa thanh toán') : 'Đã kết thúc';
 
-    return GestureDetector(
-      onTap: () => _navigateToClassDetail(context, lop.maLop),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                Container(width: 5, color: statusColor),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                lop.tieuDeLop,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.black87,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: statusColor.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                isActive
-                                    ? (isPaid ? 'Đang dạy' : 'Chưa thanh toán')
-                                    : 'Đã kết thúc',
-                                style: TextStyle(
-                                  color: statusColor,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _navigateToClassDetail(context, lop.maLop),
+          borderRadius: BorderRadius.circular(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        lop.tieuDeLop,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.black87,
                         ),
-                        const SizedBox(height: 12),
-                        _buildInfoRow(Icons.person_outline, lop.tenNguoiHoc),
-                        const SizedBox(height: 4),
-                        _buildInfoRow(
-                          Icons.attach_money,
-                          '${formatNumber(toNumber(lop.hocPhi))} đ/Buổi',
-                        ),
-                        if (isActive && !isPaid) ...[
-                          const SizedBox(height: 4),
-                          _buildInfoRow(
-                            Icons.warning_amber_rounded,
-                            'Phí nhận lớp: ${formatNumber(tinhPhiNhanLop(hocPhiMotBuoi: toNumber(lop.hocPhi), soBuoiMotTuan: lop.soBuoiTuan))} đ',
-                            textColor: Colors.red,
-                          ),
-                        ],
-                        const SizedBox(height: 16),
-                        if (isActive)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              if (isPaid) ...[
-                                _buildActionButton(
-                                  'Hủy Lịch',
-                                  Icons.delete_outline,
-                                  Colors.red,
-                                  () => _showDeleteAllSchedulesDialog(
-                                    context,
-                                    lop,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                _buildActionButton(
-                                  'Tạo Lịch',
-                                  Icons.calendar_month_outlined,
-                                  Colors.blue,
-                                  () => _navigateToAddSchedule(context, lop),
-                                ),
-                                const SizedBox(width: 8),
-                                _buildActionButton(
-                                  'Hoàn thành',
-                                  Icons.check_circle_outline,
-                                  Colors.green,
-                                  () => _showCompleteClassDialog(context, lop),
-                                  isPrimary: true,
-                                ),
-                              ] else
-                                _buildActionButton(
-                                  'Thanh toán',
-                                  Icons.payment,
-                                  Colors.orange,
-                                  () => _navigateToPayment(context, lop),
-                                  isPrimary: true,
-                                ),
-                            ],
-                          ),
-                      ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        statusText,
+                        style: TextStyle(
+                          color: statusColor,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: Color(0xFFF0F0F0)),
+
+              // Info Body
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Column(
+                  children: [
+                    _buildInfoRow(Icons.person_outline, lop.tenNguoiHoc),
+                    const SizedBox(height: 8),
+                    _buildInfoRow(
+                      Icons.monetization_on_outlined,
+                      '${formatNumber(toNumber(lop.hocPhi))} đ/Buổi',
+                      valueColor: Colors.black87,
+                      isBold: true,
+                    ),
+                    if (isActive && !isPaid) ...[
+                      const SizedBox(height: 8),
+                      _buildInfoRow(
+                        Icons.warning_amber_rounded,
+                        'Phí nhận lớp: ${formatNumber(tinhPhiNhanLop(hocPhiMotBuoi: toNumber(lop.hocPhi), soBuoiMotTuan: lop.soBuoiTuan))} đ',
+                        valueColor: Colors.red,
+                        isBold: true,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              // Action Footer
+              if (isActive)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      if (isPaid) ...[
+                        _buildSmallButton(
+                          icon: Icons.delete_outline,
+                          label: 'Hủy Lịch',
+                          color: Colors.red.shade50,
+                          textColor: Colors.red,
+                          onTap:
+                              () => _showDeleteAllSchedulesDialog(context, lop),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildSmallButton(
+                          icon: Icons.calendar_month_outlined,
+                          label: 'Tạo Lịch',
+                          color: Colors.blue.shade50,
+                          textColor: Colors.blue,
+                          onTap: () => _navigateToAddSchedule(context, lop),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildSmallButton(
+                          icon: Icons.check_circle_outline,
+                          label: 'Hoàn thành',
+                          color: Colors.green.shade50,
+                          textColor: Colors.green,
+                          onTap: () => _showCompleteClassDialog(context, lop),
+                        ),
+                      ] else
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _navigateToPayment(context, lop),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            icon: const Icon(Icons.payment, size: 18),
+                            label: const Text(
+                              'Thanh toán phí nhận lớp',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
@@ -390,115 +421,154 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
   }
 
   Widget _buildRequestCard(BuildContext context, YeuCauNhanLop yc) {
-    // ... Code cũ
     final isSentByMe = yc.vaiTroNguoiGui == 'GiaSu';
     final bloc = context.read<TutorClassesBloc>();
+
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  yc.lopHoc.tieuDeLop,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                  maxLines: 1,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  isSentByMe ? 'Bạn gửi' : 'Lời mời',
-                  style: TextStyle(
-                    color: Colors.blue.shade700,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    yc.lopHoc.tieuDeLop,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildInfoRow(Icons.person_outline, yc.lopHoc.tenNguoiHoc),
-          const SizedBox(height: 4),
-          _buildInfoRow(
-            Icons.attach_money,
-            '${formatNumber(toNumber(yc.lopHoc.hocPhi))} đ/Buổi',
-          ),
-          if (yc.ghiChu?.isNotEmpty ?? false)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: _buildInfoRow(
-                Icons.notes,
-                yc.ghiChu!,
-                textColor: Colors.grey,
-              ),
-            ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              _buildActionButton(
-                'Chi tiết',
-                Icons.visibility_outlined,
-                Colors.grey,
-                () => _navigateToClassDetail(context, yc.lopYeuCauID),
-              ),
-              const SizedBox(width: 8),
-              if (isSentByMe)
-                _buildActionButton(
-                  'Hủy',
-                  Icons.close,
-                  Colors.red,
-                  () => bloc.add(TutorClassRequestCancelled(yc.yeuCauID)),
-                )
-              else ...[
-                _buildActionButton(
-                  'Từ chối',
-                  Icons.close,
-                  Colors.red,
-                  () => bloc.add(TutorClassRequestRejected(yc.yeuCauID)),
-                ),
-                const SizedBox(width: 8),
-                _buildActionButton(
-                  'Chấp nhận',
-                  Icons.check,
-                  Colors.blue,
-                  () => bloc.add(TutorClassRequestConfirmed(yc.yeuCauID)),
-                  isPrimary: true,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    isSentByMe ? 'Bạn gửi' : 'Lời mời',
+                    style: TextStyle(
+                      color: Colors.blue.shade700,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(height: 12),
+            _buildInfoRow(Icons.person_outline, yc.lopHoc.tenNguoiHoc),
+            const SizedBox(height: 6),
+            _buildInfoRow(
+              Icons.monetization_on_outlined,
+              '${formatNumber(toNumber(yc.lopHoc.hocPhi))} đ/Buổi',
+              valueColor: Colors.black87,
+              isBold: true,
+            ),
+            if (yc.ghiChu?.isNotEmpty ?? false)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.notes, size: 16, color: Colors.grey.shade500),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          yc.ghiChu!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade700,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                _buildSmallButton(
+                  label: 'Chi tiết',
+                  icon: Icons.visibility_outlined,
+                  color: Colors.grey.shade100,
+                  textColor: Colors.black87,
+                  onTap: () => _navigateToClassDetail(context, yc.lopYeuCauID),
+                ),
+                const SizedBox(width: 8),
+                if (isSentByMe)
+                  _buildSmallButton(
+                    label: 'Hủy',
+                    icon: Icons.close,
+                    color: Colors.red.shade50,
+                    textColor: Colors.red,
+                    onTap:
+                        () => bloc.add(TutorClassRequestCancelled(yc.yeuCauID)),
+                  )
+                else ...[
+                  _buildSmallButton(
+                    label: 'Từ chối',
+                    icon: Icons.close,
+                    color: Colors.red.shade50,
+                    textColor: Colors.red,
+                    onTap:
+                        () => bloc.add(TutorClassRequestRejected(yc.yeuCauID)),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildSmallButton(
+                    label: 'Chấp nhận',
+                    icon: Icons.check,
+                    color: AppColors.primary,
+                    textColor: Colors.white,
+                    onTap:
+                        () => bloc.add(TutorClassRequestConfirmed(yc.yeuCauID)),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  // Helpers
-  Widget _buildInfoRow(IconData icon, String text, {Color? textColor}) => Row(
+  // --- UI Helpers ---
+
+  Widget _buildInfoRow(
+    IconData icon,
+    String text, {
+    Color? valueColor,
+    bool isBold = false,
+  }) => Row(
     children: [
       Icon(icon, size: 16, color: Colors.grey.shade400),
       const SizedBox(width: 8),
@@ -506,40 +576,42 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
         child: Text(
           text,
           style: TextStyle(
-            color: textColor ?? Colors.grey.shade700,
+            color: valueColor ?? Colors.grey.shade700,
             fontSize: 13,
+            fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
           ),
+          overflow: TextOverflow.ellipsis,
         ),
       ),
     ],
   );
 
-  Widget _buildActionButton(
-    String label,
-    IconData icon,
-    Color color,
-    VoidCallback onTap, {
-    bool isPrimary = false,
+  Widget _buildSmallButton({
+    required String label,
+    IconData? icon,
+    required Color color,
+    required Color textColor,
+    required VoidCallback onTap,
   }) => InkWell(
     onTap: onTap,
     borderRadius: BorderRadius.circular(8),
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isPrimary ? color : Colors.white,
+        color: color,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isPrimary ? Colors.transparent : color.withValues(alpha: 0.5),
-        ),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: isPrimary ? Colors.white : color),
-          const SizedBox(width: 6),
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: textColor),
+            const SizedBox(width: 4),
+          ],
           Text(
             label,
             style: TextStyle(
-              color: isPrimary ? Colors.white : color,
+              color: textColor,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -549,31 +621,43 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
     ),
   );
 
-  Widget _buildEmptyState(String msg) => Center(
+  Widget _buildEmptyState(String msg, IconData icon) => Center(
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.inbox_outlined, size: 48, color: Colors.grey.shade300),
+        Icon(icon, size: 64, color: Colors.grey.shade200),
         const SizedBox(height: 16),
-        Text(msg, style: TextStyle(color: Colors.grey.shade500)),
+        Text(
+          msg,
+          style: TextStyle(
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ],
     ),
   );
 
-  void _showSnack(BuildContext context, String msg, Color color) =>
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
+  // --- Functional Logic ---
+  void _showSnack(BuildContext context, String msg, Color color) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
+  }
+
   void _navigateToClassDetail(BuildContext ctx, int id) => Navigator.push(
     ctx,
     MaterialPageRoute(
       builder: (_) => ClassDetailScreen(classId: id, userRole: UserRole.tutor),
     ),
   );
+
   void _navigateToAddSchedule(BuildContext ctx, LopHoc lop) => Navigator.push(
     ctx,
     MaterialPageRoute(builder: (_) => TaoLichHocPage(lopHoc: lop)),
   );
+
   void _navigateToPayment(BuildContext context, LopHoc lop) async {
     final authState = context.read<AuthBloc>().state;
     if (authState is! AuthAuthenticated) return;
@@ -603,16 +687,22 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
       builder:
           (ctx) => AlertDialog(
             title: const Text('Hủy toàn bộ lịch?'),
-            content: const Text('Hành động này không thể hoàn tác.'),
+            content: const Text(
+              'Hành động này sẽ xóa tất cả các buổi học của lớp này. Bạn có chắc chắn không?',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Thoát'),
+                child: const Text(
+                  'Thoát',
+                  style: TextStyle(color: Colors.grey),
+                ),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
+                  elevation: 0,
                 ),
                 onPressed: () {
                   context.read<LichHocBloc>().add(
@@ -639,12 +729,13 @@ class _TutorMyClassesScreenState extends State<TutorMyClassesScreen>
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Hủy'),
+                child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
+                  elevation: 0,
                 ),
                 onPressed: () {
                   context.read<TutorClassesBloc>().add(
