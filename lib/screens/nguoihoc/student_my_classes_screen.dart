@@ -7,6 +7,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc_model.da
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/lophoc_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/add_class_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/class_detail_screen.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/complaint_form_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/student_class_proposals_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/global_notification_service.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/utils/format_vnd.dart';
@@ -408,6 +409,39 @@ class _StudentMyClassesPageState extends State<StudentMyClassesPage>
                 MaterialPageRoute(
                   builder:
                       (_) => StudentClassProposalsScreen(lopHocId: lop.maLop),
+                ),
+              ),
+        ),
+      ];
+    }
+    if (lop.trangThai == 'DangHoc') {
+      return [
+        _buildSmallButton(
+          label: 'Xem chi tiết',
+          color: Colors.grey.shade100,
+          textColor: Colors.black87,
+          onTap:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (_) => ClassDetailScreen(
+                        classId: lop.maLop,
+                        userRole: UserRole.student,
+                      ),
+                ),
+              ),
+        ),
+        const SizedBox(width: 8),
+        _buildSmallButton(
+          label: 'Khiếu nại',
+          color: Colors.orange.shade50,
+          textColor: Colors.orange.shade700,
+          onTap:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ComplaintFormScreen(lopId: lop.maLop),
                 ),
               ),
         ),
