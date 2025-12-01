@@ -52,7 +52,7 @@ class TutorCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. Image Area (Expanded to fill space in Grid)
+            // 1. Image Area
             Expanded(
               child: Stack(
                 children: [
@@ -121,12 +121,15 @@ class TutorCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
+
+                  // [CẬP NHẬT] Hiển thị tên môn thay vì bằng cấp
                   Text(
-                    tutor.bangCap ?? 'Chưa cập nhật',
+                    tutor.tenMon ?? 'Chưa cập nhật môn',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                   ),
+
                   const SizedBox(height: 10),
 
                   if (onOfferTap != null)

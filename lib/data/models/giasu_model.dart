@@ -14,6 +14,9 @@ class Tutor {
   final String? chuyenNganh;
   final String? thanhTich;
 
+  // [CẬP NHẬT] Thêm biến này
+  final String? tenMon;
+
   String? soDienThoai;
 
   Tutor({
@@ -31,6 +34,8 @@ class Tutor {
     this.truongDaoTao,
     this.chuyenNganh,
     this.thanhTich,
+    // [CẬP NHẬT] Thêm vào constructor
+    this.tenMon,
   });
 
   factory Tutor.fromJson(Map<String, dynamic> json) {
@@ -49,12 +54,14 @@ class Tutor {
       truongDaoTao: json['TruongDaoTao'],
       chuyenNganh: json['ChuyenNganh'],
       thanhTich: json['ThanhTich'],
+      // [CẬP NHẬT] Map từ JSON
+      tenMon: json['TenMon'],
     );
   }
 
-  // Getters
   String get name => hoTen;
-  String? get subject => bangCap;
+  // Getter này có thể trả về tenMon nếu muốn dùng chung
+  String? get subject => tenMon ?? bangCap;
   double get rating => diemSo;
   String get image => anhDaiDien ?? '';
   int get reviewCount => tongSoDanhGia;
