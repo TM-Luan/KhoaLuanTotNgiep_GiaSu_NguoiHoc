@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_event.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/auth/auth_state.dart';
@@ -30,6 +31,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return "Học viên";
       default:
         return "Người dùng";
+    }
+  }
+
+  String _formatDateString(String? dateString) {
+    if (dateString == null || dateString.isEmpty) {
+      return "Chưa cập nhật";
+    }
+    try {
+      DateTime parsedDate;
+      if (dateString.contains('-') && dateString.startsWith('20')) {
+        parsedDate = DateTime.parse(dateString);
+      } else {
+        parsedDate = DateFormat('dd/MM/yyyy').parse(dateString);
+      }
+      return DateFormat('dd-MM-yyyy').format(parsedDate);
+    } catch (e) {
+      return dateString;
     }
   }
 
@@ -146,7 +164,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 _buildInfoTile(
                   "Ngày sinh",
-                  userData?.ngaySinh,
+                  _formatDateString(userData?.ngaySinh),
                   Icons.cake_outlined,
                 ),
 

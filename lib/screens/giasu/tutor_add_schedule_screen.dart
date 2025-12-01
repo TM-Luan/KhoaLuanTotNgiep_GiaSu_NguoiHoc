@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/bloc/lichhoc/lich_hoc_bloc.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/lophoc_model.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/app_pickers.dart';
 
 class BuoiHocUI {
   int ngayThu;
@@ -77,8 +78,8 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
   }
 
   Future<void> _selectNgayBatDau() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
+    final DateTime? picked = await AppPickers.pickDate(
+      context,
       initialDate: _ngayBatDau,
       firstDate: DateTime.now(),
       lastDate: DateTime(2026),
@@ -531,8 +532,8 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
             flex: 2,
             child: InkWell(
               onTap: () async {
-                final picked = await showTimePicker(
-                  context: context,
+                final picked = await AppPickers.pickTime(
+                  context,
                   initialTime: buoi.thoiGianBatDau,
                 );
                 if (picked != null) {
