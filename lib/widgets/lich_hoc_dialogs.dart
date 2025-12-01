@@ -30,7 +30,7 @@ class _SuaLichHocDialogState extends State<SuaLichHocDialog> {
   // Danh sách mặc định
   final List<Map<String, dynamic>> _cacTrangThai = [
     {'value': 'SapToi', 'text': 'Sắp Tới'},
-    {'value': 'Huy', 'text': 'Hủy buổi học'},
+    {'value': 'Huy', 'text': 'Tạm ngưng'},
   ];
 
   @override

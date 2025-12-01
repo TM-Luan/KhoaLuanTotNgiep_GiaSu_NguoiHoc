@@ -582,7 +582,7 @@ class _TutorSchedulePageState extends State<TutorSchedulePage> {
         color = Colors.orange;
         break;
       case 'Huy':
-        text = 'Đã hủy';
+        text = 'Tạm ngưng';
         color = Colors.red;
         break;
       default:
