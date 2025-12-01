@@ -165,10 +165,6 @@ class _ClassFilterWidgetState extends State<ClassFilterWidget> {
               'Tất cả môn học',
               icon: Icons.book_outlined,
             ),
-            icon: Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: Colors.grey.shade400,
-            ),
             items: [
               const DropdownMenuItem<String>(
                 value: null,
@@ -206,10 +202,6 @@ class _ClassFilterWidgetState extends State<ClassFilterWidget> {
                 'Tất cả cấp học',
                 icon: Icons.school_outlined,
               ),
-              icon: Icon(
-                Icons.keyboard_arrow_down_rounded,
-                color: Colors.grey.shade400,
-              ),
               items: [
                 const DropdownMenuItem<String>(
                   value: null,
@@ -242,13 +234,10 @@ class _ClassFilterWidgetState extends State<ClassFilterWidget> {
                     _buildLabel('Hình thức'),
                     DropdownButtonFormField<String>(
                       value: _currentFilter.hinhThuc,
+                      isExpanded: true,
                       decoration: _inputDecoration(
                         'Chọn',
                         icon: Icons.laptop_mac,
-                      ),
-                      icon: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: Colors.grey.shade400,
                       ),
                       items: const [
                         DropdownMenuItem(value: null, child: Text('Tất cả')),
@@ -287,10 +276,6 @@ class _ClassFilterWidgetState extends State<ClassFilterWidget> {
                         decoration: _inputDecoration(
                           'Chọn',
                           icon: Icons.location_on_outlined,
-                        ),
-                        icon: Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: Colors.grey.shade400,
                         ),
                         items: [
                           const DropdownMenuItem(

@@ -416,7 +416,6 @@ class _AddClassPageState extends State<AddClassPage> {
         isExpanded: true,
         value: value,
         decoration: _cleanInputDecoration(label, icon),
-        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey),
         items:
             items
                 .map(
@@ -441,9 +440,9 @@ class _AddClassPageState extends State<AddClassPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: DropdownButtonFormField<String>(
+        isExpanded: true,
         value: value,
         decoration: _cleanInputDecoration(label, icon),
-        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey),
         items:
             items
                 .map((item) => DropdownMenuItem(value: item, child: Text(item)))
@@ -466,9 +465,9 @@ class _AddClassPageState extends State<AddClassPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: DropdownButtonFormField<int>(
+        isExpanded: true,
         value: value,
         decoration: _cleanInputDecoration(label, icon),
-        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey),
         items:
             items
                 .map(
@@ -495,9 +494,9 @@ class _AddClassPageState extends State<AddClassPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: DropdownButtonFormField<int>(
+        isExpanded: true,
         value: value,
         decoration: _cleanInputDecoration(label, icon, isOptional: true),
-        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey),
         items:
             items
                 .map(

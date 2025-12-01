@@ -207,6 +207,7 @@ class _TutorHomePageState extends State<TutorHomePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
+        bottom: false,
         // [SỬA] Bọc NestedScrollView bằng RefreshIndicator
         child: RefreshIndicator(
           onRefresh: _onRefresh,
@@ -378,7 +379,6 @@ class _TutorHomePageState extends State<TutorHomePage> {
                                   ),
                                 ),
                               ),
-                              
                             ],
                           ),
 
@@ -397,7 +397,6 @@ class _TutorHomePageState extends State<TutorHomePage> {
                                 },
                               ),
                             ),
-                            
                         ],
                       ),
                     ),

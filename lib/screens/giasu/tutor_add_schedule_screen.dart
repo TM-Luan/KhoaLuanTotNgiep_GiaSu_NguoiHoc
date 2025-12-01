@@ -508,7 +508,6 @@ class _TaoLichHocPageState extends State<TaoLichHocPage> {
                 child: DropdownButton<int>(
                   value: buoi.ngayThu,
                   isExpanded: true,
-                  icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
                   items:
                       availableDays
                           .map(

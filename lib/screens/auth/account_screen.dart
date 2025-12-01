@@ -3,6 +3,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/constants/app_colors.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/flutter_secure_storage_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/auth/change_password_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/auth/edit_profile_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/auth/profile_screen.dart';
@@ -231,14 +232,34 @@ class _AccountState extends State<Account> {
           child: CircleAvatar(
             radius: 50,
             backgroundColor: Colors.grey.shade200,
-            backgroundImage:
-                (_profile?.anhDaiDien?.isNotEmpty == true)
-                    ? NetworkImage(_profile!.anhDaiDien!)
-                    : null,
             child:
-                (_profile?.anhDaiDien?.isEmpty ?? true)
-                    ? Icon(Icons.person, size: 50, color: Colors.grey.shade400)
-                    : null,
+                (_profile?.anhDaiDien?.isNotEmpty == true)
+                    ? ClipOval(
+                      child: CachedNetworkImage(
+                        imageUrl: _profile!.anhDaiDien!,
+                        fit: BoxFit.cover,
+                        width: 100,
+                        height: 100,
+                        memCacheWidth: 240,
+                        memCacheHeight: 240,
+                        placeholder:
+                            (context, url) => Container(
+                              color: Colors.grey.shade100,
+                              child: Icon(
+                                Icons.person,
+                                size: 40,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
+                        errorWidget:
+                            (context, url, error) => Icon(
+                              Icons.person,
+                              size: 50,
+                              color: Colors.grey.shade400,
+                            ),
+                      ),
+                    )
+                    : Icon(Icons.person, size: 50, color: Colors.grey.shade400),
           ),
         ),
         const SizedBox(height: 16),

@@ -312,28 +312,32 @@ class _StudentClassProposalsScreenState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               if (yeuCau.giaSuID != null)
-                TextButton.icon(
-                  icon: Icon(
-                    Icons.info_outline,
-                    size: 18,
-                    color: AppColors.primary,
-                  ),
-                  label: Text(
-                    'Chi tiết GV',
-                    style: TextStyle(color: AppColors.primary),
-                  ),
-                  onPressed:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) =>
-                                  TutorDetailPage(tutorId: yeuCau.giaSuID!),
+                Expanded(
+                  child: TextButton.icon(
+                    icon: Icon(
+                      Icons.info_outline,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                    label: Text(
+                      'Chi tiết GV',
+                      style: TextStyle(color: AppColors.primary),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                    onPressed:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    TutorDetailPage(tutorId: yeuCau.giaSuID!),
+                          ),
                         ),
-                      ),
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                   ),
                 ),
 
@@ -344,7 +348,7 @@ class _StudentClassProposalsScreenState
                       height: 24,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                    : _buildActionButtons(yeuCau, sentByTutor),
+                    : Expanded(child: _buildActionButtons(yeuCau, sentByTutor)),
             ],
           ),
         ],
@@ -355,43 +359,71 @@ class _StudentClassProposalsScreenState
   Widget _buildActionButtons(YeuCauNhanLop yeuCau, bool sentByTutor) {
     if (sentByTutor) {
       return Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          OutlinedButton(
-            onPressed:
-                () => _performAction(
-                  yeuCauId: yeuCau.yeuCauID,
-                  action: () => _yeuCauRepo.tuChoiYeuCau(yeuCau.yeuCauID),
-                  successMessage: 'Đã từ chối',
-                  actionType: 'reject',
+          Expanded(
+            child: OutlinedButton(
+              onPressed:
+                  () => _performAction(
+                    yeuCauId: yeuCau.yeuCauID,
+                    action: () => _yeuCauRepo.tuChoiYeuCau(yeuCau.yeuCauID),
+                    successMessage: 'Đã từ chối',
+                    actionType: 'reject',
+                  ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.red,
+                side: const BorderSide(color: Colors.red),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 4,
                 ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.red,
-              side: const BorderSide(color: Colors.red),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                minimumSize: const Size(0, 38),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Từ chối',
+                overflow: TextOverflow.clip,
+                maxLines: 1,
+                softWrap: false,
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               ),
             ),
-            child: const Text('Từ chối'),
           ),
           const SizedBox(width: 8),
-          ElevatedButton(
-            onPressed:
-                () => _performAction(
-                  yeuCauId: yeuCau.yeuCauID,
-                  action: () => _yeuCauRepo.xacNhanYeuCau(yeuCau.yeuCauID),
-                  successMessage: 'Đã chấp nhận',
-                  actionType: 'accept',
+          Expanded(
+            child: ElevatedButton(
+              onPressed:
+                  () => _performAction(
+                    yeuCauId: yeuCau.yeuCauID,
+                    action: () => _yeuCauRepo.xacNhanYeuCau(yeuCau.yeuCauID),
+                    successMessage: 'Đã chấp nhận',
+                    actionType: 'accept',
+                  ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 4,
                 ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                minimumSize: const Size(0, 38),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
-            ),
-            child: const Text(
-              'Chấp nhận',
-              style: TextStyle(color: Colors.white),
+              child: const Text(
+                'Chấp nhận',
+                overflow: TextOverflow.clip,
+                maxLines: 1,
+                softWrap: false,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
         ],
@@ -413,7 +445,20 @@ class _StudentClassProposalsScreenState
           );
         }
       },
-      child: const Text('Hủy lời mời', style: TextStyle(color: Colors.red)),
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        minimumSize: const Size(0, 40),
+      ),
+      child: const Text(
+        'Hủy lời mời',
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+        style: TextStyle(
+          color: Colors.red,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

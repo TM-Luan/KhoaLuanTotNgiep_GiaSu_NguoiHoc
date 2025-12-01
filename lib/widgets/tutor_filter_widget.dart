@@ -140,10 +140,6 @@ class _TutorFilterWidgetState extends State<TutorFilterWidget> {
                 'Chọn chuyên môn',
                 icon: Icons.subject,
               ),
-              icon: Icon(
-                Icons.keyboard_arrow_down_rounded,
-                color: Colors.grey.shade400,
-              ),
               items: [
                 const DropdownMenuItem(value: null, child: Text('Tất cả')),
                 ...(widget.filterOptions!['subjects'] as List).map((subject) {
@@ -178,10 +174,6 @@ class _TutorFilterWidgetState extends State<TutorFilterWidget> {
               decoration: _inputDecoration(
                 'Chọn bằng cấp',
                 icon: Icons.school_outlined,
-              ),
-              icon: Icon(
-                Icons.keyboard_arrow_down_rounded,
-                color: Colors.grey.shade400,
               ),
               items: [
                 const DropdownMenuItem(value: null, child: Text('Tất cả')),
@@ -218,10 +210,6 @@ class _TutorFilterWidgetState extends State<TutorFilterWidget> {
                         decoration: _inputDecoration(
                           'Chọn',
                           icon: Icons.location_on_outlined,
-                        ),
-                        icon: Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: Colors.grey.shade400,
                         ),
                         items: [
                           const DropdownMenuItem(
@@ -262,13 +250,10 @@ class _TutorFilterWidgetState extends State<TutorFilterWidget> {
                     _buildLabel('Giới tính'),
                     DropdownButtonFormField<String>(
                       value: _currentFilter.gioiTinh,
+                      isExpanded: true,
                       decoration: _inputDecoration(
                         'Chọn',
                         icon: Icons.person_outline,
-                      ),
-                      icon: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: Colors.grey.shade400,
                       ),
                       items: const [
                         DropdownMenuItem(value: null, child: Text('Tất cả')),
@@ -303,13 +288,10 @@ class _TutorFilterWidgetState extends State<TutorFilterWidget> {
                     _buildLabel('Kinh nghiệm'),
                     DropdownButtonFormField<String>(
                       value: _currentFilter.kinhNghiem,
+                      isExpanded: true,
                       decoration: _inputDecoration(
                         'Chọn',
                         icon: Icons.work_outline,
-                      ),
-                      icon: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: Colors.grey.shade400,
                       ),
                       items: const [
                         DropdownMenuItem(value: null, child: Text('Tất cả')),
@@ -339,19 +321,16 @@ class _TutorFilterWidgetState extends State<TutorFilterWidget> {
                     _buildLabel('Đánh giá'),
                     DropdownButtonFormField<String>(
                       value: _currentFilter.minRating,
+                      isExpanded: true,
                       decoration: _inputDecoration(
                         'Sao',
                         icon: Icons.star_border_rounded,
                       ),
-                      icon: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: Colors.grey.shade400,
-                      ),
                       items: const [
                         DropdownMenuItem(value: null, child: Text('Tất cả')),
-                        DropdownMenuItem(value: '3.0', child: Text('> 3.0 ⭐')),
-                        DropdownMenuItem(value: '4.0', child: Text('> 4.0 ⭐')),
-                        DropdownMenuItem(value: '4.5', child: Text('> 4.5 ⭐')),
+                        DropdownMenuItem(value: '3.0', child: Text('3.0+ ⭐')),
+                        DropdownMenuItem(value: '4.0', child: Text('4.0+ ⭐')),
+                        DropdownMenuItem(value: '4.5', child: Text('4.5+ ⭐')),
                       ],
                       onChanged: (val) {
                         setState(
