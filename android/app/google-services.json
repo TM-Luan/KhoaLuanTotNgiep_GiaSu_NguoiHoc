@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "586630744414",
+    "project_id": "thongbaogiasu",
+    "storage_bucket": "thongbaogiasu.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:586630744414:android:ba3673e125dcf6b00ae7cf",
+        "android_client_info": {
+          "package_name": "com.example.khoa_luan_tot_ngiep_gia_su_nguoi_hoc"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFdT58EYxYNRuwqXPQiChnd6eJbNYBp_U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -11,6 +11,7 @@ import 'data/repositories/yeu_cau_nhan_lop_repository.dart';
 import 'data/repositories/lich_hoc_repository.dart';
 import 'bloc/auth/auth_bloc.dart';
 import 'bloc/tutor/tutor_bloc.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/main.dart';
 
 class GiaSuApp extends StatelessWidget {
   const GiaSuApp({super.key});
@@ -45,6 +46,7 @@ class GiaSuApp extends StatelessWidget {
         ],
         child: SafeArea(
           child: MaterialApp(
+            navigatorKey: navigatorKey,
             title: 'Gia Sư - Kết nối người học',
             debugShowCheckedModeBanner: false,
             theme: ThemeData(primarySwatch: Colors.blue, fontFamily: 'Roboto'),

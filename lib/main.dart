@@ -8,12 +8,17 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repo
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/giasu_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/danhgia_repository.dart';
 import 'package:intl/date_symbol_data_local.dart'; 
-
+import 'package:firebase_core/firebase_core.dart'; // Import này
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/firebase_options.dart';
+import 'services/fcm_service.dart'; // Import service vừa tạo
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
-  // <-- 2. THÊM 'async' VÀ 'Future<void>'
 
-  // 3. THÊM 2 DÒNG NÀY ĐỂ KHỞI TẠO LỊCH TIẾNG VIỆT
   WidgetsFlutterBinding.ensureInitialized();
+await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  await FCMService.init();
   await initializeDateFormatting('vi_VN', null);
 
   // Code cũ của bạn giữ nguyên

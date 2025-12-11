@@ -5,6 +5,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repo
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile_model.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/api/api_response.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/flutter_secure_storage_model.dart';
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/services/fcm_service.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository authRepository;
@@ -26,6 +27,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
     if (res.success && res.data != null) {
       await SecureStorage.setToken(res.data!.token);
+      await FCMService.init();
       emit(AuthAuthenticated(res.data!.user, token: res.data!.token));
     } else {
       emit(AuthError(res.message));

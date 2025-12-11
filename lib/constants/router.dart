@@ -13,7 +13,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/nguoihoc/student_my
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/home/home_screen.dart'; // Có thể là màn hình chung?
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/auth/profile_screen.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/payment/payment_return_screen.dart';
-
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/screens/notification/notification_screen.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -54,7 +54,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const PaymentReturnScreen());
       case TutorMyClassesScreen.routeName: // '/tutor-my-classes'
         return MaterialPageRoute(builder: (_) => const TutorMyClassesScreen());
-
+  case '/notifications':
+          return MaterialPageRoute(builder: (_) => const NotificationScreen());
       default:
         return _errorRoute('Trang không tồn tại (${settings.name})');
     }
