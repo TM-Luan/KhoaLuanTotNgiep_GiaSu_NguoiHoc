@@ -26,6 +26,9 @@ class _AddClassPageState extends State<AddClassPage> {
   bool _isDropdownLoading = true;
   String? _dropdownError;
 
+  // [MỚI] Biến để hiển thị lỗi dưới nút Đăng
+  String? _submitError;
+
   final _hocPhiController = TextEditingController();
   final _soLuongController = TextEditingController(text: '1');
   final _moTaController = TextEditingController();
@@ -118,15 +121,28 @@ class _AddClassPageState extends State<AddClassPage> {
     }
   }
 
-  // [SỬA LỖI] Logic submit form an toàn hơn
+  // [CẬP NHẬT] Logic submit form có hiển thị lỗi _submitError
   Future<void> _submitForm() async {
-    if (!_formKey.currentState!.validate()) return;
+    // 1. Reset lỗi cũ
+    setState(() => _submitError = null);
+
+    // 2. Validate Form
+    if (!_formKey.currentState!.validate()) {
+      setState(() {
+        _submitError = "Vui lòng kiểm tra các trường nhập liệu màu đỏ.";
+      });
+      return;
+    }
 
     setState(() => _isSubmitting = true);
+
     try {
       final nguoiHocId = await _getNguoiHocIDFromProfile();
-      if (nguoiHocId == null)
-        throw Exception('Không tìm thấy thông tin người học.');
+      if (nguoiHocId == null) {
+        throw Exception(
+          'Không tìm thấy thông tin người học. Vui lòng đăng nhập lại.',
+        );
+      }
 
       // Làm sạch chuỗi học phí (chỉ giữ lại số)
       final cleanHocPhi = _hocPhiController.text.replaceAll(
@@ -140,7 +156,7 @@ class _AddClassPageState extends State<AddClassPage> {
         'KhoiLopID': _selectedKhoiLopID,
         'DoiTuongID': _selectedDoiTuongID,
         'HinhThuc': _selectedHinhThuc,
-        'HocPhi': double.tryParse(cleanHocPhi) ?? 0, // Parse số an toàn
+        'HocPhi': double.tryParse(cleanHocPhi) ?? 0,
         'ThoiLuong': _selectedThoiLuong,
         'SoLuong': int.tryParse(_soLuongController.text) ?? 1,
         'MoTa': _moTaController.text,
@@ -157,6 +173,7 @@ class _AddClassPageState extends State<AddClassPage> {
               : await _lopHocRepo.createLopHoc(data);
 
       if (!mounted) return;
+
       if (res.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -169,17 +186,22 @@ class _AddClassPageState extends State<AddClassPage> {
         );
         Navigator.pop(context, true);
       } else {
-        throw Exception(res.message);
+        // [CẬP NHẬT] Gán lỗi API vào biến để hiện dưới nút
+        setState(() {
+          _submitError = res.message;
+        });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
-      );
+      // [CẬP NHẬT] Gán lỗi Exception vào biến
+      setState(() {
+        _submitError = 'Lỗi hệ thống: $e';
+      });
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
+  // [CẬP NHẬT] Thêm errorMaxLines: 3 để không bị mất chữ thông báo lỗi
   InputDecoration _cleanInputDecoration(
     String label,
     IconData icon, {
@@ -192,6 +214,9 @@ class _AddClassPageState extends State<AddClassPage> {
       filled: true,
       fillColor: _inputFillColor,
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+
+      errorMaxLines: 3, // <--- THÊM DÒNG NÀY
+
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide(color: _borderColor),
@@ -245,18 +270,7 @@ class _AddClassPageState extends State<AddClassPage> {
               ? Center(child: CircularProgressIndicator(color: _primaryColor))
               : _dropdownError != null
               ? Center(child: Text(_dropdownError!))
-              : _isSubmitting
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(color: _primaryColor),
-                    const SizedBox(height: 16),
-                    const Text('Đang xử lý...'),
-                  ],
-                ),
-              )
-              : _buildForm(),
+              : _buildForm(), // [CẬP NHẬT] Bỏ _isSubmitting loading full màn hình để người dùng thấy lỗi nếu có
     );
   }
 
@@ -381,6 +395,24 @@ class _AddClassPageState extends State<AddClassPage> {
 
             const SizedBox(height: 32),
             _buildSubmitButton(),
+
+            // [CẬP NHẬT] Hiển thị lỗi đỏ dưới nút Submit
+            if (_submitError != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Center(
+                  child: Text(
+                    _submitError!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+
             const SizedBox(height: 20),
           ],
         ),
@@ -424,7 +456,8 @@ class _AddClassPageState extends State<AddClassPage> {
                 )
                 .toList(),
         onChanged: onChanged,
-        validator: (v) => v == null ? 'Bắt buộc' : null,
+        // [CẬP NHẬT] Validator tiếng Việt rõ ràng
+        validator: (v) => v == null ? 'Vui lòng chọn $label' : null,
         style: const TextStyle(color: Colors.black87, fontSize: 15),
       ),
     );
@@ -448,7 +481,7 @@ class _AddClassPageState extends State<AddClassPage> {
                 .map((item) => DropdownMenuItem(value: item, child: Text(item)))
                 .toList(),
         onChanged: onChanged,
-        validator: (v) => v == null ? 'Bắt buộc' : null,
+        validator: (v) => v == null ? 'Vui lòng chọn $label' : null,
         style: const TextStyle(color: Colors.black87, fontSize: 15),
       ),
     );
@@ -478,7 +511,7 @@ class _AddClassPageState extends State<AddClassPage> {
                 )
                 .toList(),
         onChanged: onChanged,
-        validator: (v) => v == null ? 'Bắt buộc' : null,
+        validator: (v) => v == null ? 'Vui lòng chọn' : null,
         style: const TextStyle(color: Colors.black87, fontSize: 15),
       ),
     );
@@ -507,13 +540,12 @@ class _AddClassPageState extends State<AddClassPage> {
                 )
                 .toList(),
         onChanged: onChanged,
+        // Optional nên không cần validator bắt buộc
         validator: (v) => null,
         style: const TextStyle(color: Colors.black87, fontSize: 15),
       ),
     );
   }
-
-  // Tìm đến hàm _buildTextField và thay thế phần validator:
 
   Widget _buildTextField({
     required TextEditingController controller,
@@ -551,11 +583,10 @@ class _AddClassPageState extends State<AddClassPage> {
             return 'Không được để trống';
           }
 
-          // 2. [MỚI] Validate dữ liệu số
+          // 2. Validate dữ liệu số
           if (keyboardType == TextInputType.number &&
               value != null &&
               value.isNotEmpty) {
-            // Loại bỏ ký tự không phải số (phòng trường hợp copy paste hoặc format tiền tệ)
             final cleanValue = value.replaceAll(RegExp(r'[^0-9]'), '');
             final number = int.tryParse(cleanValue);
 
@@ -563,7 +594,6 @@ class _AddClassPageState extends State<AddClassPage> {
               return 'Vui lòng nhập số hợp lệ';
             }
 
-            // Kiểm tra cụ thể từng trường
             if (label.toLowerCase().contains('học phí')) {
               if (number < 10000) {
                 return 'Học phí tối thiểu 10.000đ';
@@ -586,7 +616,8 @@ class _AddClassPageState extends State<AddClassPage> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _submitForm,
+        // Disable nút khi đang submit
+        onPressed: _isSubmitting ? null : _submitForm,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
@@ -597,14 +628,24 @@ class _AddClassPageState extends State<AddClassPage> {
           ),
           shadowColor: Colors.transparent,
         ),
-        child: Text(
-          isEditMode ? 'Lưu thay đổi' : 'Đăng yêu cầu',
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
-          ),
-        ),
+        child:
+            _isSubmitting
+                ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                : Text(
+                  isEditMode ? 'Lưu thay đổi' : 'Đăng yêu cầu',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
       ),
     );
   }

@@ -7,8 +7,7 @@ import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/models/user_profile_mo
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/auth_repository.dart';
 import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/data/repositories/dropdown_repository.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-// Thêm thư viện này để vẽ viền nét đứt cho đẹp (nếu chưa có thì dùng border thường)
-// Nếu không muốn cài thêm package, mình sẽ dùng border solid nét nhạt.
+import 'package:khoa_luan_tot_ngiep_gia_su_nguoi_hoc/widgets/app_pickers.dart'; // Import widget chọn ngày kiểu cuộn
 
 class EditProfileScreen extends StatefulWidget {
   final UserProfile user;
@@ -25,6 +24,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final DropdownRepository _dropdownRepo = DropdownRepository();
   final DateFormat _displayFormat = DateFormat('dd/MM/yyyy');
   final DateFormat _apiFormat = DateFormat('yyyy-MM-dd');
+
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
@@ -42,6 +42,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   bool _isLoading = false;
   DateTime? _selectedDate;
+
+  bool _isPickingImage = false;
+  String? _submitError;
 
   final List<String> _genderOptions = ['Nam', 'Nữ', 'Khác'];
   String? _selectedGender;
@@ -72,7 +75,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _isLoadingMonHoc = false;
 
   // --- UI Constants ---
-  final Color _bgColor = const Color(0xFFF8F9FA); // Xám nhạt hiện đại
+  final Color _bgColor = const Color(0xFFF8F9FA);
   final Color _cardColor = Colors.white;
   final Color _borderColor = const Color(0xFFE9ECEF);
   final Color _textPrimary = const Color(0xFF212529);
@@ -103,6 +106,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (_selectedGender != null && !_genderOptions.contains(_selectedGender)) {
       _selectedGender = null;
     }
+
     final currentDegree = widget.user.bangCap;
     if (currentDegree != null && _degreeOptions.contains(currentDegree)) {
       _selectedDegree = currentDegree;
@@ -114,6 +118,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _selectedDegree = null;
       _isCustomDegree = false;
     }
+
     final currentExperience = widget.user.kinhNghiem;
     if (currentExperience != null &&
         _experienceOptions.contains(currentExperience)) {
@@ -145,23 +150,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool get _isGiaSu => widget.user.vaiTro == 2;
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime(1900),
+    final DateTime? picked = await AppPickers.pickDate(
+      context,
+      initialDate: _selectedDate ?? DateTime(2000, 1, 1),
+      firstDate: DateTime(1950),
       lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: AppColors.primary,
-              onPrimary: Colors.white,
-              onSurface: _textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
 
     if (picked != null && picked != _selectedDate) {
@@ -173,14 +166,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _pickImage(Function(File?) onImagePicked) async {
-    final pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 60,
-    );
-    if (pickedFile != null) {
-      onImagePicked(File(pickedFile.path));
-    } else {
-      onImagePicked(null);
+    if (_isPickingImage) return;
+    setState(() => _isPickingImage = true);
+
+    try {
+      final pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 60,
+      );
+      if (pickedFile != null) {
+        onImagePicked(File(pickedFile.path));
+      } else {
+        onImagePicked(null);
+      }
+    } catch (e) {
+      debugPrint('Lỗi chọn ảnh: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isPickingImage = false);
+      }
     }
   }
 
@@ -207,7 +211,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
-    if (!_formKey.currentState!.validate()) return;
+    setState(() => _submitError = null);
+
+    if (!_formKey.currentState!.validate()) {
+      setState(() {
+        _submitError = "Vui lòng nhập đủ các thông tin cần thiết.";
+      });
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     String? finalDegree;
@@ -266,233 +278,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       setState(() => _isLoading = false);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(res.message),
-            backgroundColor: res.success ? Colors.green : Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-
         if (res.success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(res.message),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+
           UserProfile? returnedProfile = res.data;
           if (returnedProfile != null) {
             returnedProfile.vaiTro = widget.user.vaiTro;
           }
           Navigator.pop(context, returnedProfile);
+        } else {
+          setState(() {
+            _submitError = res.message;
+          });
         }
       }
     } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
-        );
-      }
+      setState(() {
+        _isLoading = false;
+        _submitError = 'Lỗi kết nối: $e';
+      });
     }
   }
-
-  // ================= UI BUILDER =================
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _bgColor,
-      appBar: AppBar(
-        title: const Text(
-          "Chỉnh sửa hồ sơ",
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-            color: Colors.black87,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: _bgColor,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            color: Colors.black87,
-            size: 20,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: _borderColor, height: 1),
-        ),
-      ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              // --- Avatar Section ---
-              Center(
-                child: EditProfilePic(
-                  image: widget.user.anhDaiDien ?? '',
-                  newImageFile: _newAnhDaiDienFile,
-                  imageUploadBtnPress:
-                      () => _pickImage((file) {
-                        if (file != null) {
-                          setState(() => _newAnhDaiDienFile = file);
-                        }
-                      }),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // --- Personal Info Section ---
-              _buildSectionContainer(
-                title: "Thông tin cá nhân",
-                children: [
-                  _buildField("Họ và tên *", _nameController),
-                  _buildField(
-                    "Email *",
-                    _emailController,
-                    keyboard: TextInputType.emailAddress,
-                  ),
-                  _buildField(
-                    "Số điện thoại *",
-                    _phoneController,
-                    keyboard: TextInputType.phone,
-                  ),
-                  _buildField("Địa chỉ", _addressController, isRequired: false),
-                  Row(
-                    children: [
-                      Expanded(child: _buildGenderDropdown()),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildDateField()),
-                    ],
-                  ),
-                ],
-              ),
-
-              // --- Tutor Info Section ---
-              if (_isGiaSu) ...[
-                const SizedBox(height: 20),
-                _buildSectionContainer(
-                  title: "Thông tin gia sư",
-                  children: [
-                    _buildDegreeDropdown(),
-                    if (_isCustomDegree)
-                      _buildField(
-                        "Chi tiết bằng cấp *",
-                        _degreeController,
-                        isRequired: true,
-                      ),
-                    _buildField(
-                      "Trường đào tạo",
-                      _truongDaoTaoController,
-                      isRequired: false,
-                    ),
-                    _buildField(
-                      "Chuyên ngành",
-                      _chuyenNganhController,
-                      isRequired: false,
-                    ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: _buildMonHocDropdown()),
-                        const SizedBox(width: 12),
-                        Expanded(child: _buildExperienceDropdown()),
-                      ],
-                    ),
-                    _buildField(
-                      "Thành tích nổi bật",
-                      _thanhTichController,
-                      maxLines: 3,
-                      isRequired: false,
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-                _buildSectionContainer(
-                  title: "Hồ sơ xác thực",
-                  children: [
-                    _buildImageUploadBlock(
-                      "Ảnh CCCD Mặt trước",
-                      widget.user.anhCCCDMatTruoc,
-                      _newAnhCCCDMatTruocFile,
-                      () => _pickImage(
-                        (f) => setState(() => _newAnhCCCDMatTruocFile = f),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildImageUploadBlock(
-                      "Ảnh CCCD Mặt sau",
-                      widget.user.anhCCCDMatSau,
-                      _newAnhCCCDMatSauFile,
-                      () => _pickImage(
-                        (f) => setState(() => _newAnhCCCDMatSauFile = f),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildImageUploadBlock(
-                      "Ảnh Bằng cấp / Chứng chỉ",
-                      widget.user.anhBangCap,
-                      _newAnhBangCapFile,
-                      () => _pickImage(
-                        (f) => setState(() => _newAnhBangCapFile = f),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-
-              const SizedBox(height: 32),
-              _buildBottomActions(),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionContainer({
-    required String title,
-    required List<Widget> children,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: _cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title.toUpperCase(),
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: _textSecondary,
-              letterSpacing: 0.8,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ...children,
-        ],
-      ),
-    );
-  }
-
-  // --- Modern Input Styles ---
 
   InputDecoration _cleanInputDecoration(String label) {
     return InputDecoration(
@@ -505,6 +317,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       filled: true,
       fillColor: const Color(0xFFFAFAFA),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      errorMaxLines: 3,
       enabledBorder: OutlineInputBorder(
         borderSide: BorderSide(color: _borderColor),
         borderRadius: BorderRadius.circular(12),
@@ -524,8 +337,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  // Tìm đến hàm _buildField và thay thế phần validator:
-
   Widget _buildField(
     String label,
     TextEditingController controller, {
@@ -543,33 +354,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         decoration: _cleanInputDecoration(label),
         validator: (v) {
           final value = v?.trim();
-
-          // 1. Kiểm tra rỗng
           if (isRequired && (value == null || value.isEmpty)) {
             return 'Không được để trống';
           }
-
           if (value != null && value.isNotEmpty) {
-            // 2. [MỚI] Validate Email
             if (keyboard == TextInputType.emailAddress) {
               final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
               if (!emailRegex.hasMatch(value)) {
                 return 'Email không hợp lệ';
               }
             }
-
-            // 3. [MỚI] Validate Số điện thoại
             if (keyboard == TextInputType.phone) {
-              // Kiểm tra độ dài và đầu số 0
               if (value.length != 10 || !value.startsWith('0')) {
                 return 'SĐT không hợp lệ (10 số, bắt đầu bằng 0)';
               }
-              // Kiểm tra ký tự số
               final isNumeric = int.tryParse(value) != null;
               if (!isNumeric) return 'SĐT chỉ được chứa số';
             }
           }
-
           return null;
         },
       ),
@@ -664,7 +466,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         value: _selectedMonID,
         isExpanded: true,
         style: TextStyle(fontSize: 15, color: _textPrimary),
-        decoration: _cleanInputDecoration("Môn dạy"),
+        // [CẬP NHẬT] Thêm dấu * và validator
+        decoration: _cleanInputDecoration("Môn dạy *"),
         hint: Text(_isLoadingMonHoc ? "Đang tải..." : "Chọn môn"),
         items:
             _allMonHoc
@@ -676,11 +479,48 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 )
                 .toList(),
         onChanged: (v) => setState(() => _selectedMonID = v),
+        validator: (v) => v == null ? 'Vui lòng chọn môn dạy' : null,
       ),
     );
   }
 
-  // --- Modern Image Upload Block ---
+  Widget _buildSectionContainer({
+    required String title,
+    required List<Widget> children,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title.toUpperCase(),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: _textSecondary,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ...children,
+        ],
+      ),
+    );
+  }
+
   Widget _buildImageUploadBlock(
     String title,
     String? url,
@@ -713,7 +553,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               border: Border.all(
                 color: hasImage ? Colors.transparent : _borderColor,
                 width: 1.5,
-                // Nếu muốn nét đứt thì dùng package dotted_border, ở đây dùng nét liền nhạt cho đơn giản nhưng clean
               ),
             ),
             child: ClipRRect(
@@ -732,7 +571,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   else
                     _buildUploadPlaceholder(),
 
-                  // Edit Overlay
                   if (hasImage)
                     Container(
                       color: Colors.black26,
@@ -779,54 +617,234 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Widget _buildBottomActions() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: OutlinedButton(
-            onPressed: _isLoading ? null : () => Navigator.pop(context),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              side: BorderSide(color: _borderColor),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _isLoading ? null : () => Navigator.pop(context),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: BorderSide(color: _borderColor),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  foregroundColor: _textPrimary,
+                ),
+                child: const Text("Hủy bỏ"),
               ),
-              foregroundColor: _textPrimary,
             ),
-            child: const Text("Hủy bỏ"),
+            const SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _saveProfile,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child:
+                    _isLoading
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                        : const Text(
+                          "Lưu thay đổi",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.white,
+                          ),
+                        ),
+              ),
+            ),
+          ],
+        ),
+        if (_submitError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Text(
+              _submitError!,
+              style: const TextStyle(
+                color: Colors.red,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _bgColor,
+      appBar: AppBar(
+        title: const Text(
+          "Chỉnh sửa hồ sơ",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+            color: Colors.black87,
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: _isLoading ? null : _saveProfile,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+        centerTitle: true,
+        backgroundColor: _bgColor,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.black87,
+            size: 20,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: _borderColor, height: 1),
+        ),
+      ),
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              Center(
+                child: EditProfilePic(
+                  image: widget.user.anhDaiDien ?? '',
+                  newImageFile: _newAnhDaiDienFile,
+                  imageUploadBtnPress:
+                      () => _pickImage((file) {
+                        if (file != null) {
+                          setState(() => _newAnhDaiDienFile = file);
+                        }
+                      }),
+                ),
               ),
-              elevation: 0,
-            ),
-            child:
-                _isLoading
-                    ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
+              const SizedBox(height: 24),
+
+              _buildSectionContainer(
+                title: "Thông tin cá nhân",
+                children: [
+                  _buildField("Họ và tên *", _nameController),
+                  _buildField(
+                    "Email *",
+                    _emailController,
+                    keyboard: TextInputType.emailAddress,
+                  ),
+                  _buildField(
+                    "Số điện thoại *",
+                    _phoneController,
+                    keyboard: TextInputType.phone,
+                  ),
+                  // [CẬP NHẬT] Đặt isRequired: true và thêm dấu *
+                  _buildField(
+                    "Địa chỉ *",
+                    _addressController,
+                    isRequired: true,
+                  ),
+                  Row(
+                    children: [
+                      Expanded(child: _buildGenderDropdown()),
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildDateField()),
+                    ],
+                  ),
+                ],
+              ),
+
+              if (_isGiaSu) ...[
+                const SizedBox(height: 20),
+                _buildSectionContainer(
+                  title: "Thông tin gia sư",
+                  children: [
+                    _buildDegreeDropdown(),
+                    if (_isCustomDegree)
+                      _buildField(
+                        "Chi tiết bằng cấp *",
+                        _degreeController,
+                        isRequired: true,
                       ),
-                    )
-                    : const Text(
-                      "Lưu thay đổi",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.white,
+                    _buildField(
+                      "Trường đào tạo",
+                      _truongDaoTaoController,
+                      isRequired: false,
+                    ),
+                    _buildField(
+                      "Chuyên ngành",
+                      _chuyenNganhController,
+                      isRequired: false,
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: _buildMonHocDropdown()),
+                        const SizedBox(width: 12),
+                        Expanded(child: _buildExperienceDropdown()),
+                      ],
+                    ),
+                    _buildField(
+                      "Thành tích nổi bật",
+                      _thanhTichController,
+                      maxLines: 3,
+                      isRequired: false,
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+                _buildSectionContainer(
+                  title: "Hồ sơ xác thực",
+                  children: [
+                    _buildImageUploadBlock(
+                      "Ảnh CCCD Mặt trước",
+                      widget.user.anhCCCDMatTruoc,
+                      _newAnhCCCDMatTruocFile,
+                      () => _pickImage(
+                        (f) => setState(() => _newAnhCCCDMatTruocFile = f),
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    _buildImageUploadBlock(
+                      "Ảnh CCCD Mặt sau",
+                      widget.user.anhCCCDMatSau,
+                      _newAnhCCCDMatSauFile,
+                      () => _pickImage(
+                        (f) => setState(() => _newAnhCCCDMatSauFile = f),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildImageUploadBlock(
+                      "Ảnh Bằng cấp / Chứng chỉ",
+                      widget.user.anhBangCap,
+                      _newAnhBangCapFile,
+                      () => _pickImage(
+                        (f) => setState(() => _newAnhBangCapFile = f),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
+              const SizedBox(height: 32),
+              _buildBottomActions(),
+              const SizedBox(height: 20),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 
@@ -845,7 +863,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 }
 
-// --- Avatar Widget Refined ---
 class EditProfilePic extends StatelessWidget {
   const EditProfilePic({
     super.key,

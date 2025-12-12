@@ -10,8 +10,22 @@ import '../nguoihoc/class_detail_screen.dart';
 import '../giasu/tutor_my_classes_screen.dart';
 import '../nguoihoc/student_my_classes_screen.dart';
 
-class NotificationScreen extends StatelessWidget {
+// 1. Đổi từ StatelessWidget sang StatefulWidget
+class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
+
+  @override
+  State<NotificationScreen> createState() => _NotificationScreenState();
+}
+
+class _NotificationScreenState extends State<NotificationScreen> {
+  // 2. Thêm initState để tự động tải dữ liệu khi màn hình mở ra
+  @override
+  void initState() {
+    super.initState();
+    // Gọi lệnh tải thông báo ngay khi màn hình được tạo
+    context.read<NotificationBloc>().add(LoadNotifications());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +48,15 @@ class NotificationScreen extends StatelessWidget {
           preferredSize: const Size.fromHeight(1),
           child: Container(color: Colors.grey.shade100, height: 1),
         ),
+        // Thêm nút refresh thủ công nếu muốn
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              context.read<NotificationBloc>().add(LoadNotifications());
+            },
+          ),
+        ],
       ),
       body: BlocBuilder<NotificationBloc, NotificationState>(
         builder: (context, state) {
@@ -43,13 +66,22 @@ class NotificationScreen extends StatelessWidget {
             if (state.notifications.isEmpty) {
               return _buildEmptyState();
             }
-            return ListView.builder(
-              itemCount: state.notifications.length,
-              itemBuilder: (context, index) {
-                final notif = state.notifications[index];
-                return _buildNotificationItem(context, notif);
+            // Bọc trong RefreshIndicator để cho phép kéo xuống để tải lại
+            return RefreshIndicator(
+              onRefresh: () async {
+                context.read<NotificationBloc>().add(LoadNotifications());
               },
+              child: ListView.builder(
+                itemCount: state.notifications.length,
+                itemBuilder: (context, index) {
+                  final notif = state.notifications[index];
+                  return _buildNotificationItem(context, notif);
+                },
+              ),
             );
+          } else if (state is NotificationError) {
+            // Hiển thị lỗi và nút thử lại
+            return Center(child: Text(state.message));
           }
           return const SizedBox();
         },
@@ -57,7 +89,10 @@ class NotificationScreen extends StatelessWidget {
     );
   }
 
+  // ... (Giữ nguyên các hàm _buildNotificationItem, _buildEmptyState, _getIconForType, _formatTime cũ của bạn) ...
+
   Widget _buildNotificationItem(BuildContext context, dynamic notif) {
+    // Copy y nguyên nội dung hàm này từ code cũ của bạn
     final backgroundColor =
         notif.isRead ? Colors.white : const Color(0xFFF0F9FF);
     final titleColor = notif.isRead ? Colors.black87 : Colors.black;
@@ -66,19 +101,15 @@ class NotificationScreen extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        // 1. Đánh dấu đã đọc
         if (!notif.isRead) {
           context.read<NotificationBloc>().add(MarkAsRead(notif.id));
         }
 
-        // 2. XỬ LÝ ĐIỀU HƯỚNG (NAVIGATION)
         if (notif.relatedId != null) {
           final authState = context.read<AuthBloc>().state;
           final isGiaSu =
               (authState is AuthAuthenticated && authState.user.vaiTro == 2);
 
-          // === TRƯỜNG HỢP 1: "Yêu cầu dạy mới" (Hình ảnh 1) ===
-          // Người học nhận được thông báo có Gia sư đăng ký
           if (notif.type == 'request_received') {
             Navigator.push(
               context,
@@ -88,10 +119,7 @@ class NotificationScreen extends StatelessWidget {
                         StudentClassProposalsScreen(lopHocId: notif.relatedId!),
               ),
             );
-          }
-          // === TRƯỜNG HỢP 2: "Yêu cầu bị từ chối" (Hình ảnh 2) ===
-          // Gia sư từ chối lời mời -> Người học vào xem lại chi tiết lớp
-          else if (notif.type == 'request_rejected') {
+          } else if (notif.type == 'request_rejected') {
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -102,10 +130,7 @@ class NotificationScreen extends StatelessWidget {
                     ),
               ),
             );
-          }
-          // === CÁC TRƯỜNG HỢP KHÁC (Giữ nguyên logic cũ) ===
-          else if (notif.type == 'invitation_received') {
-            // Gia sư nhận lời mời từ học viên -> Vào tab "Lời mời"
+          } else if (notif.type == 'invitation_received') {
             if (isGiaSu) {
               Navigator.push(
                 context,
@@ -128,7 +153,6 @@ class NotificationScreen extends StatelessWidget {
               );
             }
           } else if (notif.type == 'request_accepted') {
-            // Chấp nhận -> Vào tab "Đang dạy/Đang học" (Index 0)
             if (isGiaSu) {
               Navigator.push(
                 context,
@@ -149,7 +173,6 @@ class NotificationScreen extends StatelessWidget {
               );
             }
           } else {
-            // Mặc định: Vào trang chi tiết lớp
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -277,17 +300,16 @@ class NotificationScreen extends StatelessWidget {
     );
   }
 
-  // Cập nhật icon phù hợp với hình ảnh của bạn
   IconData _getIconForType(String type) {
     switch (type) {
       case 'request_received':
-        return Icons.person_add_rounded; // Icon người cộng (Hình 1)
+        return Icons.person_add_rounded;
       case 'request_accepted':
         return Icons.check_circle_rounded;
       case 'invitation_received':
         return Icons.mark_email_unread_rounded;
       case 'request_rejected':
-        return Icons.cancel_rounded; // Icon dấu x (Hình 2)
+        return Icons.cancel_rounded;
       default:
         return Icons.notifications_rounded;
     }
